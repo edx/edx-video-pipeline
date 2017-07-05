@@ -1,0 +1,117 @@
+/* CSS SPECIFIC TO UPLOAD PAGE */
+
+h1 {
+    display: block;
+    font-size: 1em;
+    -webkit-margin-before: 0.67em;
+    -webkit-margin-after: 0.67em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    font-weight: normal;
+}
+
+.dropzone {
+    padding: 20px 20px;
+    border: 1px solid #fff;
+    background: #ACD8FF;
+    padding: 20px 20px;
+    width: 45%;
+    margin-left: 26%;
+    margin-right: auto;
+}
+
+.dropzone .dz-preview .dz-image {
+    border-radius: 15px;
+    overflow: hidden;
+    width: 0px !important;
+    height: 0px !important;
+    position: relative;
+    display: block;
+    z-index: 10;
+    margin-left: 135px;
+    /*margin-right: auto;*/
+}
+.dropzone .dz-preview .dz-details {
+    font-size: 1em;
+    background-color: deepskyblue;
+}
+
+.dropzone .dz-preview .dz-progress {
+    opacity: 1;
+    z-index: 1000;
+    pointer-events: none;
+    position: absolute;
+    height: 12px;
+    left: 50%;
+    top: 50%;
+    margin-top: 6px;
+    width: 150px;
+    margin-left: -80px;
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-transform: scale(1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dz-default {
+    color: #FFFFFF;
+}
+
+#uploadselect {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input[type="file" i] {
+  display: block;
+  float:left;
+  font: 1.4em/1 'Raleway', sans-serif;
+  padding: 14px 30px 14px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: text;
+}
+
+#fileupload {
+  display: block;
+  float:left;
+  font: 1.4em/1 'Raleway', sans-serif;
+  padding: 14px 30px 14px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.about_vidinf {
+    margin-bottom: 25px;
+}
+
+#video_info {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+.field_title {
+  display: table;
+  font: 1.4em/1 'Raleway', sans-serif;
+  margin-left: auto;
+  color: #FFFFFF;
+  margin-right: auto;
+  }
+
+.ul_warning {
+    margin-left: auto;
+    color: #BB0000;
+    margin-right: auto;
+    width: 15%
+}
+
+#new_buttons {
+    margin-left: 25%;
+}

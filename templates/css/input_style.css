@@ -1,0 +1,164 @@
+/* Input Styles */
+@import url(https://fonts.googleapis.com/css?family=Roboto+Slab:400,100);
+@import url(http://fonts.googleapis.com/css?family=Noto+Sans);
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  color: #000000;
+  background: radial-gradient(#fff, #737373);
+  font: 1em/1 'Roboto+Slab', sans-serif;
+  overflow: scroll;
+}
+
+.submit_button {
+  display: block;
+  margin-left: 20px;
+  margin-top: 20px;
+}
+
+#course_information {
+  border: 3px solid #fff;
+  background: rgba(255, 0, 0, 0.09);;
+  width: 45%;
+  margin-left: 20px;
+  float: left;
+}
+
+#transcribe_information {
+  border: 3px solid #fff;
+  background: rgba(255, 0, 0, 0.09);;
+  width: 45%;
+  margin-top: 20px;
+  margin-left: 20px;
+  float: left;
+ 
+}
+
+.minidiv {
+  float: left;
+}
+
+#destination_information {
+  border: 3px solid #fff;
+  background: rgba(255, 0, 0, 0.09);;
+  width: 45%;
+  margin-left: 20px;
+
+  float: left;
+}
+
+.info_container {
+  display: block;
+  margin-right: 0px;
+  margin-bottom: 20px;
+  width: 100%;
+  float: left;
+}
+
+select {
+  display: block;
+  height: 50px;
+  width: 200px;
+  font: 1em/1 'Roboto+Slab', sans-serif;
+  margin-bottom: 20px;
+  margin-left: 20px;  
+  padding: 14px 30px 14px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  color: #fff;
+  background-color: #3B3131;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, box-shadow .2s, width .3s;
+}
+
+input {
+  display: block;
+  font: 1em/1 'Roboto+Slab', sans-serif;
+  margin-bottom: 20px;
+  margin-left: 20px;  
+  padding: 14px 30px 14px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  color: #fff;
+  background-color: #3B3131;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, box-shadow .2s, width .3s;
+}
+
+.text_label {
+  font: 1em/1 'Roboto+Slab', sans-serif;
+  margin-left: 20px;
+  padding: 15px 30px 15px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  float: left;
+  }
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);  
+}
+
+.box {
+  position: absolute;
+  left: -9999px;
+}
+
+label {
+  display: block;
+  position: relative;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;    
+  padding: 15px 30px 15px 62px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  color: #0A0A0A;
+  background-color: #D1D0CE;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, box-shadow .2s, width .3s;
+}
+
+label::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  width: 1.6em;
+  border: 3px solid #fff;
+  border-radius: 100px;
+  transition: background-color .2s;
+}
+
+label:hover, input:focus + label {
+  box-shadow: 0 0 20px rgba(0, 0, 0, .6);
+}
+
+input:checked + label {
+  background-color: #3B3131;
+  color: #fff;
+}
+
+input:checked + label::before {
+  background-color: #00FF2D;
+}
