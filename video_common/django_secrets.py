@@ -1,5 +1,5 @@
 """
-VEDA's Django Secrets Shim
+Video Pipeline Django Secrets Shim
 
 This acts as a django-secret shimmer until we can finish pushing all changes to terraform/prod
 
