@@ -10,9 +10,9 @@ Start Celery Worker
 
 """
 try:
-    from control.veda_env import *
+    from control.control_env import *
 except:
-    from veda_env import *
+    from control_env import *
 
 try:
     from control.veda_deliver import VedaDelivery
@@ -20,8 +20,8 @@ except:
     from veda_deliver import VedaDelivery
 
 auth_yaml = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'veda_auth.yaml'
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'instance_config.yaml'
 )
 with open(auth_yaml, 'r') as stream:
     try:

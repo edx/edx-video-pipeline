@@ -16,7 +16,7 @@ Youtube Callback
 
 Command Line Interface
 """
-# TODO: Add email daemon alert
+
 
 class YoutubeCallbackCli():
 
@@ -50,13 +50,13 @@ class YoutubeCallbackCli():
 
         self.args = parser.parse_args()
 
-        self._PARSE_ARGS()
+        self._parse_args()
 
-    def _PARSE_ARGS(self):
+    def _parse_args(self):
         self.course_id = self.args.courseid
         self.list = self.args.list
 
-    def _RUN(self):
+    def run(self):
 
         if self.list is True:
             self.listcourses()
@@ -93,11 +93,10 @@ class YoutubeCallbackCli():
             print course.edx_classid
 
 
-
 def main():
     YTCC = YoutubeCallbackCli()
     YTCC.get_args()
-    YTCC._RUN()
+    YTCC.run()
 
 if __name__ == '__main__':
     sys.exit(main())

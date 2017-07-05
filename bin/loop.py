@@ -20,7 +20,7 @@ from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction
 
 
-class DaemonCli():
+class DaemonCli:
 
     def __init__(self):
         self.args = None

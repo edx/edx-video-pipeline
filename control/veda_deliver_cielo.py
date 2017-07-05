@@ -22,7 +22,7 @@ priority =
 turnaround_hours = number, overrides 'priority' call, will change a standard to a priority silently
 
 """
-from veda_env import *
+from control_env import *
 from veda_utils import ErrorObject, Output
 
 requests.packages.urllib3.disable_warnings()

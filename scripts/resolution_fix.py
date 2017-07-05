@@ -14,7 +14,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 # import abvid_reporting
-from veda_env import *
+from pipeline_env import *
 from veda_heal import VedaHeal
 
 sick_list = [

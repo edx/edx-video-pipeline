@@ -34,7 +34,7 @@ and upload to the appropriate endpoint via the approp. methods
 """
 homedir = expanduser("~")
 
-from veda_env import *
+from control_env import *
 from veda_utils import ErrorObject, Output, Metadata, VideoProto
 from veda_video_validation import Validation
 from veda_val import VALAPICall

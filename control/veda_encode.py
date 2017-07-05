@@ -13,7 +13,7 @@ Get a list of needed encodes from VEDA
 * Protected against extant URLs *
 
 """
-from veda_env import *
+from control_env import *
 from dependencies.shotgun_api3 import Shotgun
 
 newrelic.agent.initialize(

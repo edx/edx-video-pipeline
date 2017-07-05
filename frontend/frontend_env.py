@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+VEDA Environment variables
+
+"""
 
 import os
 import sys
@@ -6,14 +10,6 @@ import django
 from django.utils.timezone import utc
 
 
-"""
-VEDA Environment variables
-
-"""
-
-"""
-Import Django Shit
-"""
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
@@ -27,12 +23,6 @@ from VEDA_OS01.models import Course
 from VEDA_OS01.models import Video
 from VEDA_OS01.models import URL
 from VEDA_OS01.models import VedaUpload
-
-
-"""
-Generalized display and such
-
-"""
 
 """
 TERM COLORS

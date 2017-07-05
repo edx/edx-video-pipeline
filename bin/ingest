@@ -24,7 +24,6 @@ class IngestCli():
 
         self.course_list = []
 
-
     def get_args(self):
         parser = argparse.ArgumentParser()
         parser.usage = '''
@@ -45,16 +44,13 @@ class IngestCli():
             )
 
         self.args = parser.parse_args()
+        self._parse_args()
 
-        self._PARSE_ARGS()
-
-
-    def _PARSE_ARGS(self):
+    def _parse_args(self):
         self.course_id = self.args.courseid
         self.list = self.args.list
 
-
-    def _RUN(self):
+    def run(self):
         """
         Loop, constant video retreival from Remotes
 
@@ -75,7 +71,7 @@ class IngestCli():
 def main():
     IC = IngestCli()
     IC.get_args()
-    IC._RUN()
+    IC.run()
 
 
 if __name__ == '__main__':

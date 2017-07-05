@@ -9,7 +9,7 @@ if project_path not in sys.path:
     sys.path.append(project_path)
 
 
-class DeliverCli():
+class DeliverCli:
     """
     Deliver
 
@@ -43,12 +43,12 @@ class DeliverCli():
             )
 
         self.args = parser.parse_args()
-        self._PARSE_ARGS()
+        self._parse_args()
 
-    def _PARSE_ARGS(self):
+    def _parse_args(self):
         self.list = self.args.list
 
-    def _RUN(self):
+    def run(self):
         """
         Launch Celery Delivery Worker
 
@@ -75,9 +75,9 @@ class DeliverCli():
 
 
 def main():
-    DC = DeliverCli()
-    DC.get_args()
-    DC._RUN()
+    deliverinstance = DeliverCli()
+    deliverinstance.get_args()
+    deliverinstance.run()
 
 
 if __name__ == '__main__':

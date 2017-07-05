@@ -9,7 +9,7 @@ import datetime
 
 from django.utils.timezone import utc
 
-from veda_env import *
+from frontend_env import *
 
 """
 Import Django Shit

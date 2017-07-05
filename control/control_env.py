@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+VEDA Environment variables
+
+"""
 
 import os
 import sys
@@ -6,19 +10,11 @@ import django
 from django.utils.timezone import utc
 from django.db import reset_queries
 
-"""
-VEDA Environment variables
-
-"""
-
-"""
-Import Django Shit
-"""
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'VEDA.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'video_common.settings'
 
 django.setup()
 
