@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>edX Video Pipeline Video Upload</title>
+<link rel="shortcut icon" type="image/png" href="/static/img/MPT-Logo.png"/>
+
+    {% load staticfiles %}
+
+<script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+<!--Dropzone stuff - Tried to leave as factory as possible-->
+<link rel="stylesheet" href="{% static "css/dropzone.css" %}">
+<script type="text/javascript" src="{% static "js/dropzone.js" %}"></script>
+
+<link rel="stylesheet" href="{% static "css/fe_style.css" %}">
+<link rel="stylesheet" href="{% static "css/upload_style.css" %}">
+
+<script>
+var abvid_serial = "{{abvid_serial}}"
+</script>
+
+</head>
+
+<body> 
+  <div id="initial_title"><h1>
+      edX About Video Upload
+    </h1>
+  </div>  
+  <div id="inst_lookup">
+        <h3 style="font-size: 2.0em;">File Upload Complete</h3>
+        <span class="advisory" style="margin-left: 49px;">Thank you, file has been received. You can close this window<br></span>
+  </div>
+  <div id="forminput">
+  <div id="video_info">
+    <form id="vid_inf" method="post" >
+    </form>
+  </div></div>
+    <div id="uploadselect">
+
+      <form class="dropzone" id="dmz" action="https://veda-uploads.s3.amazonaws.com/" method="put" enctype="multipart/form-data" >
+        <input type="hidden" name="key" value="upload/{{ abvid_serial }}">
+        <input type="hidden" name="AWSAccessKeyId" value="{{ access_key }}">
+        <input type="hidden" name="acl" value="private">
+        <input type="hidden" name="success_action_redirect" value="../upload_success/">
+        <input type="hidden" name="policy" value="{{ policy }}">
+        <input type="hidden" name="signature" value="{{ signature }}">
+        <input type="hidden" name="Content-Type" value="image/jpeg">
+      </form>
+      <span class="advisory" style="margin-left: 30%;">Do not close or refresh this window while file is transferring<br>
+        Max. 1 file at once, file must be smaller than 5GB</span>
+  </div> 
+  <div id="new_buttons">
+    <form id="reset-form" method="post" >
+      <input id="rstb" class="reset_button" type="reset" value="Reset"/>
+    </form>
+
+    <form id="submit-form" method="post" >
+        {% csrf_token %}
+      <input id="sbmt" class="submit_button" type="submit" value="Submit"/>
+    </form>
+  </div>
+
+<!--Actions-->
+<script type="text/javascript" src="{% static "js/uploads.js" %}"></script>
+
+<script type="text/javascript">
+$('#reset-form').fadeIn()
+$('#submit-form').fadeIn()
+$('#uploadselect').hide()
+$('#inst_lookup').hide()
+</script>
+<div class="footer">
+<span class="help"><a target="_blank" href="http://edx.readthedocs.org/projects/edx-partner-course-staff/en/latest/set_up_course/setting_up_student_view.html#add-a-course-about-video-to-edx-org">Help?</a></span><br>
+edx-video-pipeline i/o <br>
+version 1.1
+</div>
+</body>
+</html>

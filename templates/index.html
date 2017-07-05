@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>edX video pipeline</title>
+<link rel="shortcut icon" type="image/png" href="/static/img/MPT-Logo.png"/>
+
+ {% load staticfiles %}
+
+<link rel="stylesheet" href="{% static "css/fe_style.css" %}">
+<style>
+body {
+    background: radial-gradient(#B1D8FB, #0086FF);
+    }
+</style>
+</head>
+
+<body>
+    <div class="veda_title">
+        <img alt="veda_logo" src="{% static "img/veda_logo.png" %}">
+        <ul>
+        {% if auth == 'YES' %}
+        	{% for k, e in links.items %}
+        	<li><a href='{{e}}'>{{k}}</a>
+      		{% endfor %}
+        {% endif %}
+	    </ul>
+    </div>
+</body>

@@ -1,0 +1,482 @@
+/*VEDA Interfaces*/
+
+@import url(https://fonts.googleapis.com/css?family=Raleway:400,100);
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+@-webkit-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@-moz-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+@-webkit-keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+@-moz-keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+@keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+
+html {
+  min-height: 100%;
+}
+
+body {
+  background: radial-gradient(#B1D8FB, #72B7F5);
+  font: 1em/1 'Raleway', sans-serif;
+  overflow: scroll;
+}
+
+/*A11y changes, per M. Sadecki*/
+.sr {
+    background: #fff;
+    color: #000;
+    clip: rect(1px 1px 1px 1px);
+    clip: rect(1px, 1px, 1px, 1px);
+    position: absolute;
+    margin: -1px;
+    height: 1px;
+    width: 1px;
+    border: 0;
+    padding: 0;
+    overflow: hidden;
+    word-wrap: normal;
+}
+/********************************/
+
+
+ul {
+  display: block;
+  list-style-type: none;
+  width: 33%;
+  font: 0.5em/1 'Raleway', sans-serif;
+  margin-right: auto;
+  margin-left: auto;
+  }
+
+a {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+li {
+  display: block; */
+  margin: auto;
+  margin-top: 10px;
+  margin-left: -10%;
+  white-space: nowrap;
+  padding: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+  font: 1em/1 'Raleway', sans-serif;
+  border-radius: 3px;
+  color: #FFFFFF;
+  background-color: #0A0A0A;
+}
+
+.veda_title {
+  opacity: 0.6;
+  color: #FFFFFF;
+  text-align: center;
+  width: 65%;
+  font: 3.4em/1 'Raleway', sans-serif;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: 100px;
+  border: 1px solid #FFFFFF;
+}
+
+hr {
+  display: none;
+  width: 75%;
+  height: 15px;
+  border: 0;
+  border-bottom: 1px solid #fff;
+  }
+
+/* Step One */
+#initial_title {
+  text-align: center;
+  margin-bottom: 25px;
+  margin-top: 150px;
+  font: 2.6em/1 'Raleway', sans-serif;
+  opacity: 0.8;
+}
+
+#input_text {
+  float: none !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#inst_lookup, .advisory {
+  color: #001152;;
+}
+#inst_lookup{
+  margin-top: 20px;
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+  border: 2px solid #fff;
+  font: 1.2em/1 'Raleway', sans-serif;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+#inst_lookup:hover {
+ cursor:pointer;
+}
+
+.new_button {
+  display: block;
+  float: none !important;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #019696;
+  font: 1em/1 'Raleway', sans-serif;
+  color: #FFFFFF;
+  border: 1px solid #fff;
+  float: left;
+  margin-top: 25px
+}
+
+/* Step Two */
+#course_edit_encode, #course_edit_main, #course_edit_transcribe {
+  margin-bottom: 15px;
+}
+
+#advanced {
+  margin-left: 25px;
+}
+#results {
+  bottom: 20px;
+  float: left;
+  font: 2.4em/1 'Raleway', sans-serif;
+  color: #FF0000;
+  position: absolute;
+  }
+
+.data {
+  display: block;
+  float:left;
+  font: 1.4em/1 'Raleway', sans-serif;
+  color: #000000;
+  padding: 14px 30px 18px 30px;
+  opacity:0;
+  -webkit-animation:fadeIn ease-in 1;
+  -moz-animation:fadeIn ease-in 1;
+  animation:fadeIn ease-in 1;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.5s;
+  -moz-animation-duration:0.5s;
+  animation-duration:0.5s;
+}
+
+.final_data {
+  display: block;
+  float:left;
+  color: #000000;
+  margin-left: 20px;
+  padding: 14px 30px 18px 30px;
+  border: 3px solid #fff;
+  width: 100%;
+  margin-bottom: 30px;
+  opacity:0;  
+  -webkit-animation:fadeIn ease-in 1;
+  -moz-animation:fadeIn ease-in 1;
+  animation:fadeIn ease-in 1;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.5s;
+  -moz-animation-duration:0.5s;
+  animation-duration:0.5s;
+}
+
+#return_data {
+  font: 0.7em/1 'Raleway', sans-serif;
+  color: #FFFFFF;
+  border: 2px solid #fff;
+  padding: 14px 30px 18px 30px;
+  opacity:0;  
+  -webkit-animation:fadeIn ease-in 1;
+  -moz-animation:fadeIn ease-in 1;
+  animation:fadeIn ease-in 1;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.5s;
+  -moz-animation-duration:0.5s;
+  animation-duration:0.5s;
+}
+
+#advst {
+  background-color: #000000;
+}
+
+#data {
+  float: left;
+  display: block;
+  color: #000000;
+  padding: 14px 30px 18px 30px;
+}
+
+h3 {
+  color: #019696;
+  font: 3.5em/0 'Raleway', sans-serif;
+}
+
+#return {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 50px;
+  display: block;
+  color: #000000;
+  padding: 14px 30px 18px 30px;
+  width: 80%;
+}
+
+#form_edit {
+  border: 2px solid #fff;
+  float: none;
+}
+
+#course_edit {
+  display: block;
+  padding: 14px 30px 18px 30px;
+  margin-top: 50px;
+  display: none;
+  opacity:0;  
+  -webkit-animation:fadeIn ease-in 1;
+  -moz-animation:fadeIn ease-in 1;
+  animation:fadeIn ease-in 1;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.3s;
+  -moz-animation-duration:0.3s;
+  animation-duration:0.3s;
+}
+
+#institution_name {
+  float: left;
+}
+
+.loading {
+  display: block;
+  float:left;
+  font: 1.4em/1 'Raleway', sans-serif;
+  color: #fff;
+  background-image: url("../img/plimsol_oledit.gif");
+  background-size: 150px;
+  background-repeat: no-repeat;
+  background-position: center; 
+  margin-left: 20px;
+  padding: 14px 30px 18px 30px;
+  border: 2px solid #fff;
+  opacity:0;  
+  -webkit-animation:fadeIn ease-in 0.7;
+  -moz-animation:fadeIn ease-in 0.7;
+  animation:fadeIn ease-in 0.7;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.3s;
+  -moz-animation-duration:0.3s;
+  animation-duration:0.3s;
+}
+
+.warning {
+  display: block;
+  float: left;
+  font: 1.5em/1 'Raleway', sans-serif;
+  color: #FF0000;
+  margin-left: 9px;
+  padding: 13px 5px 18px 5px;
+  border: 1px solid #FF0000;
+  opacity: 0;
+  -webkit-animation: fadeIn ease-in 1;
+  -moz-animation: fadeIn ease-in 1;
+  animation: fadeIn ease-in 1;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+  -webkit-animation-duration: 0.3s;
+  -moz-animation-duration: 0.3s;
+  animation-duration: 0.3s;
+  }
+
+input {
+  display: block;
+  float:left;
+  font: 1.4em/1 'Raleway', sans-serif;
+  padding: 14px 30px 14px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: text;
+}
+
+.box {
+  position: absolute;
+  left: -9999px;
+}
+
+label {
+  position: relative;
+  font: 1.4em/1 'Raleway', sans-serif;
+  margin-right: 20px;
+  padding: 15px 30px 15px 62px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  color: #FFFFFF;
+  background-color: #C3C3C3;
+  box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, box-shadow .2s, width .3s;
+}
+
+label::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  width: 1.5em;
+  border: 3px solid #fff;
+  border-radius: 100px;
+  transition: background-color .2s;
+}
+
+label:hover, input:focus + label {
+  box-shadow: 0 0 20px rgba(0, 0, 0, .6);
+}
+
+input:checked + label {
+  background-color: #8FCE00;
+  color: #000;
+}
+
+input:checked + label::before {
+  background-color: #7DFF00;
+}
+
+button {
+  padding: 5px;
+  font: 1.2em/1 'Raleway', sans-serif;
+  border-radius: 0px;
+  color: #FFFFFF;
+  background-color: #019696;
+  margin-left: 10px;
+  border: 1px solid #fff;
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+
+select {
+  display: block;
+  height: 59px;
+  width: 240px;
+  font: 1.4em/1 'Roboto+Slab', sans-serif;
+  border-radius: 0px;
+  color: #fff;
+  background-color: #019696;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, box-shadow .2s, width .3s  /*font: 32px Cursive;*/
+}
+
+.rebox{
+  margin-top:20px;
+  width: 100%;
+  display: inline-flex;
+  float: left;
+}
+
+.text_label {
+  font: 1.4em/1 'Raleway', sans-serif;
+  padding: 18px 30px 15px 30px;
+  border: 3px solid #fff;
+  border-radius: 0px;
+  float: left;
+}
+
+.tiny_titles {
+  color: #000000;
+  font: 0.7em/1 'Raleway', sans-serif;
+}
+
+.advisory {
+  font: 1em/1 'Raleway', sans-serif;
+  padding: 15px 15px 15px 15px;
+  margin-top: 5px;
+  margin-right: 15px;
+  border-radius: 0px;
+  float: left;
+}
+
+.data_input {
+  float: left;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.submit_button {
+    display: block;
+    margin-left: 20px;
+    padding-bottom: 18px;
+    background-color: #8A8A8A;
+}
+
+.reset_button {
+  display: block;
+  margin-left: 25px;
+  padding-bottom: 18px;
+  background-color: #019696;
+  color: #FFFFFF;
+}
+
+#rstb {
+  margin-top: 35px;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+#sbmt {
+  margin-top: 35px;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.course_input {
+  /* FADE */
+  opacity:0;  
+  -webkit-animation:fadeIn ease-in 1;
+  -moz-animation:fadeIn ease-in 1;
+  animation:fadeIn ease-in 1;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
+  -webkit-animation-duration:0.5s;
+  -moz-animation-duration:0.5s;
+  animation-duration:0.5s;
+}
+
+/* UPLOAD STYLES */
+.help {
+  opacity: 0.8;
+  font: 25px 'Raleway', sans-serif; 
+}
+
+.footer {
+  float: right;
+  bottom : 0px;
+  height : 20px;
+  margin-top : 250px;
+  font: 0.1em/1 'Raleway', sans-serif; 
+  margin-left: 20px; 
+  padding: 15px 30px 15px 30px;
+}

@@ -1,0 +1,69 @@
+---
+
+# Course Models YAML
+models_nottoget: 
+    - id
+    - video
+    - ingest
+    - course_hold
+    - semesterid
+    - last_vid_number
+    - previous_statechange
+    - yt_proc
+    - s3_dir
+    - studio_hex 
+    - sg_projID
+    - c24_hours
+
+#boolean (checkbox)
+bools:
+    - course_hold
+    - proc_loc
+    - review_proc
+    - mobile_override
+    - yt_proc
+    - tp_proc
+    - c24_proc
+    - s3_proc
+    - xue
+    - xuetang_proc
+
+# dropdown boxes
+dropdowns:
+    - tp_speed
+    - c24_speed
+    - c24_fidelity
+
+# mandatory fields
+must_haves:
+    - local_storedir
+    - course_name
+    - yt_channel
+
+# advanced settings/institutional fields
+organizational:
+    local_storedir: main
+    course_name: main
+    yt_channel: encode
+    institution: main
+    institution_name: main
+    edx_classid: main
+    parent_ID: main
+
+    yt_proc: encode
+    s3_proc: encode
+    mobile_override: encode
+    review_proc: encode
+    proc_loc: encode
+    xue: encode
+    xuetang_proc: encode
+    yt_logon: encode
+
+    tp_proc: transcribe
+    tp_speed: transcribe
+    tp_username: transcribe
+    tp_pass: transcribe
+    tp_apikey: transcribe
+    tp_password: transcribe
+
+...
