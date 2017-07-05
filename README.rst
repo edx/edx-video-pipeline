@@ -1,6 +1,6 @@
-===========
-edx-video-pipeline
-===========
+=================================
+edx-video-pipeline (A.K.A "Veda")
+=================================
 
 Video encode automation django app/control node for edx-platform
 ----------------------------------------------------------------
