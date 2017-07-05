@@ -102,10 +102,10 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_SSL_REDIRECT = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-ROOT_URLCONF = 'common.urls'
+ROOT_URLCONF = 'video_common.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'common.wsgi.application'
+WSGI_APPLICATION = 'video_common.wsgi.application'
 
 
 REST_FRAMEWORK = {

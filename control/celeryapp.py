@@ -20,8 +20,8 @@ except:
     from veda_deliver import VedaDelivery
 
 auth_yaml = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'veda_auth.yaml'
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'instance_config.yaml'
 )
 with open(auth_yaml, 'r') as stream:
     try:
