@@ -118,4 +118,4 @@ def user_login(request):
 
 
 if __name__ == "__main__":
-    pass
+    course_view()

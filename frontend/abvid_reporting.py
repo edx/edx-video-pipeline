@@ -9,7 +9,7 @@ import yaml
 ABVID REPORTING - email / etc.
 
 '''
-from frontend_env import *
+from veda_env import *
 
 '''
 v1 = Video.objects.filter(edx_id = upload_info['edx_id'])
