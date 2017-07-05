@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+
+from control.veda_utils import EmailAlert
+
+"""
+Ingest
+
+Command Line Interface
+"""
+
+class IngestCli():
+
+    def __init__(self, **kwargs):
+        self.args = None
+        self.test = False
+        self.logging = kwargs.get('logging', True)
+
+        self.course_list = []
+
+    def get_args(self):
+        parser = argparse.ArgumentParser()
+        parser.usage = '''
+        {cmd} -l List
+        [-l ]
+        Use --help to see all options.
+        '''.format(cmd=sys.argv[0])
+
+        parser.add_argument(
+            '-l', '--list',
+            help='List Eligible Courses, Exit',
+            action='store_true'
+            )
+        parser.add_argument(
+            '-c', '--courseid',
+            help='List Eligible Courses, Exit',
+            action='store_true'
+            )
+
+        self.args = parser.parse_args()
+        self._parse_args()
+
+    def _parse_args(self):
+        self.course_id = self.args.courseid
+        self.list = self.args.list
+
+    def run(self):
+        """
+        Loop, constant video retreival from Remotes
+
+        :return: If fault: Email admin list
+        """
+        runcommand = ' '.join((
+            'python',
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'loop.py'),
+            '-i'
+        ))
+        os.system(runcommand)
+
+        E1 = EmailAlert(message='Ingest Daemon Crash', subject='Ingest Daemon')
+        E1.email()
+
+
+
+def main():
+    IC = IngestCli()
+    IC.get_args()
+    IC.run()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+

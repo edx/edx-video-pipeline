@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+
+from control.veda_utils import EmailAlert
+from youtube_callback.daemon import generate_course_list, get_course
+from youtube_callback.sftp_id_retrieve import callfunction
+
+"""
+Youtube Callback
+
+Command Line Interface
+"""
+
+
+class YoutubeCallbackCli():
+
+    def __init__(self, **kwargs):
+        self.args = None
+        self.test = False
+        self.logging = kwargs.get('logging', True)
+
+        self.course_list = []
+
+    def get_args(self):
+        parser = argparse.ArgumentParser()
+        parser.usage = '''
+        {cmd} -l List
+        {cmd} -c course
+        [-l -c ]
+        Use --help to see all options.
+        '''.format(cmd=sys.argv[0])
+
+        parser.add_argument(
+            '-l', '--list',
+            help='List Eligible Courses, Exit',
+            action='store_true'
+            )
+
+        parser.add_argument(
+            '-c', '--courseid',
+            default=None,
+            help='Parse Specific Course ID, Exit',
+            )
+
+        self.args = parser.parse_args()
+
+        self._parse_args()
+
+    def _parse_args(self):
+        self.course_id = self.args.courseid
+        self.list = self.args.list
+
+    def run(self):
+
+        if self.list is True:
+            self.listcourses()
+        else:
+            self.loop()
+
+    def loop(self):
+        """
+        Daemon Loop
+        """
+        if self.course_id is not None:
+            course = get_course(course_id=self.course_id)
+            if course is not None:
+                callfunction(course)
+            return None
+
+        runcommand = ' '.join((
+            'python',
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'loop.py'),
+            '-y'
+        ))
+        os.system(runcommand)
+        E1 = EmailAlert(message='Youtube Callback Daemon Crash', subject='Youtube Callback Daemon')
+        E1.email()
+
+    def listcourses(self):
+        """
+        list and exit
+        :return:
+        """
+        self.course_list = generate_course_list()
+        for course in self.course_list:
+            print course.institution
+            print course.edx_classid
+
+
+def main():
+    YTCC = YoutubeCallbackCli()
+    YTCC.get_args()
+    YTCC.run()
+
+if __name__ == '__main__':
+    sys.exit(main())

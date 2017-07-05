@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+import yaml
+
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_path not in sys.path:
+    sys.path.append(project_path)
+
+
+class DeliverCli:
+    """
+    Deliver
+
+    Command Line Interface
+    """
+
+    def __init__(self, **kwargs):
+        self.args = None
+        self.test = False
+        self.logging = kwargs.get('logging', True)
+
+        self.ROOT_DIR = os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)
+        ))
+        self.auth_yaml = os.path.join(self.ROOT_DIR, 'instance_config.yaml')
+        self.new_relic_config = os.path.join(self.ROOT_DIR, 'veda_newrelic.ini')
+        self.celery_daemon = os.path.join(self.ROOT_DIR, 'control', 'celeryapp.py')
+
+    def get_args(self):
+        parser = argparse.ArgumentParser()
+        parser.usage = '''
+        {cmd} -l List
+        [-l ]
+        Use --help to see all options.
+        '''.format(cmd=sys.argv[0])
+
+        parser.add_argument(
+            '-l', '--list',
+            help='Unused, Exit',
+            action='store_true'
+            )
+
+        self.args = parser.parse_args()
+        self._parse_args()
+
+    def _parse_args(self):
+        self.list = self.args.list
+
+    def run(self):
+        """
+        Launch Celery Delivery Worker
+
+        """
+        with open(self.auth_yaml, 'r') as stream:
+            try:
+                auth_dict = yaml.load(stream)
+            except yaml.YAMLError as exc:
+                auth_dict = None
+
+        if auth_dict is not None:
+            os.system(
+                ' '.join((
+                    'NEW_RELIC_CONFIG_FILE=' + self.new_relic_config,
+                    'newrelic-admin run-program python',
+                    self.celery_daemon,
+                    'worker',
+                    '--loglevel=info',
+                    '--concurrency=' + str(auth_dict['celery_threads']),
+                    '-Q ' + auth_dict['celery_stat_queue'],
+                    '-n deliver.%h'
+                ))
+            )
+
+
+def main():
+    deliverinstance = DeliverCli()
+    deliverinstance.get_args()
+    deliverinstance.run()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
