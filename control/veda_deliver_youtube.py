@@ -11,7 +11,7 @@ Youtube Dynamic Upload
 Note: This represents early VEDA work, but is functional
 
 """
-from control_env import *
+from veda_env import *
 
 
 def printTotals(transferred, toBeTransferred):

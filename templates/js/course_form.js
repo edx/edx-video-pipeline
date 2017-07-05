@@ -204,7 +204,7 @@ function create_post(inst) {
                 $("#institutional").empty();
 
                 var $inst_name = $("<div>", {id: "institution_title", class: "data"});
-                $inst_name.append('<span class="tiny_titles">edX Video Pipeline Course Addition Tool : </span><br>')
+                $inst_name.append('<span class="tiny_titles">VEDA Course Addition Tool : </span><br>')
                 if (json.length == 0) {
                     $inst_name.append(('NEW INSTITUTION'));
                 }
@@ -614,7 +614,7 @@ function submit_data () {
             $('#return').append('<h3>Success!</h3>');
             $('#return').append('<span class=\"advisory\" style=\"margin-left: 49px;\">Paste into edX Studio Advanced Settings > <br>Video Upload Credentials</span>')
             $('#return').append('<span class=\"final_data\"> &nbsp;\"course_video_upload_token\": \"'+json['studio_hex']+'\"&nbsp;<span><br>')
-            $('#return').append('<span class=\"advisory\" style=\"margin-left: 49px;\">Pipeline Code : ' + json['course_code'] + '</span><br>')
+            $('#return').append('<span class=\"advisory\" style=\"margin-left: 49px;\">VEDA Code : ' + json['course_code'] + '</span><br>')
 
             // Reset Button
             $('#rstb').attr('value', 'New')

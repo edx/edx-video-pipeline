@@ -19,7 +19,7 @@ newrelic.agent.initialize(
 Let's do some quick and dirty error handling & logging
 
 """
-from control.control_env import *
+from control.veda_env import *
 from control.veda_encode import VedaEncode
 
 

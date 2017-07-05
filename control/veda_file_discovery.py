@@ -27,7 +27,7 @@ Currently:
     Local (watchfolder w/o edit priv.)
 
 """
-from control_env import *
+from veda_env import *
 from veda_utils import ErrorObject
 from veda_file_ingest import VideoProto, VedaIngest
 from veda_val import VALAPICall

@@ -1,5 +1,5 @@
 """
-Pipeline API METHODS
+VEDA_API METHODS
 
 1. cheap-o token authorizer
 This is a super hacky way to finish the Oauth2 Flow, but I need to move on
@@ -15,7 +15,7 @@ from oauth2_provider import models
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 
-from pipeline_env import *
+from veda_env import *
 
 primary_directory = os.path.dirname(__file__)
 sys.path.append(primary_directory)

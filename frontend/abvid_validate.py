@@ -7,7 +7,7 @@ import sys
 import datetime
 
 
-from frontend_env import *
+from veda_env import *
 
 
 def create_record(upload_data):

@@ -36,7 +36,7 @@ Send data to VAL, either Video ID data or endpoint URLs
 "imported": _IMPORTED,
 
 '''
-from control_env import *
+from veda_env import *
 from control.veda_utils import ErrorObject, Output
 
 

@@ -1,4 +1,6 @@
 ## NOTE: This is not a working req file -- merely a collection for notes.
+### TODO: Make this a working file
+
 django<1.10
 djangorestframework
 oauth2_provider
@@ -10,3 +12,11 @@ uwsgi
 pysftp
 boto
 pyyaml
+
+# below is a yum install
+# python-devel mysql-devel
+# gcc
+# mysql-python
+# git
+# pcre-devel
+# nginx

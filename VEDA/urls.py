@@ -5,14 +5,13 @@ sys.path.append(os.path.abspath(__file__))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 from django.conf import settings
-from rest_framework import routers
-# from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
 from VEDA_OS01 import views
 
-router = routers.DefaultRouter()
+router = DefaultRouter()
 admin.autodiscover()
 
 router.register(r'courses', views.CourseViewSet)

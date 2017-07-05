@@ -22,7 +22,7 @@ if DATABASES is None:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': pipeline_dbname,
+            'NAME': veda_dbname,
             'USER': DJANGO_DB_USER,
             'PASSWORD': DJANGO_DB_PASS,
             'HOST': DBHOST,
@@ -102,10 +102,10 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_SSL_REDIRECT = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-ROOT_URLCONF = 'video_common.urls'
+ROOT_URLCONF = 'VEDA.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'video_common.wsgi.application'
+WSGI_APPLICATION = 'VEDA.wsgi.application'
 
 
 REST_FRAMEWORK = {

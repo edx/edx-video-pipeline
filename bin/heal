@@ -21,7 +21,7 @@ Command Line Interface
 """
 
 
-class HealCli:
+class HealCli():
 
     def __init__(self, **kwargs):
         self.logging = kwargs.get('logging', True)
