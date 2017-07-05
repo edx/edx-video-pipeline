@@ -1,0 +1,13 @@
+---
+# Instance Authentication
+
+## Email Vars
+veda_noreply_email:
+admin_email:
+
+## VEDA AWS Account
+veda_access_key_id:
+veda_secret_access_key:
+veda_upload_bucket:
+
+...

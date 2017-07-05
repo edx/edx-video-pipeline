@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<feed xmlns="http://www.youtube.com/schemas/cms/2.0" notification_email="greg@edx.org">
+
+  <asset type="web" tag="">
+    <title> </title>
+    <custom_id> </custom_id>
+    <!--  other asset details included in feed  -->
+  </asset>
+
+  <file type="video" tag="">
+    <filename> </filename>
+  </file>
+
+  <ownership/>
+
+  <relationship>
+    <item path="/feed/asset[@tag='']"/>
+    <related_item path="/feed/ownership[1]"/>
+  </relationship>
+
+  <video tag="">
+    <title> </title>
+    <channel> </channel>
+    <description> </description>
+    <keyword>edX</keyword>
+    <genre>Education</genre>
+    <allow_embedding>True</allow_embedding>
+    <allow_comments>Approve</allow_comments>
+    <allow_ratings>True</allow_ratings>
+<!--    <allow_responses>Approve</allow_responses> -->
+    <public>unlisted</public>
+<!--    <start_time>1990-11-30T12:00:00Z</start_time> -->
+  </video>
+
+  <relationship>
+    <item path="/feed/file[@tag='']"/>
+    <related_item path="/feed/asset[@tag='']"/>
+    <related_item path="/feed/video[@tag='']"/>
+
+  </relationship>
+
+  <rights_admin type="usage" owner="True"/>
+  <rights_admin type="match" owner="True"/>
+
+  <!--  declare a one-off policy  -->
+  <rights_policy>
+    <rule action="track"/>
+  </rights_policy>
+
+  <!--  Claim our uploaded video with the one-off policy  -->
+  <claim type="audiovisual" video="/feed/video[@tag='']" asset="/feed/asset[@tag='']" rights_admin="/feed/rights_admin[@type='usage']" rights_policy="/feed/rights_policy[1]"/>
+
+  <relationship>
+    <item path="/feed/rights_admin[@type='match']"/>
+    <item path="/feed/rights_policy[1]"/>
+    <related_item path="/feed/asset[@tag='']"/>
+
+  </relationship>
+
+</feed>
