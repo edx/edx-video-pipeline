@@ -9,7 +9,7 @@ if project_path not in sys.path:
     sys.path.append(project_path)
 
 from control.veda_heal import VedaHeal
-from pipeline.models import URL, Encode, Video
+from VEDA_OS01.models import URL, Encode, Video
 
 """
 Set your globals here

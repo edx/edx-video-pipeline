@@ -24,7 +24,7 @@ if project_path not in sys.path:
 os.environ['DJANGO_SETTINGS_MODULE'] = 'common.settings'
 django.setup()
 
-from pipeline.models import Video, Encode, URL
+from VEDA_OS01.models import Video, Encode, URL
 from frontend.abvid_reporting import report_status
 from control.veda_val import VALAPICall
 from control.veda_utils import ErrorObject, Metadata, VideoProto

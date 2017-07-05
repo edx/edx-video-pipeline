@@ -11,7 +11,7 @@ import newrelic.agent
 
 from django.utils.timezone import utc
 
-from pipeline.models import Course, Video, Encode, URL
+from VEDA_OS01.models import Course, Video, Encode, URL
 
 """
 Import Django Shit

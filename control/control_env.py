@@ -18,13 +18,13 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'common.settings'
 
 django.setup()
 
-from pipeline.models import Institution
-from pipeline.models import Course
-from pipeline.models import Video
-from pipeline.models import Destination
-from pipeline.models import Encode
-from pipeline.models import URL
-from pipeline.models import VedaUpload
+from VEDA_OS01.models import Institution
+from VEDA_OS01.models import Course
+from VEDA_OS01.models import Video
+from VEDA_OS01.models import Destination
+from VEDA_OS01.models import Encode
+from VEDA_OS01.models import URL
+from VEDA_OS01.models import VedaUpload
 
 """
 Central Config

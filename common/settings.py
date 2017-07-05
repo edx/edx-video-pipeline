@@ -139,7 +139,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'corsheaders',
     'frontend',
-    'pipeline',
+    'VEDA_OS01',
 )
 
 CORS_ORIGIN_ALLOW_ALL = True

@@ -9,7 +9,7 @@ from rest_framework.routers import DefaultRouter
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
-from pipeline import views
+from VEDA_OS01 import views
 
 router = DefaultRouter()
 admin.autodiscover()

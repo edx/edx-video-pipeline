@@ -4,3 +4,5 @@
 *.pyc
 
 static/admin/
+
+sandbox.db

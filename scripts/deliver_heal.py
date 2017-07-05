@@ -11,7 +11,7 @@ if project_path not in sys.path:
 
 from control.celeryapp import deliverable_route
 from control.veda_heal import VedaHeal
-from pipeline.models import Video
+from VEDA_OS01.models import Video
 
 
 def get_videos():

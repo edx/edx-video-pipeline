@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from pipeline.models import Course, Video, URL, Encode
+from VEDA_OS01.models import Course, Video, URL, Encode
 
 
 class CourseSerializer(serializers.ModelSerializer):

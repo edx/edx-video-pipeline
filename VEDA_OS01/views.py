@@ -11,11 +11,11 @@ from rest_framework import filters
 
 from api import token_finisher
 
-from pipeline.models import Course, Video, URL, Encode
-from pipeline.serializers import CourseSerializer
-from pipeline.serializers import VideoSerializer
-from pipeline.serializers import EncodeSerializer
-from pipeline.serializers import URLSerializer
+from VEDA_OS01.models import Course, Video, URL, Encode
+from VEDA_OS01.serializers import CourseSerializer
+from VEDA_OS01.serializers import VideoSerializer
+from VEDA_OS01.serializers import EncodeSerializer
+from VEDA_OS01.serializers import URLSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
