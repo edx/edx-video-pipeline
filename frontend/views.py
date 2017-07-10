@@ -18,8 +18,8 @@ from course_validate import VEDACat
 from abvid_validate import validate_incoming, create_record, send_to_pipeline
 
 auth_yaml = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'frontend_auth.yaml'
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'instance_config.yaml'
 )
 
 """
