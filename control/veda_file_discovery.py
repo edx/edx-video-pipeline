@@ -41,7 +41,7 @@ class FileDiscovery():
         self.auth_dict = {}
         self.auth_yaml = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'ingest_config.yaml'
+            'instance_config.yaml'
         )
         with open(self.auth_yaml, 'r') as stream:
             try:

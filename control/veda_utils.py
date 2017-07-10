@@ -30,7 +30,7 @@ class EmailAlert():
             'auth_yaml',
             os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'ingest_config.yaml'
+                'instance_config.yaml'
             )
         )
         self.auth_dict = self._AUTH()
@@ -142,7 +142,7 @@ class Report():
             'auth_yaml',
             os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'ingest_config.yaml'
+                'instance_config.yaml'
             )
         )
         self.auth_dict = self._AUTH()

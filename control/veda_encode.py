@@ -41,7 +41,7 @@ class VedaEncode():
             'auth_yaml',
             os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'ingest_config.yaml'
+                'instance_config.yaml'
             ),
         )
         self.encode_dict = self._READ_AUTH()['encode_dict']
