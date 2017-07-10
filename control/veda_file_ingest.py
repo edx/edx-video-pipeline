@@ -86,8 +86,8 @@ class VedaIngest:
         self.auth_yaml = kwargs.get(
             'auth_yaml',
             os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                'veda_auth.yaml'
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                'ingest_config.yaml'
             ),
         )
         self.auth_dict = self._READ_AUTH()
