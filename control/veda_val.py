@@ -205,11 +205,12 @@ class VALAPICall():
         if self.val_status != 'invalid_token':
             for f in self.video_object.inst_class.local_storedir.split(','):
                 if f.strip() not in val_courses:
-                    val_courses.append(f.strip())
+                    val_courses.append({f.strip(): None})
 
-        for g in self.video_proto.platform_course_url:
-            if g.strip() not in val_courses:
-                val_courses.append(g.strip())
+        if len(val_courses) == 0:
+            for g in self.video_proto.platform_course_url:
+                if g.strip() not in val_courses:
+                    val_courses.append({g.strip(): None})
 
         self.val_data = {
             'client_video_id': self.video_proto.client_title,
@@ -237,7 +238,7 @@ class VALAPICall():
             self.send_404()
 
         elif r1.status_code == 200:
-            val_api_return = ast.literal_eval(r1.text)
+            val_api_return = ast.literal_eval(r1.text.replace('null', 'None'))
             self.send_200(val_api_return)
 
         """
@@ -390,25 +391,6 @@ class VALAPICall():
 
 def main():
     pass
-    from veda_utils import VideoProto
-
-    V1 = VideoProto()
-    V1.veda_id = 'XXXC93BC2016-V000100'
-    V1.duration = '00:05:32.00'
-    V1.client_title = 'ELEN7070_2016_S1_04_01.mp4'
-    V1.bitrate = '8718 kb/s'
-    V1.valid = False
-    V1.filesize = 361804005
-    V1.platform_course_url = 'test'
-    V1.s3_filename = 'test'
-
-    V = VALAPICall(
-        video_proto=V1,
-        encode_profile='mobile_high',
-        val_status='duplicate',
-        endpoint_url='DUPLICATE'
-    )
-    V.call()
 
 
 if __name__ == '__main__':
