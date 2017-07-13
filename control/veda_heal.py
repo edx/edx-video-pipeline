@@ -40,6 +40,8 @@ import celeryapp
 
 time_safetygap = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=1)
 
+# TODO: make a checklist of these if e != 'mobile_high' and e != 'audio_mp3' and e != 'review' and e != 'hls':
+
 
 class VedaHeal():
     """
@@ -59,7 +61,7 @@ class VedaHeal():
         self.video_query = kwargs.get('video_query', None)
         self.freezing_bug = kwargs.get('freezing_bug', True)
         self.val_status = None
-        self.retry_barrier_hours = 48
+        self.retry_barrier_hours = 24
 
     def _READ_AUTH(self):
         if self.auth_yaml is None:
@@ -157,7 +159,7 @@ class VedaHeal():
         check_list = []
         if encode_list is not None:
             for e in encode_list:
-                if e != 'mobile_high' and e != 'audio_mp3' and e != 'review':
+                if e != 'mobile_high' and e != 'audio_mp3' and e != 'review' and e != 'hls':
                     check_list.append(e)
 
         if check_list is None or len(check_list) == 0:
@@ -194,6 +196,7 @@ class VedaHeal():
             course_object=video_object.inst_class,
         )
         E2.determine_encodes()
+        E2.encode_list.remove('hls')
         if len(E2.encode_list) == len(encode_list) and len(encode_list) > 1:
             """
             Mark File Corrupt, accounting for migrated URLs
