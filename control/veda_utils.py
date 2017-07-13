@@ -89,7 +89,7 @@ class Output(object):
     """
     @staticmethod
     def _seconds_from_string(duration):
-        if duration == 0:
+        if duration == 0 or duration is None:
             return 0
         hours = float(duration.split(':')[0])
         minutes = float(duration.split(':')[1])

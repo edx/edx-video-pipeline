@@ -193,6 +193,12 @@ class VALAPICall():
         if not isinstance(self.video_proto.platform_course_url, list):
             self.video_proto.platform_course_url = [self.video_proto.platform_course_url]
 
+        try:
+            self.video_object.video_orig_duration
+        except NameError:
+            self.video_object.video_orig_duration = 0
+            self.video_object.duration = 0.0
+
         if not isinstance(self.video_proto.duration, float):
             self.video_proto.duration = Output._seconds_from_string(
                 duration=self.video_object.video_orig_duration
