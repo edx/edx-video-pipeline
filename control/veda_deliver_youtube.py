@@ -120,7 +120,7 @@ class DeliverYoutube():
             'require_paid_subscription'
         ]
         print "%s : %s" % ("Generate CSV", str(self.video.edx_id))
-
+        '''
         # TODO: Refactor this into centrally located util for escaping bad chars
         if self.video.client_title is not None:
             try:
@@ -136,7 +136,7 @@ class DeliverYoutube():
                     client_title += char
         else:
             client_title = self.file
-
+        '''
         """
         This is where we can add or subtract file attributes as needed
 
@@ -146,7 +146,7 @@ class DeliverYoutube():
             'filename': self.file,
             'channel': self.course.yt_channel,
             'custom_id': self.video.edx_id,
-            'title': client_title.replace(',', ''),
+            'title': self.video.edx_id,  # >102 Chars will fail
             'privacy': 'unlisted',
 
         }
