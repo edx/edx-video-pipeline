@@ -32,3 +32,5 @@ Logging, Data dumping, Celery node status and queue information
 
 .. image:: https://travis-ci.org/edx/edx-video-pipeline.svg?branch=master
     :target: https://travis-ci.org/edx/edx-video-pipeline
+
+ noop
