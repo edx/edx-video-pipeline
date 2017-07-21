@@ -29,10 +29,17 @@ with open(auth_yaml, 'r') as stream:
     except yaml.YAMLError as exc:
         auth_dict = None
 
-CEL_BROKER = 'amqp://' + auth_dict['rabbitmq_user'] + ':' + auth_dict['rabbitmq_pass'] + '@' \
-             + auth_dict['rabbitmq_broker'] + ':5672//'
-CEL_BACKEND = 'amqp://' + auth_dict['rabbitmq_user'] + ':' + auth_dict['rabbitmq_pass'] + \
-              '@' + auth_dict['rabbitmq_broker'] + ':5672//'
+CEL_BROKER = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.format(
+    rabbitmq_user=auth_dict['rabbitmq_user'],
+    rabbitmq_pass=auth_dict['rabbitmq_pass'],
+    rabbitmq_broker=auth_dict['rabbitmq_broker']
+)
+
+CEL_BACKEND = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.format(
+    rabbitmq_user=auth_dict['rabbitmq_user'],
+    rabbitmq_pass=auth_dict['rabbitmq_pass'],
+    rabbitmq_broker=auth_dict['rabbitmq_broker']
+)
 
 app = Celery(auth_dict['celery_app_name'], broker=CEL_BROKER, backend=CEL_BACKEND, include=[])
 

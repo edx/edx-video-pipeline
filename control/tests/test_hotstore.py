@@ -11,9 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
 )))
 
-from veda_hotstore import Hotstore
+from control.veda_hotstore import Hotstore
 from veda_file_ingest import VideoProto
-from veda_env import *
 
 
 class TestHotstore(unittest.TestCase):
@@ -29,7 +28,8 @@ class TestHotstore(unittest.TestCase):
 
         self.H1 = Hotstore(
             video_object=VP,
-            upload_filepath=self.upload_filepath
+            upload_filepath=self.upload_filepath,
+            video_proto=VP
         )
 
     def test_single_upload(self):

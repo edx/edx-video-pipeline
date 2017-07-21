@@ -9,7 +9,7 @@ Test VEDA API
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
 )))
-from veda_file_discovery import FileDiscovery
+from control.veda_file_discovery import FileDiscovery
 
 
 class TestValidation(unittest.TestCase):

@@ -1,4 +1,6 @@
-
+"""
+Models for Video Pipeline
+"""
 import uuid
 from django.db import models
 
@@ -12,7 +14,7 @@ class Institution (models.Model):
     institution_name = models.CharField(max_length=50)
 
     def __unicode__(self):
-        return '%s %s' % (self.institution_name, self.institution_code) or u''
+        return u'%s %s'.format(self.institution_name, self.institution_code) or u''
 
 
 class Course (models.Model):
@@ -38,9 +40,7 @@ class Course (models.Model):
     review_proc = models.BooleanField('Producer Review', default=False)
     last_vid_number = models.IntegerField('Last Video ID', default=0)
 
-    """
-    Youtube
-    """
+    # Youtube
     yt_proc = models.BooleanField('Process for Youtube', default=True)
     yt_logon = models.CharField(
         'Youtube SFTP U/N',
@@ -53,9 +53,7 @@ class Course (models.Model):
         null=True, blank=True
     )
 
-    """
-    3Play Media (Transcription)
-    """
+    # 3Play Media (Transcription)
     tp_proc = models.BooleanField('Process for 3Play', default=False)
     tp_username = models.CharField(
         '3Play Username',
@@ -91,9 +89,7 @@ class Course (models.Model):
         null=True, blank=True
     )
 
-    """
-    Cielo24
-    """
+    # Cielo24
     c24_proc = models.BooleanField('Process for Cielo24', default=False)
     c24_username = models.CharField(
         'Cielo24 Username',
@@ -177,7 +173,7 @@ class Course (models.Model):
     )
 
     def __unicode__(self):
-        return '%s %s %s' % (
+        return u'%s %s %s'.format(
             self.institution,
             self.edx_classid,
             self.course_name
@@ -199,9 +195,7 @@ class Video (models.Model):
         max_length=100,
         null=True, blank=True
     )
-    """
-    Master File Properties
-    """
+    # Master File Properties
     video_orig_filesize = models.BigIntegerField(
         'Master Filesize',
         null=True, blank=True
@@ -226,9 +220,7 @@ class Video (models.Model):
         max_length=50,
         null=True, blank=True
     )
-    """
-    Status
-    """
+    # Status
     video_trans_start = models.DateTimeField('Process Start', null=True, blank=True)
     video_trans_end = models.DateTimeField('Process Complete', null=True, blank=True)
 
@@ -298,7 +290,7 @@ class Video (models.Model):
         get_latest_by = 'video_trans_start'
 
     def __unicode__(self):
-        return '%s' % (self.edx_id) or u''
+        return u'%s'.format(self.edx_id) or u''
 
 
 class Destination (models.Model):
@@ -307,7 +299,7 @@ class Destination (models.Model):
     destination_nick = models.CharField('Nickname (3 Char.)', max_length=3, null=True, blank=True)
 
     def __unicode__(self):
-        return '%s' % (self.destination_name) or u''
+        return u'%s'.format(self.destination_name) or u''
 
 
 class Encode (models.Model):
@@ -355,7 +347,7 @@ class Encode (models.Model):
     xuetang_proc = models.BooleanField('Submit to XuetangX', default=False)
 
     def __unicode__(self):
-        return '%s' % (self.encode_name)
+        return u'%s'.format(self.encode_name)
 
 
 class URL (models.Model):
@@ -378,7 +370,7 @@ class URL (models.Model):
         get_latest_by = 'url_date'
 
     def __unicode__(self):
-        return '%s : %s : %s' % (self.videoID, self.encode_profile.encode_name, self.url_date) or u''
+        return u'%s : %s : %s'.format(self.videoID, self.encode_profile.encode_name, self.url_date) or u''
 
 
 class VedaUpload (models.Model):
@@ -430,7 +422,7 @@ class VedaUpload (models.Model):
         get_latest_by = 'upload_date'
 
     def __unicode__(self):
-        return '%s %s %s %s' % (
+        return u'%s %s %s %s'.format(
             self.client_information,
             self.upload_filename,
             self.status_email,

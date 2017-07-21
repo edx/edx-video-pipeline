@@ -9,13 +9,12 @@ will get the token id from a url view, auth it, then push forward with a success
 
 import os
 import sys
-import oauth2_provider
 
-from oauth2_provider import models
+from oauth2_provider.models import AccessToken
+
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 
-from pipeline_env import *
 
 primary_directory = os.path.dirname(__file__)
 sys.path.append(primary_directory)
@@ -23,7 +22,7 @@ sys.path.append(primary_directory)
 
 def token_finisher(token_id):
     try:
-        d = oauth2_provider.models.AccessToken.objects.get(token=token_id)
+        d = AccessToken.objects.get(token=token_id)
     except:
         return False
 
@@ -34,7 +33,3 @@ def token_finisher(token_id):
     except:
         token = Token.objects.get(user=d.user)
     return token.key
-
-
-if __name__ == '__main__':
-    pass

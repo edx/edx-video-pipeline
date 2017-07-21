@@ -19,7 +19,7 @@ with open(read_yaml, 'r') as stream:
         return_dict = None
 
 
-DJANGO_SECRET_KEY = return_dict['django_secret_key']
+DJANGO_SECRET_KEY = return_dict['django_secret_key'] or 'test_secret_key'
 DJANGO_ADMIN = ('', '')
 DEBUG = True
 DATABASES = return_dict['DATABASES']

@@ -11,8 +11,9 @@ Test encode profiler
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
 )))
-from veda_env import *
-from veda_encode import VedaEncode
+
+from control.veda_encode import VedaEncode
+from VEDA_OS01.models import Course, URL, Video, Encode
 
 
 class TestEncode(unittest.TestCase):

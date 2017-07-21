@@ -115,7 +115,3 @@ def user_login(request):
         return HttpResponseRedirect(request.path)
     else:
         return HttpResponseRedirect('../admin')  # settings.LOGIN_REDIRECT_URL)
-
-
-if __name__ == "__main__":
-    pass

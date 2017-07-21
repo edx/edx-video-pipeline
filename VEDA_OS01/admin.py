@@ -1,11 +1,5 @@
 from django.contrib import admin
-from VEDA_OS01.models import Course
-from VEDA_OS01.models import Video
-from VEDA_OS01.models import Encode
-from VEDA_OS01.models import URL
-from VEDA_OS01.models import Destination
-from VEDA_OS01.models import Institution
-from VEDA_OS01.models import VedaUpload
+from VEDA_OS01.models import Course, Video, Encode, URL, Destination, Institution, VedaUpload
 
 
 class CourseAdmin(admin.ModelAdmin):

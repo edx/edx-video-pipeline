@@ -12,7 +12,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 import abvid_reporting
-
+from frontend.course_validate import VEDACat
 
 class TestVariables(unittest.TestCase):
 

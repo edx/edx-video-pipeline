@@ -1,0 +1,32 @@
+# .coveragerc for edx-video-pipeline
+[run]
+data_file = reports/.coverage
+source =
+    VEDA_OS01
+    control
+    frontend
+    youtube_callback
+    scripts
+
+omit =
+    templates/*
+    frontend/tests/*
+    dependencies/*
+    control/*
+    VEDA/tests/*
+
+concurrency=multiprocessing
+
+[report]
+ignore_errors = True
+
+exclude_lines =
+   pragma: no cover
+   raise NotImplementedError
+
+[html]
+title = edx-video-worker Python Test Coverage Report
+directory = reports/cover
+
+[xml]
+output = reports/coverage.xml

@@ -1,4 +1,3 @@
 [pep8]
 max-line-length = 120
-ignore = E402
 exclude = dependencies, watchdog.py, veda_deliver_xuetang.py, scripts

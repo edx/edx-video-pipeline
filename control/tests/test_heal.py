@@ -10,8 +10,8 @@ Test heal processor
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
 )))
-from veda_env import *
-from veda_heal import VedaHeal
+from control.veda_heal import VedaHeal
+from VEDA_OS01.models import URL, Video, Encode
 
 
 class TestEncode(unittest.TestCase):
