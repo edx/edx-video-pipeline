@@ -356,9 +356,11 @@ class VALAPICall():
         VAL will not allow duped studio urls to be sent,
         so we must scrub the data
         """
-        for c in val_api_return['courses']:
-            if c in self.val_data['courses']:
-                self.val_data['courses'].remove(c)
+        for course in val_api_return['courses']:
+            for course_id in course.keys():
+                for course_entry in self.val_data['courses']:
+                    if course_id in course_entry:
+                        self.val_data['courses'].remove(course_entry)
 
         self.profile_determiner(val_api_return=val_api_return)
         self.val_data['status'] = self.val_status
