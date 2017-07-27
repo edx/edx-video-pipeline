@@ -357,11 +357,10 @@ class VALAPICall():
         so we must scrub the data
         """
         for course in val_api_return['courses']:
-            for key, entry in course.items():
-                for crs in self.val_data['courses']:
-                    for ky, ey in crs.items():
-                        if ky == key:
-                            self.val_data['courses'].remove(crs)
+            for course_id in course.keys():
+                for course_entry in self.val_data['courses']:
+                    if course_id in course_entry:
+                        self.val_data['courses'].remove(course_entry)
 
         self.profile_determiner(val_api_return=val_api_return)
         self.val_data['status'] = self.val_status
