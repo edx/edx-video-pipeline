@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(
 )))
 
 from control.veda_hotstore import Hotstore
-from veda_file_ingest import VideoProto
+from control.veda_file_ingest import VideoProto
 
 
 class TestHotstore(unittest.TestCase):

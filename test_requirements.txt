@@ -1,4 +1,4 @@
 ## NOTE:  Test requirements.
-codecov==2.2.0
+codecov==2.0.9
 pep8==1.7.0
 coverage==3.7.1
