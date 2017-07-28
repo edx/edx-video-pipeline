@@ -386,20 +386,10 @@ class VedaIngest:
         else:
             val_status = 'ingest'
 
-        val_duration = Output._seconds_from_string(duration=self.video_proto.duration)
-
-        if self.video_proto.s3_filename is not None:
-            val_id = self.video_proto.s3_filename
-        else:
-            val_id = self.video_proto.veda_id
-
-        if self.video_proto.platform_course_url is None:
-            self.video_proto.platform_course_url = ''
-
         VAC = VALAPICall(
             video_proto=self.video_proto,
             val_status=val_status,
-            platform_course_url=self.video_proto.platform_course_url
+            platform_course_url=""  # Empty record for initial status update
         )
         VAC.call()
 

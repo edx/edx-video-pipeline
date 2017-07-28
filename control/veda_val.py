@@ -81,10 +81,8 @@ class VALAPICall():
         if self.val_token is None:
             self.val_tokengen()
         if self.video_object is not None:
-            print 'VIDEO OBJECT'
             self.send_object_data()
         if self.video_proto is not None:
-            print 'VIDEO PROTO'
             self.send_val_data()
 
     def _AUTH(self):
@@ -106,7 +104,9 @@ class VALAPICall():
 
     @newrelic.agent.background_task()
     def val_tokengen(self):
-
+        """
+        Generate a API token for VAL
+        """
         payload = {
             'grant_type': 'password',
             'client_id': self.auth_dict['val_client_id'],
