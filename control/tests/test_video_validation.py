@@ -9,10 +9,13 @@ Test VEDA API
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
 )))
-from veda_video_validation import Validation
+from control.veda_video_validation import Validation
 
 
 class TestValidation(unittest.TestCase):
+    """
+    Test class for Validation
+    """
 
     def setUp(self):
 

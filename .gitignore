@@ -6,3 +6,7 @@
 static/admin/
 
 sandbox.db
+
+.coverage
+
+coverage/
