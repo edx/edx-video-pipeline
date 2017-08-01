@@ -164,14 +164,3 @@ class URLSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return URL.objects.create(**validated_data)
-
-
-class TranscriptionProviderSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Transcription Provider object
-    """
-    class Meta:  # pylint: disable=C1001, C0111
-        model = TranscriptionProvider
-        fields = ('org', 'provider', 'api_key', 'api_secret', 'languages', 'created', 'modified')
-        lookup_field = 'org'
-        exclude = ('id',)
