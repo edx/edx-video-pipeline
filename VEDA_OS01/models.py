@@ -451,3 +451,6 @@ class TranscriptionProvider(models.Model):
     api_key = models.CharField('API key', max_length=255)
     api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
     languages = models.CharField('Preferred languages', max_length=255)
+
+    def __unicode__(self):
+        return self.org
