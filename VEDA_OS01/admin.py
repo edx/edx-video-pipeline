@@ -1,5 +1,9 @@
 from django.contrib import admin
-from VEDA_OS01.models import Course, Video, Encode, URL, Destination, Institution, VedaUpload
+
+from VEDA_OS01.models import (
+    Course, Video, Encode, URL, Destination, Institution, VedaUpload,
+    TranscriptionProvider
+)
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -99,6 +103,10 @@ class VideoUploadAdmin(admin.ModelAdmin):
     ]
 
 
+class TranscriptionProviderAdmin(admin.ModelAdmin):
+    model = TranscriptionProvider
+
+
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Encode, EncodeAdmin)
@@ -106,3 +114,4 @@ admin.site.register(URL, URLAdmin)
 admin.site.register(Destination, DestinationAdmin)
 admin.site.register(Institution, InstitutionAdmin)
 admin.site.register(VedaUpload, VideoUploadAdmin)
+admin.site.register(TranscriptionProvider, TranscriptionProviderAdmin)
