@@ -137,6 +137,7 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'oauth2_provider',
     'rest_framework',
+    'django_filters',
     'corsheaders',
     'frontend',
     'VEDA_OS01',
