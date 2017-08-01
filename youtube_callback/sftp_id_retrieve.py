@@ -1,23 +1,20 @@
-
 """
 Check SFTP dropboxes for YT Video ID XML information
 
 """
 import datetime
-
+from datetime import timedelta
 import django
+from django.utils.timezone import utc
 import fnmatch
 import newrelic.agent
 import os
+from os.path import expanduser
 import pysftp
 import shutil
 import sys
 import xml.etree.ElementTree as ET
 
-from os.path import expanduser
-from datetime import timedelta
-
-from django.utils.timezone import utc
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
@@ -28,8 +25,7 @@ from VEDA_OS01.models import Video, Encode, URL
 from frontend.abvid_reporting import report_status
 from control.veda_val import VALAPICall
 from control.veda_utils import ErrorObject, Metadata, VideoProto
-
-from youtube_callback.daemon import generate_course_list, get_course
+from youtube_callback.daemon import get_course
 
 newrelic.agent.initialize(
     os.path.join(
@@ -43,7 +39,6 @@ Defaults:
 """
 homedir = expanduser("~")
 workdir = os.path.join(homedir, 'download_data_holding')
-
 YOUTUBE_LOOKBACK_DAYS = 15
 
 
@@ -124,11 +119,11 @@ def crawl_sftp(d, s1):
 
     for f in s1.listdir_attr():
         filetime = datetime.datetime.fromtimestamp(f.st_mtime)
-        if filetime > datetime.datetime.now() - timedelta(days=YOUTUBE_LOOKBACK_DAYS) and \
-                fnmatch.fnmatch(f.filename, '*.xml'):
-            """
-            Determine If there's an extant dl for this same ID
-            """
+        if not filetime > datetime.datetime.now() - timedelta(days=YOUTUBE_LOOKBACK_DAYS):
+            continue
+        if fnmatch.fnmatch(f.filename, '*.xml') or fnmatch.fnmatch(f.filename, '*.csv'):
+            # Determine If there are extant downloaded status files for this same ID,
+            # If yes, increment filename
             x = 0
             while True:
                 """
@@ -359,9 +354,3 @@ def urlpatch(upload_data):
                 encode_profile='youtube'
             )
             VAC.call()
-
-
-if __name__ == "__main__":
-    course = get_course(course_id='COLACGIM')
-    if course is not None:
-        callfunction(course)
