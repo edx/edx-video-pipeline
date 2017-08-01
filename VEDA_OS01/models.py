@@ -451,7 +451,6 @@ class TranscriptionProvider(models.Model):
     provider = models.CharField('Transcription provider', max_length=50, choices=TranscriptionProviderType.CHOICES)
     api_key = models.CharField('API key', max_length=255)
     api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
-    languages = models.CharField('Preferred languages', max_length=255)
     created = models.DateTimeField(auto_now_add=True, null=True)
     modified = models.DateTimeField(auto_now=True, null=True)
 
