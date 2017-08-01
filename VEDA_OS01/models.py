@@ -429,6 +429,7 @@ class VedaUpload (models.Model):
             self.file_complete
         )
 
+
 class TranscriptionProviderType(object):
     """
     3rd party transcript providers.
@@ -451,6 +452,8 @@ class TranscriptionProvider(models.Model):
     api_key = models.CharField('API key', max_length=255)
     api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
     languages = models.CharField('Preferred languages', max_length=255)
+    created = models.DateTimeField(auto_now_add=True, null=True)
+    modified = models.DateTimeField(auto_now=True, null=True)
 
     def __unicode__(self):
         return self.org
