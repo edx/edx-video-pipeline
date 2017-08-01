@@ -428,3 +428,29 @@ class VedaUpload (models.Model):
             self.status_email,
             self.file_complete
         )
+
+class TranscriptionProviderType(object):
+    """
+    3rd party transcript providers.
+    """
+
+    THREE_PLAY = '3PlayMedia'
+    CIELO24 = 'Cielo24'
+    CHOICES = (
+        (THREE_PLAY, THREE_PLAY),
+        (CIELO24, CIELO24),
+    )
+
+
+class TranscriptionProvider(models.Model):
+    """
+    Model to contain third party transcription service provider preferances.
+    """
+    org = models.CharField('Organization', max_length=50, unique=True)
+    provider = models.CharField('Transcription provider', max_length=50, choices=TranscriptionProviderType.CHOICES)
+    api_key = models.CharField('API key', max_length=255)
+    api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
+    languages = models.CharField('Preferred languages', max_length=255)
+
+    def __unicode__(self):
+        return self.org
