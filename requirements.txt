@@ -4,6 +4,7 @@ djangorestframework
 django-cors-headers
 django-oauth-toolkit==0.11.0
 django-filter
+django-model-utils==3.0.0
 newrelic
 uwsgi
 pysftp
