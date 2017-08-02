@@ -2,3 +2,7 @@
 codecov==2.0.9
 pep8==1.7.0
 coverage==3.7.1
+isort==4.2.15
+ddt==1.1.1
+moto==1.0.1
+responses==0.6.1
