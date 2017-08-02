@@ -446,9 +446,10 @@ class TranscriptionProviderType(object):
 
 class TranscriptionPreferences(TimeStampedModel):
     """
-    Model to contain third party transcription service provider preferance.
+    Model to contain third party transcription service provider preferances.
     """
-    org = models.CharField('Organization',
+    org = models.CharField(
+        'Organization',
         max_length=50,
         help_text='This value must match the value of organization in studio/edx-platform.'
     )
