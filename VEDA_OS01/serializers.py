@@ -70,7 +70,13 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_trans_start',
             'video_trans_end',
             'video_trans_status',
-            'video_glacierid'
+            'video_glacierid',
+            'process_transcription',
+            'provider',
+            'three_play_turnaround',
+            'cielo24_turnaround',
+            'cielo24_fidelity',
+            'preferred_languages',
         )
 
     def create(self, validated_data):
@@ -121,6 +127,30 @@ class VideoSerializer(serializers.ModelSerializer):
         instance.video_glacierid = validated_data.get(
             'video_glacierid',
             instance.video_glacierid
+        )
+        instance.process_transcription = validated_data.get(
+            'process_transcription',
+            instance.process_transcription
+        )
+        instance.provider = validated_data.get(
+            'provider',
+            instance.provider
+        )
+        instance.three_play_turnaround = validated_data.get(
+            'three_play_turnaround',
+            instance.three_play_turnaround
+        )
+        instance.cielo24_turnaround = validated_data.get(
+            'cielo24_turnaround',
+            instance.cielo24_turnaround
+        )
+        instance.cielo24_fidelity = validated_data.get(
+            'cielo24_fidelity',
+            instance.cielo24_fidelity
+        )
+        instance.preferred_languages = validated_data.get(
+            'preferred_languages',
+            instance.preferred_languages
         )
         instance.save()
         return instance
