@@ -10,6 +10,36 @@ def _createHex():
     return uuid.uuid1().hex
 
 
+class TranscriptProvider(object):
+    """
+    3rd party transcript providers.
+    """
+
+    THREE_PLAY = '3PlayMedia'
+    CIELO24 = 'Cielo24'
+    CHOICES = (
+        (THREE_PLAY, THREE_PLAY),
+        (CIELO24, CIELO24),
+    )
+
+
+class TranscriptStatus(object):
+    """
+    Transcript statuses.
+    """
+
+    PENDING = 'PENDING'
+    IN_PROGRESS = 'IN PROGRESS'
+    FAILED = 'FAILED'
+    READY = 'READY'
+    CHOICES = (
+        (PENDING, PENDING),
+        (IN_PROGRESS, IN_PROGRESS),
+        (FAILED, FAILED),
+        (READY, READY)
+    )
+
+
 class Institution (models.Model):
     institution_code = models.CharField(max_length=4)
     institution_name = models.CharField(max_length=50)
@@ -431,19 +461,6 @@ class VedaUpload (models.Model):
         )
 
 
-class TranscriptProvider(object):
-    """
-    3rd party transcript providers.
-    """
-
-    THREE_PLAY = '3PlayMedia'
-    CIELO24 = 'Cielo24'
-    CHOICES = (
-        (THREE_PLAY, THREE_PLAY),
-        (CIELO24, CIELO24),
-    )
-
-
 class TranscriptPreferences(TimeStampedModel):
     """
     Model to contain third party transcription service provider preferances.
@@ -463,3 +480,30 @@ class TranscriptPreferences(TimeStampedModel):
 
     def __unicode__(self):
         return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
+
+
+class TranscriptProcessMetadata(TimeStampedModel):
+    """
+    Model to contain third party transcript process metadata.
+    """
+    video = models.ForeignKey(Video)
+    provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
+    process_id = models.CharField('Process id', max_length=255)
+    lang_code = models.CharField('Language code', max_length=3)
+    status = models.CharField(
+        'Transcript status',
+        max_length=50,
+        choices=TranscriptStatus.CHOICES,
+        default=TranscriptStatus.PENDING
+    )
+
+    class Meta:
+        unique_together = ('video', 'provider', 'lang_code')
+        verbose_name_plural = 'Transcript process metadata'
+
+    def __unicode__(self):
+        return u'{video} - {provider} - {lang}'.format(
+            video=self.video.edx_id,
+            provider=self.provider,
+            lang=self.lang_code
+        )
