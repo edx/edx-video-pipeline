@@ -3,6 +3,7 @@ Models for Video Pipeline
 """
 import uuid
 from django.db import models
+from model_utils.models import TimeStampedModel
 
 
 def _createHex():
@@ -443,16 +444,21 @@ class TranscriptionProviderType(object):
     )
 
 
-class TranscriptionProvider(models.Model):
+class TranscriptionPreferences(TimeStampedModel):
     """
-    Model to contain third party transcription service provider preferances.
+    Model to contain third party transcription service provider preferance.
     """
-    org = models.CharField('Organization', max_length=50, unique=True)
+    org = models.CharField('Organization',
+        max_length=50,
+        help_text='This value must match the value of organization in studio/edx-platform.'
+    )
     provider = models.CharField('Transcription provider', max_length=50, choices=TranscriptionProviderType.CHOICES)
     api_key = models.CharField('API key', max_length=255)
     api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
-    created = models.DateTimeField(auto_now_add=True, null=True)
-    modified = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        unique_together = ('org', 'provider')
+        verbose_name_plural = 'Transcription preferences'
 
     def __unicode__(self):
-        return self.org
+        return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
