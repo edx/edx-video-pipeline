@@ -34,7 +34,13 @@ class VideoAdmin(admin.ModelAdmin):
         'studio_id',
         'video_trans_start',
         'video_trans_status',
-        'video_active'
+        'video_active',
+        'process_transcription',
+        'provider',
+        'three_play_turnaround',
+        'cielo24_turnaround',
+        'cielo24_fidelity',
+        'preferred_languages',
     ]
     list_filter = ['inst_class__institution']
     search_fields = ['edx_id', 'client_title', 'studio_id']

@@ -10,3 +10,6 @@ sandbox.db
 .coverage
 
 coverage/
+
+# TODO remove this once migrations are shipped with the code
+*/migrations/*

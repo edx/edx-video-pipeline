@@ -1,9 +1,13 @@
 
+import json
+import logging
 import os.path
 import boto
 import boto.s3
 from boto.exception import S3ResponseError, S3DataError
 import yaml
+
+from VEDA_OS01.models import TranscriptPreferences
 
 try:
     boto.config.add_section('Boto')
@@ -25,6 +29,8 @@ from control_env import *
 from veda_utils import ErrorObject
 from veda_file_ingest import VideoProto, VedaIngest
 from veda_val import VALAPICall
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FileDiscovery(object):
@@ -159,6 +165,7 @@ class FileDiscovery(object):
         client_title = meta.get_metadata('client_video_id')
         course_hex = meta.get_metadata('course_video_upload_token')
         course_url = meta.get_metadata('course_key')
+        transcript_preferences = meta.get_metadata('transcript_preferences')
         edx_filename = key.name[::-1].split('/')[0][::-1]
 
         if len(course_hex) == 0:
@@ -226,24 +233,49 @@ class FileDiscovery(object):
             key.delete()
             return
 
-        """
-        Trigger Ingest Process
-        """
-        V = VideoProto(
+        # Make decision if this video needs the transcription as well.
+        try:
+            transcript_preferences = json.loads(transcript_preferences)
+            TranscriptPreferences.objects.get(
+                # TODO: Once ammar is done with cielo24.
+                # org=extract_course_org(course_url),
+                org=transcript_preferences.get('org'),
+                provider=transcript_preferences.get('provider')
+            )
+            process_transcription = True
+        except (TypeError, TranscriptPreferences.DoesNotExist):
+            # when the preferences are not set OR these are set to some data in invalid format OR these don't
+            # have associated 3rd party transcription provider API keys.
+            process_transcription = False
+        except ValueError:
+            LOGGER.error('[VIDEO-PIPELINE] File Discovery - Invalid transcripts preferences=%s', transcript_preferences)
+            process_transcription = False
+
+        # Trigger Ingest Process
+        video_metadata = dict(
             s3_filename=edx_filename,
             client_title=client_title,
             file_extension=file_extension,
-            platform_course_url=course_url
+            platform_course_url=course_url,
         )
+        if process_transcription:
+            video_metadata.update({
+                'process_transcription': process_transcription,
+                'provider': transcript_preferences.get('provider'),
+                'three_play_turnaround': transcript_preferences.get('three_play_turnaround'),
+                'cielo24_turnaround': transcript_preferences.get('cielo24_turnaround'),
+                'cielo24_fidelity': transcript_preferences.get('cielo24_fidelity'),
+                'preferred_languages': transcript_preferences.get('preferred_languages'),
+            })
 
-        I = VedaIngest(
+        ingest = VedaIngest(
             course_object=course_query[0],
-            video_proto=V,
+            video_proto=VideoProto(**video_metadata),
             node_work_directory=self.node_work_directory
         )
-        I.insert()
+        ingest.insert()
 
-        if I.complete is False:
+        if ingest.complete is False:
             return
 
         """
