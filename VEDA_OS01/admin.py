@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from VEDA_OS01.models import (
     Course, Video, Encode, URL, Destination, Institution, VedaUpload,
-    TranscriptPreferences
+    TranscriptPreferences, TranscriptProcessMetadata
 )
 
 
@@ -107,6 +107,10 @@ class TranscriptPreferencesAdmin(admin.ModelAdmin):
     model = TranscriptPreferences
 
 
+class TranscriptProcessMetadataAdmin(admin.ModelAdmin):
+    model = TranscriptProcessMetadata
+
+
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Encode, EncodeAdmin)
@@ -115,3 +119,4 @@ admin.site.register(Destination, DestinationAdmin)
 admin.site.register(Institution, InstitutionAdmin)
 admin.site.register(VedaUpload, VideoUploadAdmin)
 admin.site.register(TranscriptPreferences, TranscriptPreferencesAdmin)
+admin.site.register(TranscriptProcessMetadata, TranscriptProcessMetadataAdmin)
