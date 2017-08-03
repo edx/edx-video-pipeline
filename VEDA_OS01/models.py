@@ -431,7 +431,7 @@ class VedaUpload (models.Model):
         )
 
 
-class TranscriptionProviderType(object):
+class TranscriptProvider(object):
     """
     3rd party transcript providers.
     """
@@ -444,7 +444,7 @@ class TranscriptionProviderType(object):
     )
 
 
-class TranscriptionPreferences(TimeStampedModel):
+class TranscriptPreferences(TimeStampedModel):
     """
     Model to contain third party transcription service provider preferances.
     """
@@ -453,13 +453,13 @@ class TranscriptionPreferences(TimeStampedModel):
         max_length=50,
         help_text='This value must match the value of organization in studio/edx-platform.'
     )
-    provider = models.CharField('Transcription provider', max_length=50, choices=TranscriptionProviderType.CHOICES)
+    provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
     api_key = models.CharField('API key', max_length=255)
     api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
 
     class Meta:
         unique_together = ('org', 'provider')
-        verbose_name_plural = 'Transcription preferences'
+        verbose_name_plural = 'Transcript preferences'
 
     def __unicode__(self):
         return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
