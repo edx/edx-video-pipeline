@@ -1,0 +1,75 @@
+[
+  {
+    "model": "VEDA_OS01.Destination",
+    "pk": 1,
+    "fields": {
+      "destination_name": "Amazon AWS",
+      "destination_active": true,
+      "destination_nick": "S31"
+    }
+  },
+  {
+    "model": "VEDA_OS01.Encode",
+    "pk": 1,
+    "fields": {
+      "encode_destination": 1,
+      "encode_name": "Desktop - High",
+      "profile_active": true,
+      "encode_suffix": "DTH",
+      "encode_filetype": "mp4",
+      "encode_bitdepth": "27",
+      "encode_resolution": "720",
+      "product_spec": "desktop_mp4",
+      "xuetang_proc": true
+    }
+  },
+  {
+    "model": "VEDA_OS01.Encode",
+    "pk": 2,
+    "fields": {
+      "encode_destination": 1,
+      "encode_name": "HLS",
+      "profile_active": true,
+      "encode_suffix": "HLS",
+      "encode_filetype": "HLS",
+      "encode_bitdepth": "0",
+      "encode_resolution": "0",
+      "product_spec": "hls",
+      "xuetang_proc": false
+    }
+  },
+  {
+    "model": "VEDA_OS01.Encode",
+    "pk": 3,
+    "fields": {
+      "encode_destination": 1,
+      "encode_name": "Mobile - Low",
+      "profile_active": true,
+      "encode_suffix": "MB2",
+      "encode_filetype": "mp4",
+      "encode_bitdepth": "27",
+      "encode_resolution": "360",
+      "product_spec": "mobile_low",
+      "xuetang_proc": false
+    }
+  },
+  {
+    "model": "VEDA_OS01.Course",
+    "pk": 1,
+    "fields": {
+      "course_name": "Veda Sandbox Test Course",
+      "course_hold": true,
+      "institution": "XXX",
+      "edx_classid": "XXXXX",
+      "semesterid": "2017",
+      "yt_proc": false,
+      "tp_proc": false,
+      "c24_proc": false,
+      "s3_proc": true,
+      "xue": true,
+      "local_storedir": "course-v1:VEDA+VEDA201+2015_T1",
+      "xuetang_proc": false,
+      "studio_hex": "xxxx"
+    }
+  }
+]

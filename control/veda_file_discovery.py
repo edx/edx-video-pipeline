@@ -1,9 +1,10 @@
 
 import os.path
 import boto
-import yaml
-from boto.s3.connection import S3Connection
+import boto.s3
+from boto.exception import S3ResponseError, S3DataError
 import newrelic.agent
+import yaml
 
 try:
     boto.config.add_section('Boto')
@@ -33,7 +34,7 @@ from veda_file_ingest import VideoProto, VedaIngest
 from veda_val import VALAPICall
 
 
-class FileDiscovery():
+class FileDiscovery(object):
 
     def __init__(self, **kwargs):
         self.video_info = {}
@@ -62,25 +63,19 @@ class FileDiscovery():
 
     @newrelic.agent.background_task()
     def about_video_ingest(self):
+        """
+        Crawl VEDA Upload bucket
+        """
         if self.node_work_directory is None:
             ErrorObject().print_error(
                 message='No Workdir'
             )
-            return None
-        """
-        Crawl ingest bucket looking for files
-        """
-        conn = S3Connection(
-            self.auth_dict['veda_access_key_id'],
-            self.auth_dict['veda_secret_access_key']
-        )
+            return
+        conn = boto.connect_s3()
 
-        """
-        Occassional s3 Error
-        """
         try:
             self.bucket = conn.get_bucket(self.auth_dict['veda_s3_upload_bucket'])
-        except:
+        except S3ResponseError:
             return None
 
         for key in self.bucket.list('upload/', '/'):
@@ -97,10 +92,8 @@ class FileDiscovery():
             video_serial=meta.name.split('/')[1]
         )
         if len(upload_query) == 0:
-            '''
-            Non serialized upload - reject
-            '''
-            return None
+            # Non serialized upload - reject
+            return
 
         if upload_query[0].upload_filename is not None:
             file_extension = upload_query[0].upload_filename.split('.')[-1]
@@ -119,9 +112,8 @@ class FileDiscovery():
         )
 
         course_query = Course.objects.get(institution='EDX', edx_classid='ABVID')
-        """
-        Trigger Ingest Process
-        """
+
+        # Trigger Ingest Process
         V = VideoProto(
             abvid_serial=abvid_serial,
             client_title=upload_query[0].upload_filename.replace('.' + file_extension, ''),
@@ -146,28 +138,23 @@ class FileDiscovery():
 
     @newrelic.agent.background_task()
     def studio_s3_ingest(self):
+        """
+        Ingest files from studio upload endpoint
+        """
         if self.node_work_directory is None:
             ErrorObject().print_error(
                 message='No Workdir'
             )
-            return None
+            return
 
-        """
-        Ingest files from studio upload endpoint
-        """
-        conn = S3Connection(
-            self.auth_dict['edx_access_key_id'],
-            self.auth_dict['edx_secret_access_key']
-        )
-
-        """Occassional s3 Error"""
+        conn = boto.connect_s3()
         try:
             self.bucket = conn.get_bucket(self.auth_dict['edx_s3_ingest_bucket'])
-        except:
+        except S3ResponseError:
             print 'S3: Ingest Conn Failure'
-            return None
+            return
 
-        for key in self.bucket.list('prod-edx/unprocessed/', '/'):
+        for key in self.bucket.list(self.auth_dict['edx_s3_ingest_prefix'], '/'):
             meta = self.bucket.get_key(key.name)
             self.studio_s3_validate(
                 meta=meta,
@@ -175,7 +162,6 @@ class FileDiscovery():
             )
 
     def studio_s3_validate(self, meta, key):
-
         if meta.get_metadata('course_video_upload_token') is None:
             return None
 
@@ -209,7 +195,7 @@ class FileDiscovery():
             new_key = 'prod-edx/rejected/' + key.name[::-1].split('/')[0][::-1]
             key.copy(self.bucket, new_key)
             key.delete()
-            return None
+            return
 
         file_extension = client_title[::-1].split('.')[0][::-1]
 
@@ -225,7 +211,7 @@ class FileDiscovery():
                     )
                 )
                 file_ingested = True
-            except:
+            except S3DataError:
                 print 'File Copy Fail: Studio S3 Ingest'
                 file_ingested = False
         else:
@@ -237,7 +223,7 @@ class FileDiscovery():
                     )
                 )
                 file_ingested = True
-            except:
+            except S3DataError:
                 print 'File Copy Fail: Studio S3 Ingest'
                 file_ingested = False
                 file_extension = ''
@@ -245,12 +231,9 @@ class FileDiscovery():
         if file_ingested is not True:
             # 's3 Bucket ingest Fail'
             new_key = 'prod-edx/rejected/' + key.name[::-1].split('/')[0][::-1]
-            try:
-                key.copy(self.bucket, new_key)
-            except:
-                key.copy(self.bucket, new_key)
+            key.copy(self.bucket, new_key)
             key.delete()
-            return None
+            return
 
         """
         Trigger Ingest Process
@@ -270,17 +253,15 @@ class FileDiscovery():
         I.insert()
 
         if I.complete is False:
-            return None
+            return
 
         """
         Delete Original After Copy
         """
-        new_key = 'prod-edx/processed/' + key.name[::-1].split('/')[0][::-1]
-        try:
+        if self.auth_dict['edx_s3_ingest_prefix'] is not None:
+            new_key = 'prod-edx/processed/' + key.name[::-1].split('/')[0][::-1]
             key.copy(self.bucket, new_key)
-        except:
-            key.copy(self.bucket, new_key)
-        # key.copy(self.bucket, new_key)
+
         key.delete()
 
 

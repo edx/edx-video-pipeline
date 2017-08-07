@@ -72,7 +72,7 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_trans_start',
             'video_trans_end',
             'video_trans_status',
-            'video_glacierid'
+            'video_glacierid',
             'course_ids'
         )
 
