@@ -53,6 +53,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class VideoSerializer(serializers.ModelSerializer):
 
+    course_ids = serializers.SerializerMethodField(source='get_course_ids', read_only=True)
+
     class Meta:
         model = Video
         fields = (
@@ -71,7 +73,11 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_trans_end',
             'video_trans_status',
             'video_glacierid'
+            'course_ids'
         )
+
+    def get_course_ids(self, video):
+        return [course_id.strip() for course_id in video.inst_class.local_storedir.split(',') if course_id]
 
     def create(self, validated_data):
         return Video.objects.create(**validated_data)
