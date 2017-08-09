@@ -5,6 +5,7 @@ import yaml
 import boto
 import boto.s3
 from boto.s3.key import Key
+from boto.exception import S3ResponseError
 from os.path import expanduser
 import requests
 import datetime
@@ -232,7 +233,7 @@ class VedaDelivery:
 
         if not isinstance(self.video_proto.duration, int) and ':' not in self.video_proto.duration:
             print 'Duration Failure'
-            return None
+            return
 
         self.video_proto.duration = Output._seconds_from_string(
             duration=self.video_proto.duration
@@ -263,12 +264,11 @@ class VedaDelivery:
         """
         if self.auth_dict['veda_deliverable_bucket'] == \
                 self.auth_dict['edx_s3_endpoint_bucket']:
-            return None
-
-        conn = boto.connect_s3(
-            self.auth_dict['veda_access_key_id'],
-            self.auth_dict['veda_secret_access_key']
-        )
+            return
+        try:
+            conn = boto.connect_s3()
+        except S3ResponseError:
+            return
         del_bucket = conn.get_bucket(
             self.auth_dict['veda_deliverable_bucket']
         )
@@ -382,27 +382,28 @@ class VedaDelivery:
         """
         if self.video_query.inst_class.s3_proc is False and \
                 self.video_query.inst_class.mobile_override is False:
-            return None
+            return False
 
         if self.video_proto.filesize < self.auth_dict['multi_upload_barrier']:
             """
             Upload single part
             """
             if self._BOTO_SINGLEPART() is False:
-                return None
+                return False
 
         else:
             """
             Upload multipart
             """
             if self._BOTO_MULTIPART() is False:
-                return None
+                return False
 
         self.endpoint_url = '/'.join((
             'https://s3.amazonaws.com',
             self.auth_dict['edx_s3_endpoint_bucket'],
             self.encoded_file
         ))
+        return True
 
     def _BOTO_SINGLEPART(self):
         """
@@ -410,21 +411,16 @@ class VedaDelivery:
         node_config MULTI_UPLOAD_BARRIER
         """
         try:
-            conn = boto.connect_s3(
-                self.auth_dict['edx_access_key_id'],
-                self.auth_dict['edx_secret_access_key']
-            )
-            delv_bucket = conn.get_bucket(
-                self.auth_dict['edx_s3_endpoint_bucket']
-            )
-
-        except:
+            conn = boto.connect_s3()
+        except S3ResponseError:
             ErrorObject.print_error(
                 message='Deliverable Fail: s3 Connection Error\n \
                 Check node_config DELIVERY_ENDPOINT'
             )
             return False
-
+        delv_bucket = conn.get_bucket(
+            self.auth_dict['edx_s3_endpoint_bucket']
+        )
         upload_key = Key(delv_bucket)
         upload_key.key = os.path.basename(os.path.join(
             self.node_work_directory,
@@ -455,9 +451,7 @@ class VedaDelivery:
         if not os.path.exists(
             os.path.join(path_to_multipart, filename.split('.')[0])
         ):
-            os.mkdir(
-                os.path.join(path_to_multipart, filename.split('.')[0])
-            )
+            os.mkdir(os.path.join(path_to_multipart, filename.split('.')[0]))
 
         os.chdir(os.path.join(path_to_multipart, filename.split('.')[0]))
         """
@@ -472,18 +466,14 @@ class VedaDelivery:
         Connect to s3
         """
         try:
-            c = boto.connect_s3(
-                settings['aws_access_key'],
-                settings['aws_secret_key']
-            )
-            b = c.lookup(settings['aws_deliver_bucket'])
-        except:
+            c = boto.connect_s3()
+        except S3ResponseError:
             ErrorObject.print_error(
                 message='Deliverable Fail: s3 Connection Error\n \
                 Check node_config DELIVERY_ENDPOINT'
             )
             return False
-
+        b = c.lookup(self.auth_dict['edx_s3_endpoint_bucket'])
         if b is None:
             ErrorObject.print_error(
                 message='Deliverable Fail: s3 Connection Error\n \

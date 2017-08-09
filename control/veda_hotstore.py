@@ -1,13 +1,17 @@
 
-import os
-import sys
 import boto
+import os
+import shutil
+import sys
+import yaml
+
 import boto.s3
 from boto.s3.key import Key
-import yaml
-import shutil
-from os.path import expanduser
+from boto.exception import S3ResponseError
 import newrelic.agent
+from os.path import expanduser
+
+from veda_utils import ErrorObject
 
 try:
     boto.config.add_section('Boto')
@@ -21,18 +25,14 @@ newrelic.agent.initialize(
         'veda_newrelic.ini'
     )
 )
-
-"""
-Upload file to hotstore
-
-"""
-from veda_utils import ErrorObject, Output
-
 homedir = expanduser("~")
 
 
-class Hotstore():
+class Hotstore(object):
+    """
+    Upload file to hotstore (short term storage, s3 objects)
 
+    """
     def __init__(self, video_proto, upload_filepath, **kwargs):
         self.video_proto = video_proto
         self.upload_filepath = upload_filepath
@@ -87,28 +87,22 @@ class Hotstore():
         """
         if self.endpoint is False:
             try:
-                conn = boto.connect_s3(
-                    self.auth_dict['veda_access_key_id'],
-                    self.auth_dict['veda_secret_access_key']
-                )
+                conn = boto.connect_s3()
                 delv_bucket = conn.get_bucket(
                     self.auth_dict['veda_s3_hotstore_bucket']
                 )
-            except:
+            except S3ResponseError:
                 ErrorObject().print_error(
                     message='Hotstore: Bucket Connectivity'
                 )
                 return False
         else:
             try:
-                conn = boto.connect_s3(
-                    self.auth_dict['edx_access_key_id'],
-                    self.auth_dict['edx_secret_access_key']
-                )
+                conn = boto.connect_s3()
                 delv_bucket = conn.get_bucket(
                     self.auth_dict['edx_s3_endpoint_bucket']
                 )
-            except:
+            except S3ResponseError:
                 ErrorObject().print_error(
                     message='Endpoint: Bucket Connectivity'
                 )
@@ -155,24 +149,18 @@ class Hotstore():
         """
         if self.endpoint is False:
             try:
-                c = boto.connect_s3(
-                    self.auth_dict['veda_access_key_id'],
-                    self.auth_dict['veda_secret_access_key']
-                )
+                c = boto.connect_s3()
                 b = c.lookup(self.auth_dict['veda_s3_hotstore_bucket'])
-            except:
+            except S3ResponseError:
                 ErrorObject().print_error(
                     message='Hotstore: Bucket Connectivity'
                 )
                 return False
         else:
             try:
-                c = boto.connect_s3(
-                    self.auth_dict['edx_access_key_id'],
-                    self.auth_dict['edx_secret_access_key']
-                )
+                c = boto.connect_s3()
                 b = c.lookup(self.auth_dict['edx_s3_endpoint_bucket'])
-            except:
+            except S3ResponseError:
                 ErrorObject().print_error(
                     message='Endpoint: Bucket Connectivity'
                 )

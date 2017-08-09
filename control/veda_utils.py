@@ -57,8 +57,10 @@ class EmailAlert():
 
         email_body = 'There has been a fault:'
         email_body += self.message
-
-        conn = boto.ses.connect_to_region('us-east-1')
+        try:
+            conn = boto.ses.connect_to_region('us-east-1')
+        except boto.exception.NoAuthHandlerFound:
+            return
 
         conn.send_email(
             self.auth_dict['veda_noreply_email'],
@@ -231,8 +233,10 @@ class Report():
             'edX Studio Course URL : ' + v1[0].edx_studio_url + '\n\n'
             'Please do not reply to this email.\n\n <<EOM'
         )
-
-        conn = boto.ses.connect_to_region('us-east-1')
+        try:
+            conn = boto.ses.connect_to_region('us-east-1')
+        except boto.exception.NoAuthHandlerFound:
+            return
 
         conn.send_email(
             self.auth_dict['veda_noreply_email'],
