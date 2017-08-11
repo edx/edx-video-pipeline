@@ -6,14 +6,7 @@ import datetime
 import boto.ses
 import hashlib
 import subprocess
-import newrelic.agent
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 """
 Let's do some quick and dirty error handling & logging
@@ -50,7 +43,6 @@ class EmailAlert():
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def email(self):
         email_subject = '[ VEDA ALERTING ]'
         email_subject += ' : ' + self.subject
@@ -165,7 +157,6 @@ class Report():
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def upload_status(self):
         if self.upload_serial is None:
             return None
@@ -286,7 +277,6 @@ class Metadata():
         self.freezing_bug = False
         self.val_status = None
 
-    @newrelic.agent.background_task()
     def _METADATA(self):
         """
         use st filesize for filesize
@@ -324,7 +314,6 @@ class Metadata():
                     if self.video_proto.resolution is None:
                         self.video_proto.resolution = vid_breakout[3].strip()
 
-    @newrelic.agent.background_task()
     def _FAULT(self, video_object):
         if self.video_object is None:
             return []

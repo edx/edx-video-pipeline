@@ -25,7 +25,6 @@ class DeliverCli:
             os.path.abspath(__file__)
         ))
         self.auth_yaml = os.path.join(self.ROOT_DIR, 'instance_config.yaml')
-        self.new_relic_config = os.path.join(self.ROOT_DIR, 'veda_newrelic.ini')
         self.celery_daemon = os.path.join(self.ROOT_DIR, 'control', 'celeryapp.py')
 
     def get_args(self):
@@ -62,8 +61,7 @@ class DeliverCli:
         if auth_dict is not None:
             os.system(
                 ' '.join((
-                    'NEW_RELIC_CONFIG_FILE=' + self.new_relic_config,
-                    'newrelic-admin run-program python',
+                    'python',
                     self.celery_daemon,
                     'worker',
                     '--loglevel=info',

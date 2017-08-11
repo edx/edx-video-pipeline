@@ -4,14 +4,6 @@ import sys
 import subprocess
 import fnmatch
 import django
-import newrelic.agent
-
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 """
 VEDA Intake/Product Final Testing Suite
@@ -43,7 +35,6 @@ class Validation():
         seconds_duration = (((hours * 60) + minutes) * 60) + seconds
         return seconds_duration
 
-    @newrelic.agent.background_task()
     def validate(self):
         """
         Test #1 - assumes file is in 'work' directory of node

@@ -7,7 +7,6 @@ import sys
 import datetime
 from datetime import timedelta
 import django
-import newrelic.agent
 
 from django.utils.timezone import utc
 
@@ -24,13 +23,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'VEDA.settings'
 
 django.setup()
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
-
 """
 Defaults
 """
@@ -46,7 +38,6 @@ def get_course(course_id):
     return course
 
 
-@newrelic.agent.background_task()
 def generate_course_list():
 
     course_list = []
@@ -79,7 +70,6 @@ def generate_course_list():
     return course_list
 
 
-@newrelic.agent.background_task()
 def weed_dupes(course_list, course):
     for c in course_list:
         if c.yt_logon == course.yt_logon:
@@ -87,7 +77,6 @@ def weed_dupes(course_list, course):
     return True
 
 
-@newrelic.agent.background_task()
 def determine_missing_url(course_object):
 
     video_query = Video.objects.filter(

@@ -4,7 +4,6 @@ import sys
 import django
 import yaml
 import uuid
-import newrelic.agent
 
 
 """
@@ -15,13 +14,6 @@ Get a list of needed encodes from VEDA
 """
 from control_env import *
 from dependencies.shotgun_api3 import Shotgun
-
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 
 class VedaEncode():
@@ -62,7 +54,6 @@ class VedaEncode():
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def determine_encodes(self):
         self.match_profiles()
 
