@@ -10,15 +10,8 @@ from os.path import expanduser
 import requests
 import datetime
 import ftplib
-import newrelic.agent
 import shutil
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 try:
     boto.config.add_section('Boto')
@@ -84,7 +77,6 @@ class VedaDelivery:
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def run(self):
         """
         Check the destination, route via available methods,

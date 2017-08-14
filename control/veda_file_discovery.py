@@ -3,7 +3,6 @@ import os.path
 import boto
 import boto.s3
 from boto.exception import S3ResponseError, S3DataError
-import newrelic.agent
 import yaml
 
 try:
@@ -12,12 +11,6 @@ except:
     pass
 boto.config.set('Boto', 'http_socket_timeout', '100')
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 """
 multi-point videofile discovery
 Currently:
@@ -61,7 +54,6 @@ class FileDiscovery(object):
         self.ftp_faillog = "/Users/Shared/edX1/LG/FailedTransfers.log"
         self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
 
-    @newrelic.agent.background_task()
     def about_video_ingest(self):
         """
         Crawl VEDA Upload bucket
@@ -136,7 +128,6 @@ class FileDiscovery(object):
 
         reset_queries()
 
-    @newrelic.agent.background_task()
     def studio_s3_ingest(self):
         """
         Ingest files from studio upload endpoint

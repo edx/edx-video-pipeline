@@ -6,16 +6,9 @@ import ast
 import json
 import datetime
 import yaml
-import newrelic.agent
 
 requests.packages.urllib3.disable_warnings()
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 """
 Send data to VAL, either Video ID data or endpoint URLs
@@ -69,7 +62,6 @@ class VALAPICall():
         )
         self.auth_dict = self._AUTH()
 
-    @newrelic.agent.background_task()
     def call(self):
         if self.auth_dict is None:
             print 'No AUTH'
@@ -102,7 +94,6 @@ class VALAPICall():
                 )
                 return None
 
-    @newrelic.agent.background_task()
     def val_tokengen(self):
         """
         Generate a API token for VAL

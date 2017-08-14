@@ -7,7 +7,6 @@ from datetime import timedelta
 import django
 from django.utils.timezone import utc
 import fnmatch
-import newrelic.agent
 import os
 from os.path import expanduser
 import pysftp
@@ -27,13 +26,6 @@ from control.veda_val import VALAPICall
 from control.veda_utils import ErrorObject, Metadata, VideoProto
 from youtube_callback.daemon import get_course
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
-
 """
 Defaults:
 """
@@ -42,7 +34,6 @@ workdir = os.path.join(homedir, 'download_data_holding')
 YOUTUBE_LOOKBACK_DAYS = 15
 
 
-@newrelic.agent.background_task()
 def callfunction(course):
     """
 
@@ -64,7 +55,6 @@ def callfunction(course):
             urlpatch(upload_data)
 
 
-@newrelic.agent.background_task()
 def xml_downloader(course):
     """
 
@@ -96,7 +86,6 @@ def xml_downloader(course):
         return None
 
 
-@newrelic.agent.background_task()
 def crawl_sftp(d, s1):
     """
     crawl the sftp dir and dl the XML files for parsing
@@ -147,7 +136,6 @@ def crawl_sftp(d, s1):
     s1.cwd('..')
 
 
-@newrelic.agent.background_task()
 def domxml_parser(file):
     """
 
@@ -209,7 +197,6 @@ def domxml_parser(file):
     return upload_data
 
 
-@newrelic.agent.background_task()
 def urlpatch(upload_data):
     """
 

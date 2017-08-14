@@ -6,14 +6,6 @@ from datetime import timedelta
 import yaml
 import uuid
 
-import newrelic.agent
-
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 """
 Heal Process
@@ -76,7 +68,6 @@ class VedaHeal():
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def discovery(self):
         self.video_query = Video.objects.filter(
             video_trans_start__lt=self.current_time - timedelta(
@@ -122,7 +113,6 @@ class VedaHeal():
                         queue=cel_queue
                     )
 
-    @newrelic.agent.background_task()
     def determine_fault(self, video_object):
         """
         Is there anything to do with this?
@@ -222,7 +212,6 @@ class VedaHeal():
             self.val_status = 'transcode_queue'
         return encode_list
 
-    @newrelic.agent.background_task()
     def purge(self):
         """
         Purge Work Directory

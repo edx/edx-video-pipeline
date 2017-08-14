@@ -8,7 +8,6 @@ import yaml
 import boto.s3
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
-import newrelic.agent
 from os.path import expanduser
 
 from veda_utils import ErrorObject
@@ -19,12 +18,6 @@ except:
     pass
 boto.config.set('Boto', 'http_socket_timeout', '100')
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 homedir = expanduser("~")
 
 
@@ -62,7 +55,6 @@ class Hotstore(object):
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def upload(self):
         if self.auth_dict is None:
             return False

@@ -12,14 +12,7 @@ from django.db import reset_queries
 import uuid
 import yaml
 import hashlib
-import newrelic.agent
 
-newrelic.agent.initialize(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'veda_newrelic.ini'
-    )
-)
 
 """
 Discovered file ingest/insert/job triggering
@@ -111,7 +104,6 @@ class VedaIngest:
             except yaml.YAMLError as exc:
                 return None
 
-    @newrelic.agent.background_task()
     def insert(self):
         """
         NOTE:
@@ -245,7 +237,6 @@ class VedaIngest:
                         else:
                             self.video_proto.resolution = '1920x1080'
 
-    @newrelic.agent.background_task()
     def database_record(self):
         """
         Start DB Inserts, Get Information
@@ -393,7 +384,6 @@ class VedaIngest:
         )
         VAC.call()
 
-    @newrelic.agent.background_task()
     def abvid_report(self):
         if self.video_proto.abvid_serial is None:
             return None
@@ -406,7 +396,6 @@ class VedaIngest:
         R.upload_status()
         self.complete = True
 
-    @newrelic.agent.background_task()
     def rename(self):
         """
         Rename to VEDA ID,
