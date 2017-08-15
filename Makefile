@@ -1,13 +1,15 @@
 PACKAGES = VEDA VEDA_OS01 control frontend youtube_callback scripts
 
+requirements:
+	pip install -r requirements.txt
+	pip install -r test_requirements.txt
+
 validate: test ## Run tests and quality checks
 
 test: clean
-	 nosetests --with-coverage --cover-inclusive --cover-branches \
-		--cover-html --cover-html-dir=build/coverage/html/ \
-		--cover-xml --cover-xml-file=build/coverage/coverage.xml --verbosity=2 \
-		$(foreach package,$(PACKAGES),--cover-package=$(package)) \
-		$(PACKAGES)
+	coverage run -m pytest --durations=10
+	coverage combine
+	coverage report
 
 clean:
 	coverage erase

@@ -2,6 +2,7 @@
 import os
 import sys
 import unittest
+from django.test import TestCase
 
 """
 A basic unittest for the "Course Addition Tool"
@@ -14,7 +15,7 @@ sys.path.append(
 from veda_utils import Report
 
 
-class TestReporting(unittest.TestCase):
+class TestReporting(TestCase):
 
     def setUp(self):
         self.R = Report(

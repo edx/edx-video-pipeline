@@ -1,7 +1,7 @@
 """
 Cielo24 transcription testing
 """
-from unittest import TestCase
+from django.test import TestCase
 
 import responses
 from ddt import ddt
@@ -12,22 +12,6 @@ from VEDA_OS01.models import (Cielo24Fidelity, Cielo24Turnaround, Course,
                               TranscriptProcessMetadata, TranscriptStatus,
                               Video)
 from VEDA_OS01.utils import build_url
-
-CONFIG_DATA = {
-    'cielo24_get_caption_url': 'http://api.cielo24.com/job/get_caption',
-    'transcript_bucket_access_key': 'bucket_access_key',
-    'transcript_bucket_secret_key': 'bucket_secret_key',
-    'transcript_bucket_name': 'bucket_name',
-    'val_token_url': 'http://val.edx.org/token',
-    'val_username': 'username',
-    'val_password': 'password',
-    'val_client_id': 'client',
-    'val_secret_key': 'secret',
-    'val_transcript_create_url': 'http://val.edx.org/transcript/create',
-    'val_video_transcript_status_url': 'http://val.edx.org/video/status',
-    'veda_base_url': 'https://veda.edx.org',
-    'transcript_provider_request_token': '1234a5a67cr890'
-}
 
 VIDEO_DATA = {
     'studio_id': '12345'
