@@ -5,13 +5,14 @@ python:
 
 sudo: required
 
-install:
-  - pip install -r requirements.txt
-  - pip install -r test_requirements.txt
+before_install:
+  - export BOTO_CONFIG=/dev/null
 
-# build tests
+install:
+  - make requirements
+
 script:
-    - make validate
+  - make validate
 
 after_success:
   - pip install -U codecov
