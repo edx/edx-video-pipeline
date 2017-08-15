@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 
+from django.test import TestCase
 import requests
 import yaml
 
@@ -19,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 requests.packages.urllib3.disable_warnings()
 
 
-class TestIngest(unittest.TestCase):
+class TestIngest(TestCase):
 
     def setUp(self):
         self.VP = VideoProto(

@@ -14,26 +14,12 @@ from moto import mock_s3_deprecated
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from VEDA_OS01 import transcripts
+from VEDA_OS01 import transcripts, utils
 from VEDA_OS01.models import (Course, TranscriptPreferences,
                               TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus, Video)
 
-CONFIG_DATA = {
-    'cielo24_get_caption_url': 'http://api.cielo24.com/job/get_caption',
-    'transcript_bucket_access_key': 'bucket_access_key',
-    'transcript_bucket_secret_key': 'bucket_secret_key',
-    'transcript_bucket_name': 'bucket_name',
-    'val_token_url': 'http://val.edx.org/token',
-    'val_username': 'val_username',
-    'val_password': 'val_password',
-    'val_client_id': 'val_client_id',
-    'val_secret_key': 'val_secret_key',
-    'val_transcript_create_url': 'http://val.edx.org/transcript/create',
-    'val_video_transcript_status_url': 'http://val.edx.org/video/status',
-    'transcript_provider_request_token': '1234a5a67cr890',
-    'transcript_bucket_directory': 'video-transcripts/',
-}
+CONFIG_DATA = utils.get_config('test_config.yaml')
 
 VIDEO_DATA = {
     'studio_id': '12345'
@@ -217,7 +203,7 @@ class Cielo24TranscriptTests(APITestCase):
         responses.add(responses.PATCH, CONFIG_DATA['val_video_transcript_status_url'], status=200)
 
         # create s3 bucket -- all this is happening in moto's virtual environment
-        conn = S3Connection(CONFIG_DATA['transcript_bucket_access_key'], CONFIG_DATA['transcript_bucket_secret_key'])
+        conn = S3Connection()
         conn.create_bucket(CONFIG_DATA['transcript_bucket_name'])
 
         transcripts.cielo24_transcript_callback(None, **REQUEST_PARAMS)
