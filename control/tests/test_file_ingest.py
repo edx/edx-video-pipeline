@@ -2,6 +2,7 @@
 import os
 import sys
 import unittest
+from django.test import TestCase
 import requests
 import ast
 import yaml
@@ -17,7 +18,7 @@ from veda_file_ingest import VideoProto, VedaIngest
 requests.packages.urllib3.disable_warnings()
 
 
-class TestIngest(unittest.TestCase):
+class TestIngest(TestCase):
 
     def setUp(self):
         self.VP = VideoProto(

@@ -3,6 +3,7 @@ import datetime
 import ftplib
 import logging
 import os
+import shutil
 import sys
 from os.path import expanduser
 
@@ -19,7 +20,8 @@ from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
-from VEDA_OS01.models import TranscriptPreferences, VideoStatus, TranscriptProvider
+from VEDA_OS01.models import (TranscriptPreferences, TranscriptProvider,
+                              VideoStatus)
 from VEDA_OS01.utils import build_url
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
