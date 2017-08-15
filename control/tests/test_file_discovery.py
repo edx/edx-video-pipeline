@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from django.test import TestCase
 
 """
 Test VEDA API
@@ -12,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(
 from control.veda_file_discovery import FileDiscovery
 
 
-class TestValidation(unittest.TestCase):
+class TestValidation(TestCase):
 
     def setUp(self):
 
