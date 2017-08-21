@@ -1,10 +1,14 @@
 
+import ast
 import os
 import sys
 import unittest
+
 import requests
-import ast
 import yaml
+
+from veda_file_ingest import VideoProto
+from veda_val import VALAPICall
 
 requests.packages.urllib3.disable_warnings()
 """
@@ -14,8 +18,6 @@ set to pass if instance_config.yaml is missing
 """
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from veda_val import VALAPICall
-from veda_file_ingest import VideoProto
 
 
 class TestVALAPI(unittest.TestCase):
@@ -33,7 +35,7 @@ class TestVALAPI(unittest.TestCase):
 
         self.auth_yaml = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'veda_auth.yaml'
+            'instance_config.yaml'
         )
 
     def test_val_setup(self):

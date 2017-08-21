@@ -21,6 +21,10 @@ DATABASES:
 
 django_secret_key: ""
 
+# Django DEBUG global
+# (set to false in prod)
+debug: false
+
 # ---
 # AWS Buckets, Prefixes
 # ---
@@ -40,6 +44,10 @@ veda_deliverable_bucket:
 # Settings
 multi_upload_barrier: 2000000000
 
+# Ingest Secret
+# TODO: Elminate access key after AWS Support ticket 08/20/17 regarding cross-account IAM role access.
+veda_secret_access_key:
+veda_access_key_id:
 
 # ---
 # email vars

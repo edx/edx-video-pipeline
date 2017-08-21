@@ -1,9 +1,13 @@
 
 import os
 import sys
+import uuid
+
 import django
 import yaml
-import uuid
+
+from control_env import *
+from dependencies.shotgun_api3 import Shotgun
 
 
 """
@@ -12,11 +16,9 @@ Get a list of needed encodes from VEDA
 * Protected against extant URLs *
 
 """
-from control_env import *
-from dependencies.shotgun_api3 import Shotgun
 
 
-class VedaEncode():
+class VedaEncode(object):
 
     """
     This should create a scrubbed list of encode profiles for processing
@@ -55,27 +57,28 @@ class VedaEncode():
                 return None
 
     def determine_encodes(self):
+        """
+        Determine which encodes are needed via course-based workflow for video.
+        """
         self.match_profiles()
 
-        for e in self.encode_list.copy():
-            enc_query = Encode.objects.filter(
-                product_spec=e
-            )
-            if len(enc_query) == 0:
-                self.encode_list.remove(e)
-            else:
-                if enc_query[0].profile_active is False:
-                    self.encode_list.remove(e)
+        for encode in self.encode_list.copy():
+            try:
+                encode_queryset = Encode.objects.filter(product_spec=encode)
+                if encode_queryset.exists():
+                    if not encode_queryset.first.profile_active:
+                        self.encode_list.remove(encode)
+                else:
+                    self.encode_list.remove(encode)
+            except AttributeError:
+                continue
 
         self.query_urls()
-        if len(self.encode_list) == 0:
-            return None
 
-        send_list = []
-        for s in self.encode_list.copy():
-            send_list.append(s)
+        if len(self.encode_list) <= 0:
+            return
 
-        return send_list
+        return self.encode_list.copy()
 
     def match_profiles(self):
         if self.course_object.review_proc is True and self.veda_id is not None:
@@ -110,14 +113,20 @@ class VedaEncode():
             return None
 
         for l in self.encode_list.copy():
-            url_query = URL.objects.filter(
-                videoID=Video.objects.filter(edx_id=self.veda_id).latest(),
-                encode_profile=Encode.objects.get(product_spec=l.strip())
-            )
-            if len(url_query) > 0:
-                self.encode_list.remove(l)
+            try:
+                url_query = URL.objects.filter(
+                    videoID=Video.objects.filter(edx_id=self.veda_id).latest(),
+                    encode_profile=Encode.objects.get(product_spec=l.strip())
+                )
+                if len(url_query) > 0:
+                    self.encode_list.remove(l)
+            except AttributeError:
+                continue
 
     def check_review_approved(self):
+        if self.sg_script_key is None:
+            return True
+
         """
         ** Mediateam only **
         Check in with SG to see if this video

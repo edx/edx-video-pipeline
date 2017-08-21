@@ -1,12 +1,3 @@
-
-import os
-import sys
-import datetime
-from datetime import timedelta
-import yaml
-import uuid
-
-
 """
 Heal Process
 
@@ -15,28 +6,25 @@ Roll through videos, check for completion
     - fix data (if wrong), including on VAL
     - reschedule self
 
-# Heuristic
-# Encode
-# Activation
-# Logistics
-
-
-
 """
-from control_env import *
+import datetime
+import uuid
+from datetime import timedelta
 
+import yaml
+from django.utils.timezone import utc
+
+import celeryapp
+from control_env import *
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
-import celeryapp
-
 
 time_safetygap = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=1)
 
-# TODO: make a checklist of these if e != 'mobile_high' and e != 'audio_mp3' and e != 'review' and e != 'hls':
 
-
-class VedaHeal():
+class VedaHeal(object):
     """
+    Maintenance process for finding and repairing failed encodes
 
     """
     def __init__(self, **kwargs):
@@ -83,9 +71,7 @@ class VedaHeal():
     def send_encodes(self):
         for v in self.video_query:
             encode_list = self.determine_fault(video_object=v)
-            """
-            Using the 'Video Proto' Model
-            """
+            # Using the 'Video Proto' Model
             if self.val_status is not None:
                 VAC = VALAPICall(
                     video_proto=None,
@@ -115,7 +101,7 @@ class VedaHeal():
 
     def determine_fault(self, video_object):
         """
-        Is there anything to do with this?
+        Determine expected and completed encodes
         """
         if self.freezing_bug is True:
             if video_object.video_trans_status == 'Corrupt File':
@@ -133,32 +119,36 @@ class VedaHeal():
         """
         Finally, determine encodes
         """
-        E = VedaEncode(
+        uncompleted_encodes = VedaEncode(
             course_object=video_object.inst_class,
             veda_id=video_object.edx_id
-        )
-
-        encode_list = E.determine_encodes()
+        ).determine_encodes()
+        expected_encodes = VedaEncode(
+            course_object=video_object.inst_class,
+        ).determine_encodes()
         try:
-            encode_list.remove('review')
-        except:
+            uncompleted_encodes.remove('review')
+        except ValueError:
             pass
-        """
-        Status Cleaning
-        """
-        check_list = []
-        if encode_list is not None:
-            for e in encode_list:
-                if e != 'mobile_high' and e != 'audio_mp3' and e != 'review' and e != 'hls':
-                    check_list.append(e)
 
+        # list comparison
+        return self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
+
+    def differentiate_encodes(self, uncompleted_encodes, expected_encodes, video_object):
+        """
+        Update video status if complete
+        """
+        # Video Status Updating
+        check_list = []
+        if uncompleted_encodes is not None:
+            for e in uncompleted_encodes:
+                # These encodes don't count towards 'file_complete'
+                if e != 'mobile_high' and e != 'audio_mp3' and e != 'review':
+                    check_list.append(e)
         if check_list is None or len(check_list) == 0:
             self.val_status = 'file_complete'
-
-            """
-            File is complete!
-            Check for data parity, and call done
-            """
+            # File is complete!
+            # Check for data parity, and call done
             if video_object.video_trans_status != 'Complete':
                 Video.objects.filter(
                     edx_id=video_object.edx_id
@@ -166,51 +156,58 @@ class VedaHeal():
                     video_trans_status='Complete',
                     video_trans_end=datetime.datetime.utcnow().replace(tzinfo=utc)
                 )
-        if encode_list is None or len(encode_list) == 0:
+        if not uncompleted_encodes or len(uncompleted_encodes) == 0:
             return []
 
+        if self.freezing_bug:
+            if self.determine_longterm_corrupt(uncompleted_encodes, expected_encodes, video_object):
+                return []
+
+        if self.val_status != 'file_complete':
+            self.val_status = 'transcode_queue'
+        return uncompleted_encodes
+
+    def determine_longterm_corrupt(self, uncompleted_encodes, expected_encodes, video_object):
         """
         get baseline // if there are == encodes and baseline,
         mark file corrupt -- just run the query again with
         no veda_id
         """
-        """
-        This overrides
-        """
-        if self.freezing_bug is False:
-            if self.val_status != 'file_complete':
-                self.val_status = 'transcode_queue'
-            return encode_list
 
-        E2 = VedaEncode(
-            course_object=video_object.inst_class,
-        )
-        E2.determine_encodes()
-        E2.encode_list.remove('hls')
-        if len(E2.encode_list) == len(encode_list) and len(encode_list) > 1:
-            """
-            Mark File Corrupt, accounting for migrated URLs
-            """
-            url_test = URL.objects.filter(
-                videoID=Video.objects.filter(
-                    edx_id=video_object.edx_id
-                ).latest()
-            )
-            if video_object.video_trans_start < datetime.datetime.utcnow().replace(tzinfo=utc) - \
-                    timedelta(hours=self.retry_barrier_hours):
-
-                if len(url_test) == 0:
-                    Video.objects.filter(
+        try:
+            expected_encodes.remove('hls')
+        except ValueError:
+            pass
+        # Mark File Corrupt, accounting for migrated URLs
+        if len(expected_encodes) == len(uncompleted_encodes) - 1 and len(expected_encodes) > 1:
+            try:
+                url_test = URL.objects.filter(
+                    videoID=Video.objects.filter(
                         edx_id=video_object.edx_id
-                    ).update(
-                        video_trans_status='Corrupt File',
-                        video_trans_end=datetime.datetime.utcnow().replace(tzinfo=utc)
+                    ).latest()
+                ).exclude(
+                    encode_profile=Encode.objects.get(
+                        product_spec='hls'
                     )
+                )
+            except AttributeError:
+                url_test = []
+            retry_barrier = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(hours=self.retry_barrier_hours)
+
+            if video_object.video_trans_start < retry_barrier:
+                if len(url_test) < 1:
+                    try:
+                        Video.objects.filter(
+                            edx_id=video_object.edx_id
+                        ).update(
+                            video_trans_status='Corrupt File',
+                            video_trans_end=datetime.datetime.utcnow().replace(tzinfo=utc)
+                        )
+                    except AttributeError:
+                        pass
                     self.val_status = 'file_corrupt'
-                    return []
-        if self.val_status != 'file_complete':
-            self.val_status = 'transcode_queue'
-        return encode_list
+                    return True
+        return False
 
     def purge(self):
         """
@@ -232,7 +229,6 @@ class VedaHeal():
 def main():
     VH = VedaHeal()
     VH.discovery()
-
 
 if __name__ == '__main__':
     sys.exit(main())
