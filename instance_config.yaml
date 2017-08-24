@@ -45,7 +45,7 @@ s3_base_url: https://s3.amazonaws.com
 
 # transcript bucket config
 transcript_bucket_name:
-transcript_bucket_directory:  video-transcripts/
+transcript_bucket_directory: video-transcripts/
 
 
 # a token identifying a valid request from transcript provider
