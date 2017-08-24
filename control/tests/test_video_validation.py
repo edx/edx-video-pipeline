@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from django.test import TestCase
 
 """
 Test VEDA API
@@ -12,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(
 from control.veda_video_validation import Validation
 
 
-class TestValidation(unittest.TestCase):
+class TestValidation(TestCase):
     """
     Test class for Validation
     """
@@ -28,6 +29,10 @@ class TestValidation(unittest.TestCase):
             videofile=self.videofile
         )
 
+    @unittest.skipIf(
+        'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true',
+        'Skipping this test on Travis CI due to unavailability of required ffprobe version.'
+    )
     def test_validation(self):
         """
         Check a known file for validity

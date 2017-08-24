@@ -1,16 +1,35 @@
 
-import os
-import sys
-import yaml
-import boto
-import boto.s3
-from boto.s3.key import Key
-from boto.exception import S3ResponseError
-from os.path import expanduser
-import requests
 import datetime
 import ftplib
+import logging
+import os
 import shutil
+import sys
+from os.path import expanduser
+
+import boto
+import boto.s3
+import requests
+import yaml
+from boto.exception import S3ResponseError
+from boto.s3.key import Key
+from django.core.urlresolvers import reverse
+
+import veda_deliver_xuetang
+from control_env import *
+from veda_deliver_cielo import Cielo24Transcript
+from veda_deliver_youtube import DeliverYoutube
+from VEDA_OS01 import utils
+from VEDA_OS01.models import (TranscriptPreferences, TranscriptProvider,
+                              VideoStatus)
+from VEDA_OS01.utils import build_url
+from veda_utils import ErrorObject, Metadata, Output, VideoProto
+from veda_val import VALAPICall
+from veda_video_validation import Validation
+from watchdog import Watchdog
+
+LOGGER = logging.getLogger(__name__)
+
 
 
 try:
@@ -28,14 +47,6 @@ and upload to the appropriate endpoint via the approp. methods
 """
 homedir = expanduser("~")
 
-from control_env import *
-from veda_utils import ErrorObject, Output, Metadata, VideoProto
-from veda_video_validation import Validation
-from veda_val import VALAPICall
-from veda_deliver_cielo import Cielo24Transcript
-import veda_deliver_xuetang
-from veda_deliver_youtube import DeliverYoutube
-from watchdog import Watchdog
 
 watchdog_time = 10.0
 
@@ -171,7 +182,18 @@ class VedaDelivery:
         Transcript, Xuetang
         """
         self._THREEPLAY_UPLOAD()
-        self._CIELO24_UPLOAD()
+        # Transcription Process
+        # We only want to generate transcripts for `desktop_mp4` profile.
+        if self.encode_profile == 'desktop_mp4' and self.video_query.process_transcription:
+
+            # 3PlayMedia
+            if self.video_query.provider == TranscriptProvider.THREE_PLAY:
+                self.start_3play_transcription_process()
+
+            # Cielo24
+            if self.video_query.provider == TranscriptProvider.CIELO24:
+                self.cielo24_transcription_flow()
+
         self._XUETANG_ROUTE()
 
         self.status = self._DETERMINE_STATUS()
@@ -507,21 +529,48 @@ class VedaDelivery:
         os.chdir(homedir)
         return True
 
-    def _CIELO24_UPLOAD(self):
-        if self.video_query.inst_class.c24_proc is False:
+    def cielo24_transcription_flow(self):
+        """
+        Cielo24 transcription flow.
+        """
+        org = utils.extract_course_org(self.video_proto.platform_course_url[0])
+
+        try:
+            api_key = TranscriptPreferences.objects.get(org=org, provider=self.video_query.provider).api_key
+        except TranscriptPreferences.DoesNotExist:
+            LOGGER.warn('[cielo24] Unable to find api_key for org=%s', org)
             return None
 
-        if self.video_query.inst_class.mobile_override is False:
-            if self.encode_profile != 'desktop_mp4':
-                return None
+        s3_video_url = build_url(
+            self.auth_dict['s3_base_url'],
+            self.auth_dict['edx_s3_endpoint_bucket'],
+            self.encoded_file
+        )
 
-        C24 = Cielo24Transcript(
-            veda_id=self.video_query.edx_id
+        callback_base_url = build_url(
+            self.auth_dict['veda_base_url'],
+            reverse(
+                'cielo24_transcript_completed',
+                args=[self.auth_dict['transcript_provider_request_token']]
+            )
         )
-        output = C24.perform_transcription()
-        print '[ %s ] : %s' % (
-            'Cielo24 JOB', self.video_query.edx_id
+
+        # update transcript status for video in edx-val
+        VALAPICall(video_proto=None, val_status=None).update_video_status(
+            self.video_query.studio_id, VideoStatus.TRANSCRIPTION_IN_PROGRESS
         )
+
+        cielo24 = Cielo24Transcript(
+            self.video_query,
+            org,
+            api_key,
+            self.video_query.cielo24_turnaround,
+            self.video_query.cielo24_fidelity,
+            self.video_query.preferred_languages,
+            s3_video_url,
+            callback_base_url
+        )
+        cielo24.start_transcription_flow()
 
     def _THREEPLAY_UPLOAD(self):
 

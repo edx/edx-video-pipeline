@@ -55,10 +55,10 @@ xuetang_api_shared_secret:
 ##---
 # This is a list of encodes and their respective course
 # boolean matches
-encode_dict: 
-    review_proc: 
+encode_dict:
+    review_proc:
         - review
-    mobile_override: 
+    mobile_override:
         - override
     s3_proc:
         - mobile_high
@@ -75,7 +75,7 @@ encode_dict:
 # This is a list of encode profiles and their val profile matches
 # boolean matches
 val_profile_dict:
-    mobile_low: 
+    mobile_low:
         - mobile_low
 
     desktop_mp4:

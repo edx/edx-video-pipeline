@@ -39,6 +39,17 @@ veda_s3_hotstore_bucket:
 veda_deliverable_bucket:
 # Settings
 multi_upload_barrier: 2000000000
+veda_base_url:
+s3_base_url: https://s3.amazonaws.com
+
+
+# transcript bucket config
+transcript_bucket_name:
+transcript_bucket_directory: video-transcripts/
+
+
+# a token identifying a valid request from transcript provider
+transcript_provider_request_token:
 
 
 # ---
@@ -68,6 +79,8 @@ val_client_id:
 val_secret_key:
 val_password:
 val_username:
+val_transcript_create_url:
+val_video_transcript_status_url:
 
 # ---
 # Celery Info
