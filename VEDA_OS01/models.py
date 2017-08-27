@@ -647,6 +647,8 @@ class TranscriptProcessMetadata(TimeStampedModel):
     video = models.ForeignKey(Video)
     provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
     process_id = models.CharField('Process id', max_length=255)
+    # To keep track of 3Play Translations.
+    translation_id = models.CharField('Translation id', max_length=255, null=True, blank=True)
     lang_code = models.CharField('Language code', max_length=3)
     status = models.CharField(
         'Transcript status',

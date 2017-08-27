@@ -39,4 +39,10 @@ urlpatterns = [
         view=transcripts.Cielo24CallbackHandlerView.as_view(),
         name='cielo24_transcript_completed'
     ),
+    # 3PlayMedia callback handler view
+    url(
+        regex=r'^3playmedia/transcripts/handle/(?P<token>[\w]+)$',
+        view=transcripts.ThreePlayMediaCallbackHandlerView.as_view(),
+        name='3play_media_callback'
+    )
 ]
