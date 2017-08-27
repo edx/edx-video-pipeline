@@ -189,22 +189,22 @@ class Cielo24Transcript(object):
         Returns:
             cielo24 job id
         """
-        response = requests.get(
-            build_url(
-                self.cielo24_site,
-                self.cielo24_new_job,
-                v=1,
-                language='en',
-                api_token=self.api_key,
-                job_name=self.video.studio_id
-            )
+        create_job_url = build_url(
+            self.cielo24_site,
+            self.cielo24_new_job,
+            v=1,
+            language='en',
+            api_token=self.api_key,
+            job_name=self.video.studio_id
         )
+        response = requests.get(create_job_url)
 
         if not response.ok:
             raise Cielo24CreateJobError(
-                '[CREATE JOB ERROR] status={} -- text={}'.format(
+                '[CREATE JOB ERROR] url={} -- status={} -- text={}'.format(
+                    create_job_url,
                     response.status_code,
-                    response.text
+                    response.text,
                 )
             )
 
