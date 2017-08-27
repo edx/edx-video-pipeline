@@ -127,7 +127,7 @@ class VideoStatus(object):
     PROGRESS = 'Progress'
     COMPLETE = 'Complete'
     TRANSCRIPTION_IN_PROGRESS = 'transcription_in_progress'
-    TRANSCRIPTION_READY = 'transcription_ready'
+    TRANSCRIPT_READY = 'transcript_ready'
 
     CHOICES = (
         (SI, 'System Ingest'),
@@ -147,7 +147,7 @@ class VideoStatus(object):
         (PROGRESS, 'In Progress'),
         (COMPLETE, 'Complete'),
         (TRANSCRIPTION_IN_PROGRESS, 'Transcription In Progress'),
-        (TRANSCRIPTION_READY, 'Transcription Ready'),
+        (TRANSCRIPT_READY, 'Transcript Ready'),
     )
 
 
@@ -619,9 +619,9 @@ class VedaUpload (models.Model):
         )
 
 
-class TranscriptPreferences(TimeStampedModel):
+class TranscriptCredentials(TimeStampedModel):
     """
-    Model to contain third party transcription service provider preferances.
+    Model to contain third party transcription service provider preferences.
     """
     org = models.CharField(
         'Organization',
@@ -634,7 +634,7 @@ class TranscriptPreferences(TimeStampedModel):
 
     class Meta:
         unique_together = ('org', 'provider')
-        verbose_name_plural = 'Transcript preferences'
+        verbose_name_plural = 'Transcript Credentials'
 
     def __unicode__(self):
         return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
@@ -647,7 +647,9 @@ class TranscriptProcessMetadata(TimeStampedModel):
     video = models.ForeignKey(Video)
     provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
     process_id = models.CharField('Process id', max_length=255)
-    lang_code = models.CharField('Language code', max_length=3)
+    # To keep track of 3Play Translations.
+    translation_id = models.CharField('Translation id', max_length=255, null=True, blank=True)
+    lang_code = models.CharField('Language code', max_length=8)
     status = models.CharField(
         'Transcript status',
         max_length=50,
@@ -658,6 +660,17 @@ class TranscriptProcessMetadata(TimeStampedModel):
     class Meta:
         verbose_name_plural = 'Transcript process metadata'
         get_latest_by = 'modified'
+
+    def update(self, **fields):
+        """
+        Updates a process.
+
+        Keyword Arguments:
+            fields(dict): dict containing all the fields to be updated.
+        """
+        for attr, value in fields.iteritems():
+            setattr(self, attr, value)
+        self.save()
 
     def __unicode__(self):
         return u'{video} - {provider} - {lang}'.format(
