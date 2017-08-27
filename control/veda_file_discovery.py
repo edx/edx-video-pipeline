@@ -7,7 +7,7 @@ import boto.s3
 from boto.exception import S3ResponseError, S3DataError
 import yaml
 
-from VEDA_OS01.models import TranscriptPreferences
+from VEDA_OS01.models import TranscriptCredentials
 from VEDA_OS01.utils import extract_course_org
 
 try:
@@ -237,12 +237,12 @@ class FileDiscovery(object):
         # Make decision if this video needs the transcription as well.
         try:
             transcript_preferences = json.loads(transcript_preferences)
-            TranscriptPreferences.objects.get(
+            TranscriptCredentials.objects.get(
                 org=extract_course_org(course_url),
                 provider=transcript_preferences.get('provider')
             )
             process_transcription = True
-        except (TypeError, TranscriptPreferences.DoesNotExist):
+        except (TypeError, TranscriptCredentials.DoesNotExist):
             # when the preferences are not set OR these are set to some data in invalid format OR these don't
             # have associated 3rd party transcription provider API keys.
             process_transcription = False
