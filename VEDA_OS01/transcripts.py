@@ -137,7 +137,7 @@ def cielo24_transcript_callback(sender, **kwargs):
             provider=TranscriptProvider.CIELO24,
             process_id=job_id,
             lang_code=lang_code
-        ).latest('modified')
+        ).latest()
     except TranscriptProcessMetadata.DoesNotExist:
         LOGGER.exception(
             '[CIELO24 TRANSCRIPTS] Unable to get transcript process metadata for job_id=%s',
