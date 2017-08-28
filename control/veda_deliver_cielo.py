@@ -105,15 +105,14 @@ class Cielo24Transcript(object):
         """
         Request cielo24 to generate transcripts for a video.
         """
-        callback_url = urllib.quote_plus(
-            build_url(
-                self.callback_base_url,
-                job_id=job_id,
-                lang_code=lang_code,
-                org=self.org,
-                video_id=self.video.studio_id
-            )
+        callback_url = build_url(
+            self.callback_base_url,
+            job_id=job_id,
+            lang_code=lang_code,
+            org=self.org,
+            video_id=self.video.studio_id
         )
+
         response = requests.get(
             build_url(
                 self.cielo24_site,
