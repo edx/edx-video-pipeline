@@ -114,12 +114,12 @@ class Cielo24TranscriptTests(APITestCase):
         self.transcript_process_metadata = TranscriptProcessMetadata.objects.create(**metadata)
 
         self.transcript_create_data = {
-            'transcript_format': transcripts.TRANSCRIPT_SJSON,
+            'file_format': transcripts.TRANSCRIPT_SJSON,
             'video_id': self.video.studio_id,
-            'transcript_url': '{directory}{uuid}.sjson'.format(
+            'name': '{directory}{uuid}.sjson'.format(
                 directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
             ),
-            'language': 'en',
+            'language_code': 'en',
             'provider': TranscriptProvider.CIELO24
         }
 
@@ -227,7 +227,7 @@ class Cielo24TranscriptTests(APITestCase):
         # verify sjson data uploaded to s3
         bucket = conn.get_bucket(CONFIG_DATA['transcript_bucket_name'])
         key = Key(bucket)
-        key.key = transcript_create_request_data['transcript_url']
+        key.key = transcript_create_request_data['name']
         sjson = json.loads(key.get_contents_as_string())
         self.assertEqual(sjson, TRANSCRIPT_SJSON_DATA)
 
