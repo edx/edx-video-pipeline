@@ -398,10 +398,10 @@ class VALAPICall():
 
         post_data = {
             'video_id': video_id,
-            'language': lang_code,
-            'transcript_url': name,
-            'transcript_format': transcript_format,
+            'name': name,
             'provider': provider,
+            'language_code': lang_code,
+            'file_format': transcript_format,
         }
 
         response = requests.post(
