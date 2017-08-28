@@ -126,7 +126,7 @@ class Cielo24TranscriptTests(TestCase):
                 'method': 'GET'
             },
             {
-                'url': 'https://api.cielo24.com/api/job/perform_transcription?transcription_fidelity=PROFESSIONAL&job_id=000-111-222&v=1&priority=PRIORITY&api_token=cielo24_api_key&callback_url=https%253A%252F%252Fveda.edx.org%252Fcielo24%252Ftranscript_completed%252F1234567890%253Flang_code%253D{}%2526video_id%253D12345%2526job_id%253D000-111-222%2526org%253DMAx&target_language={}',
+                'url': 'https://api.cielo24.com/api/job/perform_transcription?transcription_fidelity=PROFESSIONAL&job_id=000-111-222&v=1&priority=PRIORITY&api_token=cielo24_api_key&callback_url=https%3A%2F%2Fveda.edx.org%2Fcielo24%2Ftranscript_completed%2F1234567890%3Flang_code%3D{}%26video_id%3D12345%26job_id%3D000-111-222%26org%3DMAx&target_language={}',
                 'body': None,
                 'method': 'GET'
             }
