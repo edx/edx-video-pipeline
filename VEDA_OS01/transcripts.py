@@ -24,6 +24,7 @@ from VEDA_OS01.models import (TranscriptPreferences, TranscriptProcessMetadata,
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
+logging.basicConfig()
 LOGGER = logging.getLogger(__name__)
 TRANSCRIPT_SJSON = 'sjson'
 CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=['job_id', 'lang_code', 'org', 'video_id'])
@@ -178,7 +179,7 @@ def cielo24_transcript_callback(sender, **kwargs):
             sjson_file_name = upload_sjson_to_s3(CONFIG, sjson)
         except Exception:
             LOGGER.exception(
-                '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s -- message=%s',
+                '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s',
                 video_id,
                 lang_code,
                 job_id
@@ -256,11 +257,11 @@ def upload_sjson_to_s3(config, sjson_data):
     Upload sjson data to s3.
     """
     s3_conn = boto.connect_s3()
-    bucket = s3_conn.get_bucket(config['transcript_bucket_name'])
+    bucket = s3_conn.get_bucket(config['aws_video_transcripts_bucket'])
     k = Key(bucket)
     k.content_type = 'application/json'
     k.key = '{directory}{uuid}.sjson'.format(
-        directory=config['transcript_bucket_directory'],
+        directory=config['aws_video_transcripts_prefix'],
         uuid=uuid.uuid4().hex
     )
     k.set_contents_from_string(json.dumps(sjson_data))
