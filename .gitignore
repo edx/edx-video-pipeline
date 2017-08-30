@@ -11,9 +11,6 @@ sandbox.db
 
 coverage/
 
-# TODO remove this once migrations are shipped with the code
-*/migrations/*
-
 reports/
 
 .cache/
