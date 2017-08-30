@@ -181,6 +181,15 @@ class VedaDelivery:
         """
         Transcript, Xuetang
         """
+
+        self._XUETANG_ROUTE()
+
+        self.status = self._DETERMINE_STATUS()
+
+        self._UPDATE_DATA()
+
+        self._CLEANUP()
+
         self._THREEPLAY_UPLOAD()
         # Transcription Process
         # We only want to generate transcripts for `desktop_mp4` profile.
@@ -194,13 +203,6 @@ class VedaDelivery:
             if self.video_query.provider == TranscriptProvider.CIELO24:
                 self.cielo24_transcription_flow()
 
-        self._XUETANG_ROUTE()
-
-        self.status = self._DETERMINE_STATUS()
-
-        self._UPDATE_DATA()
-
-        self._CLEANUP()
 
     def _INFORM_INTAKE(self):
         """
