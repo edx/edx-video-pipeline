@@ -117,7 +117,7 @@ class Cielo24TranscriptTests(APITestCase):
             'file_format': transcripts.TRANSCRIPT_SJSON,
             'video_id': self.video.studio_id,
             'name': '{directory}{uuid}.sjson'.format(
-                directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
+                directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
             ),
             'language_code': 'en',
             'provider': TranscriptProvider.CIELO24
@@ -204,7 +204,7 @@ class Cielo24TranscriptTests(APITestCase):
 
         # create s3 bucket -- all this is happening in moto's virtual environment
         conn = S3Connection()
-        conn.create_bucket(CONFIG_DATA['transcript_bucket_name'])
+        conn.create_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
 
         transcripts.cielo24_transcript_callback(None, **REQUEST_PARAMS)
 
@@ -225,7 +225,7 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertEqual(json.loads(responses.calls[3].request.body), self.video_transcript_ready_status_data)
 
         # verify sjson data uploaded to s3
-        bucket = conn.get_bucket(CONFIG_DATA['transcript_bucket_name'])
+        bucket = conn.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
         key = Key(bucket)
         key.key = transcript_create_request_data['name']
         sjson = json.loads(key.get_contents_as_string())

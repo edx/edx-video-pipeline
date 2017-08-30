@@ -8,6 +8,7 @@ from boto.exception import S3ResponseError, S3DataError
 import yaml
 
 from VEDA_OS01.models import TranscriptPreferences
+from VEDA_OS01.utils import extract_course_org
 
 try:
     boto.config.add_section('Boto')
@@ -237,9 +238,7 @@ class FileDiscovery(object):
         try:
             transcript_preferences = json.loads(transcript_preferences)
             TranscriptPreferences.objects.get(
-                # TODO: Once ammar is done with cielo24.
-                # org=extract_course_org(course_url),
-                org=transcript_preferences.get('org'),
+                org=extract_course_org(course_url),
                 provider=transcript_preferences.get('provider')
             )
             process_transcription = True
