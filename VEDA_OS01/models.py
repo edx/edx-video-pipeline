@@ -619,9 +619,9 @@ class VedaUpload (models.Model):
         )
 
 
-class TranscriptPreferences(TimeStampedModel):
+class TranscriptCredentials(TimeStampedModel):
     """
-    Model to contain third party transcription service provider preferances.
+    Model to contain third party transcription service provider preferences.
     """
     org = models.CharField(
         'Organization',
@@ -634,7 +634,7 @@ class TranscriptPreferences(TimeStampedModel):
 
     class Meta:
         unique_together = ('org', 'provider')
-        verbose_name_plural = 'Transcript preferences'
+        verbose_name_plural = 'Transcript Credentials'
 
     def __unicode__(self):
         return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
@@ -649,7 +649,7 @@ class TranscriptProcessMetadata(TimeStampedModel):
     process_id = models.CharField('Process id', max_length=255)
     # To keep track of 3Play Translations.
     translation_id = models.CharField('Translation id', max_length=255, null=True, blank=True)
-    lang_code = models.CharField('Language code', max_length=3)
+    lang_code = models.CharField('Language code', max_length=8)
     status = models.CharField(
         'Transcript status',
         max_length=50,

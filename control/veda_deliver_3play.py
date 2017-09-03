@@ -102,11 +102,7 @@ class ThreePLayMediaClient(object):
             callback_url=self.callback_url,
         )
         upload_url = build_url(self.base_url, self.upload_media_file_url)
-        response = requests.post(
-            url=upload_url,
-            data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'}
-        )
+        response = requests.post(url=upload_url, json=payload)
 
         if not response.ok:
             raise ThreePlayMediaPerformTranscriptionError(

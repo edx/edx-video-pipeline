@@ -20,7 +20,7 @@ from rest_framework.views import APIView
 
 from control.veda_val import VALAPICall
 from VEDA_OS01 import utils
-from VEDA_OS01.models import (TranscriptPreferences, TranscriptProcessMetadata,
+from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
                               TranscriptProvider, TranscriptStatus,
                               VideoStatus)
 
@@ -28,11 +28,6 @@ requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
 logging.basicConfig()
 LOGGER = logging.getLogger(__name__)
-
-VALID_TRANSCRIPT_PROVIDERS = [
-    '',
-    '',
-]
 
 # 3PlayMedia possible send-along statuses for a transcription callback.
 COMPLETE = 'complete'
@@ -116,9 +111,13 @@ class Cielo24CallbackHandlerView(APIView):
         """
         Handle Cielo24 callback request.
         """
-        attrs = ('job_id', 'lang_code', 'org', 'video_id')
-        if not all([attr in request.query_params for attr in attrs]):
-            LOGGER.warn('[CIELO24 HANDLER] Required params are missing %s', request.query_params.keys())
+        required_attrs = ('job_id', 'lang_code', 'org', 'video_id')
+        missing = [attr for attr in required_attrs if attr not in request.query_params.keys()]
+        if missing:
+            LOGGER.warning(
+                '[CIELO24 HANDLER] Required params are missing %s',
+                missing,
+            )
             return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
         CIELO24_TRANSCRIPT_COMPLETED.send_robust(
@@ -155,14 +154,14 @@ def cielo24_transcript_callback(sender, **kwargs):
         job_id
     )
 
-    # get transcript preferences for an organization
+    # get transcript credentials for an organization
     try:
-        transcript_prefs = TranscriptPreferences.objects.get(
+        transcript_prefs = TranscriptCredentials.objects.get(
             org=org,
             provider=TranscriptProvider.CIELO24,
         )
-    except TranscriptPreferences.DoesNotExist:
-        LOGGER.exception('[CIELO24 TRANSCRIPTS] Unable to get transcript preferences for job_id=%s', job_id)
+    except TranscriptCredentials.DoesNotExist:
+        LOGGER.exception('[CIELO24 TRANSCRIPTS] Unable to get transcript credentials for job_id=%s', job_id)
 
     # mark the transcript for a particular language as ready
     try:
@@ -177,7 +176,7 @@ def cielo24_transcript_callback(sender, **kwargs):
             job_id
         )
 
-    # if transcript preferences are missing then we can do nothing
+    # if transcript credentials are missing then we can do nothing
     if not transcript_prefs and process_metadata:
         process_metadata.status = TranscriptStatus.FAILED
         process_metadata.save()
@@ -211,7 +210,7 @@ def cielo24_transcript_callback(sender, **kwargs):
             sjson_file_name = upload_sjson_to_s3(CONFIG, sjson)
         except Exception:
             LOGGER.exception(
-                '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s',
+                '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s.',
                 video_id,
                 lang_code,
                 job_id
@@ -426,7 +425,7 @@ def order_translations(file_id, api_key, api_secret, target_languages):
             continue
 
         # 2 - At this point, we've got our service ready to use. Now, place an order for the translation.
-        response = requests.post(THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=file_id), data={
+        response = requests.post(THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=file_id), json={
             'apikey': api_key,
             'api_secret_key': api_secret,
             'translation_service_id': translation_service_id,
@@ -465,6 +464,7 @@ def order_translations(file_id, api_key, api_secret, target_languages):
 @django.dispatch.receiver(THREE_PLAY_TRANSCRIPTION_DONE, dispatch_uid="three_play_transcription_done")
 def three_play_transcription_callback(sender, **kwargs):
     """
+    This is a receiver for 3Play Media callback signal.
 
     Arguments:
         sender: sender of the signal
@@ -502,8 +502,8 @@ def three_play_transcription_callback(sender, **kwargs):
     if state == COMPLETE:
         # Indicates that the default video speech transcription has been done successfully.
         try:
-            transcript_secrets = TranscriptPreferences.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
-        except TranscriptPreferences.DoesNotExist:
+            transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
+        except TranscriptCredentials.DoesNotExist:
             # Fail the process
             process.status = TranscriptStatus.FAILED
             process.save()
@@ -676,8 +676,8 @@ def retrieve_three_play_translations():
         org = utils.extract_course_org(course_id=course_id)
 
         try:
-            three_play_secrets = TranscriptPreferences.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
-        except TranscriptPreferences.DoesNotExist:
+            three_play_secrets = TranscriptCredentials.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
+        except TranscriptCredentials.DoesNotExist:
             LOGGER.exception(
                 u'[3PlayMedia Task] 3Play secrets not found for video=%s -- lang_code=%s -- process_id=%s',
                 translation_process.video.studio_id,
@@ -720,22 +720,19 @@ def retrieve_three_play_translations():
             continue
 
         if translation_status['state'] == 'complete':
-            translation_download_url = utils.build_url(
-                THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
-                    file_id=translation_process.process_id,
-                    translation_id=translation_process.translation_id,
-                ),
-                apikey=three_play_secrets.api_key
-            )
-            response = requests.get(translation_download_url)
-            if not response.ok:
-                LOGGER.error(
-                    u'[3PlayMedia Task] Translation download failed for video=%s -- lang_code=%s -- process_id=%s -- '
-                    u'status=%s',
+            try:
+                response = fetch_srt_data(
+                    url=THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
+                        file_id=translation_process.process_id, translation_id=translation_process.translation_id
+                    ),
+                    apikey=three_play_secrets.api_key,
+                )
+            except TranscriptFetchError:
+                LOGGER.exception(
+                    u'[3PlayMedia Task] Translation download failed for video=%s -- lang_code=%s -- process_id=%s.',
                     translation_process.video.studio_id,
                     translation_process.lang_code,
-                    translation_process.process_id,
-                    response.status_code,
+                    translation_process.process_id
                 )
                 continue
 
@@ -743,7 +740,7 @@ def retrieve_three_play_translations():
             # ValueError if its a valid response, otherwise it'll be json
             # response in result of an error.
             try:
-                json.loads(response.text)
+                json.loads(response)
                 translation_process.status = TranscriptStatus.FAILED
                 translation_process.save()
                 LOGGER.error(
@@ -762,7 +759,7 @@ def retrieve_three_play_translations():
             translation_process.save()
 
             try:
-                sjson_transcript = convert_srt_to_sjson(response.text)
+                sjson_transcript = convert_srt_to_sjson(response)
                 sjson_file = upload_sjson_to_s3(CONFIG, sjson_transcript)
             except Exception:
                 # in case of any exception, log and raise.

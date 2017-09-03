@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from VEDA_OS01 import transcripts, utils
-from VEDA_OS01.models import (Course, TranscriptPreferences,
+from VEDA_OS01.models import (Course, TranscriptCredentials,
                               TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus, Video)
 
@@ -108,7 +108,7 @@ class Cielo24TranscriptTests(APITestCase):
             **VIDEO_DATA
         )
 
-        self.transcript_prefs = TranscriptPreferences.objects.create(
+        self.transcript_prefs = TranscriptCredentials.objects.create(
             **TRANSCRIPT_PREFERENCES
         )
 
@@ -142,10 +142,11 @@ class Cielo24TranscriptTests(APITestCase):
         REQUEST_PARAMS['video_id'] = self.video.studio_id
 
     @data(
-        {'url': 'cielo24/transcript_completed', 'status_code': 404},
-        {'url': None, 'status_code': 200},
+        ('cielo24/transcript_completed', 404),
+        (None, 200),
     )
     @unpack
+    @patch('VEDA_OS01.transcripts.CIELO24_TRANSCRIPT_COMPLETED.send_robust', Mock(return_value=None))
     def test_provider(self, url, status_code):
         """
         Verify that only valid provider requests are allowed .
@@ -157,19 +158,26 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertEqual(response.status_code, status_code)
 
     @data(
-        {'params': {}},
-        {'params': {'job_id': 1}},
-        {'params': {'job_id': 2, 'lang_code': 'en'}},
-        {'params': {'job_id': 3, 'lang_code': 'ar', 'org': 'edx'}}
+        ({}, ['job_id', 'lang_code', 'org', 'video_id']),
+        ({'job_id': 1}, ['lang_code', 'org', 'video_id']),
+        ({'job_id': 2, 'lang_code': 'en'}, ['org', 'video_id']),
+        ({'job_id': 3, 'lang_code': 'ar', 'org': 'edx'}, ['video_id']),
     )
     @unpack
-    def test_missing_required_params(self, params):
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    def test_missing_required_params(self, params, logger_params, mock_logger):
         """
         Verify that 400 response is recevied if any required param is missing.
         """
         response = self.client.get(self.url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_logger.warning.assert_called_with(
+            '[CIELO24 HANDLER] Required params are missing %s',
+            logger_params,
+        )
 
+    @responses.activate
+    @patch('VEDA_OS01.transcripts.CIELO24_TRANSCRIPT_COMPLETED.send_robust', Mock(return_value=None))
     def test_transcript_callback_get_request(self):
         """
         Verify that transcript callback get request is working as expected.
@@ -263,7 +271,7 @@ class Cielo24TranscriptTests(APITestCase):
             with self.assertRaises(transcripts.TranscriptConversionError) as conversion_exception:
                 transcripts.cielo24_transcript_callback(None, **REQUEST_PARAMS)
                 mock_logger.exception.assert_called_with(
-                    '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s -- message=%s',
+                    '[CIELO24 TRANSCRIPTS] Request failed for video=%s -- lang=%s -- job_id=%s.',
                     REQUEST_PARAMS['video_id'],
                     REQUEST_PARAMS['lang_code'],
                     REQUEST_PARAMS['job_id']
@@ -331,7 +339,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             **VIDEO_DATA
         )
 
-        self.transcript_prefs = TranscriptPreferences.objects.create(
+        self.transcript_prefs = TranscriptCredentials.objects.create(
             org=self.org,
             provider=TranscriptProvider.THREE_PLAY,
             api_key='insecure_api_key',
@@ -710,7 +718,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             # request - 5
             {
                 'url': transcripts.THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=self.file_id),
-                'body': urllib.urlencode({
+                'body': json.dumps({
                     'apikey': self.transcript_prefs.api_key,
                     'api_secret_key': self.transcript_prefs.api_secret,
                     'translation_service_id': 30,
@@ -1240,14 +1248,12 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
             ],
             {
-                'method': 'error',
+                'method': 'exception',
                 'args': (
-                    '[3PlayMedia Task] Translation download failed for video=%s -- lang_code=%s -- process_id=%s -- '
-                    'status=%s',
+                    '[3PlayMedia Task] Translation download failed for video=%s -- lang_code=%s -- process_id=%s.',
                     VIDEO_DATA['studio_id'],
                     'ro',
-                    '112233',
-                    400,
+                    '112233'
                 )
             },
             TranscriptStatus.IN_PROGRESS

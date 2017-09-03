@@ -18,7 +18,7 @@ from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
-from VEDA_OS01.models import (TranscriptPreferences, TranscriptProvider,
+from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
                               VideoStatus)
 from VEDA_OS01.utils import build_url
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
@@ -534,8 +534,8 @@ class VedaDelivery:
         org = utils.extract_course_org(self.video_proto.platform_course_url[0])
 
         try:
-            api_key = TranscriptPreferences.objects.get(org=org, provider=self.video_query.provider).api_key
-        except TranscriptPreferences.DoesNotExist:
+            api_key = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider).api_key
+        except TranscriptCredentials.DoesNotExist:
             LOGGER.warn('[cielo24] Unable to find api_key for org=%s', org)
             return None
 
@@ -578,7 +578,7 @@ class VedaDelivery:
             # Picks the first course from the list as there may be multiple
             # course runs in that list (i.e. all having the same org).
             org = utils.extract_course_org(self.video_proto.platform_course_url[0])
-            transcript_secrets = TranscriptPreferences.objects.get(org=org, provider=self.video_query.provider)
+            transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider)
 
             # update transcript status for video in edx-val
             VALAPICall(video_proto=None, val_status=None).update_video_status(
@@ -612,7 +612,7 @@ class VedaDelivery:
             )
             three_play_media.generate_transcripts()
 
-        except TranscriptPreferences.DoesNotExist:
+        except TranscriptCredentials.DoesNotExist:
             LOGGER.warning(
                 'Transcript preference is not found for provider=%s, video=%s',
                 self.video_query.provider,
