@@ -5,6 +5,7 @@ Transcript tests
 import json
 import responses
 import urllib
+import urlparse
 
 from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
@@ -368,7 +369,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         Creates an s3 bucket. That is happening in moto's virtual environment.
         """
         connection = S3Connection()
-        connection.create_bucket(CONFIG_DATA['transcript_bucket_name'])
+        connection.create_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
         return connection
 
     def invoke_3play_callback(self, state='complete'):
@@ -387,7 +388,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         )
         return response
 
-    def assert_request(self, received_request, expected_request):
+    def assert_request(self, received_request, expected_request, decode_func):
         """
         Verify that `received_request` matches `expected_request`
         """
@@ -397,6 +398,11 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 actual_headers = getattr(received_request, request_attr)
                 for attr, expect_value in expected_headers.iteritems():
                     self.assertEqual(actual_headers[attr], expect_value)
+            elif request_attr == 'body' and decode_func:
+                expected_body = expected_request[request_attr]
+                actual_body = decode_func(getattr(received_request, request_attr))
+                for attr, expect_value in expected_body.iteritems():
+                    self.assertEqual(actual_body[attr], expect_value)
             else:
                 self.assertEqual(getattr(received_request, request_attr), expected_request[request_attr])
 
@@ -404,9 +410,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         Verify sjson data uploaded to s3
         """
-        key = Key(connection.get_bucket(CONFIG_DATA['transcript_bucket_name']))
+        key = Key(connection.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket']))
         key.key = '{directory}{uuid}.sjson'.format(
-            directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
+            directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
         )
         sjson_transcript = json.loads(key.get_contents_as_string())
         self.assertEqual(sjson_transcript, TRANSCRIPT_SJSON_DATA)
@@ -531,47 +537,54 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             # request - 2
             {
                 'url': CONFIG_DATA['val_token_url'],
-                'body': urllib.urlencode({
-                    'grant_type': 'password',
-                    'client_id': CONFIG_DATA['val_client_id'],
-                    'client_secret': CONFIG_DATA['val_secret_key'],
-                    'username': CONFIG_DATA['val_username'],
-                    'password': CONFIG_DATA['val_password'],
-                })
+                'body': {
+                    'grant_type': ['password'],
+                    'client_id': [CONFIG_DATA['val_client_id']],
+                    'client_secret': [CONFIG_DATA['val_secret_key']],
+                    'username': [CONFIG_DATA['val_username']],
+                    'password': [CONFIG_DATA['val_password']],
+                },
+                'decode_func': urlparse.parse_qs,
             },
             # request - 3
             {
                 'url': CONFIG_DATA['val_transcript_create_url'],
-                'body': json.dumps({
-                    'transcript_format': transcripts.TRANSCRIPT_SJSON,
+                'body': {
+                    'file_format': transcripts.TRANSCRIPT_SJSON,
                     'video_id': self.video.studio_id,
-                    'language': 'en',
-                    'transcript_url': '{directory}{uuid}.sjson'.format(
-                        directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
+                    'language_code': 'en',
+                    'name': '{directory}{uuid}.sjson'.format(
+                        directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
                     ),
                     'provider': TranscriptProvider.THREE_PLAY
-                }),
+                },
                 'headers': {
                     'Authorization': 'Bearer 1234567890',
                     'content-type': 'application/json'
-                }
+                },
+                'decode_func': json.loads,
             },
             # request - 4
             {
                 'url': CONFIG_DATA['val_video_transcript_status_url'],
-                'body': json.dumps({
+                'body': {
                     'status': transcripts.VideoStatus.TRANSCRIPTION_READY,
                     'edx_video_id': self.video.studio_id
-                }),
+                },
                 'headers': {
                     'Authorization': 'Bearer 1234567890',
                     'content-type': 'application/json'
-                }
+                },
+                'decode_func': json.loads,
             }
         ]
 
         for position, expected_request in enumerate(expected_requests):
-            self.assert_request(responses.calls[position].request, expected_request)
+            self.assert_request(
+                responses.calls[position].request,
+                expected_request,
+                expected_request.pop('decode_func', None)
+            )
 
         # verify transcript sjson data uploaded to s3
         self.assert_uploaded_transcript_on_s3(connection=conn)
@@ -683,30 +696,32 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             # request - 2
             {
                 'url': CONFIG_DATA['val_token_url'],
-                'body': urllib.urlencode({
-                    'grant_type': 'password',
-                    'client_id': CONFIG_DATA['val_client_id'],
-                    'client_secret': CONFIG_DATA['val_secret_key'],
-                    'username': CONFIG_DATA['val_username'],
-                    'password': CONFIG_DATA['val_password'],
-                })
+                'body': {
+                    'grant_type': ['password'],
+                    'client_id': [CONFIG_DATA['val_client_id']],
+                    'client_secret': [CONFIG_DATA['val_secret_key']],
+                    'username': [CONFIG_DATA['val_username']],
+                    'password': [CONFIG_DATA['val_password']],
+                },
+                'decode_func': urlparse.parse_qs,
             },
             # request - 3
             {
                 'url': CONFIG_DATA['val_transcript_create_url'],
-                'body': json.dumps({
-                    'transcript_format': transcripts.TRANSCRIPT_SJSON,
+                'body': {
+                    'file_format': transcripts.TRANSCRIPT_SJSON,
                     'video_id': self.video.studio_id,
-                    'language': 'en',
-                    'transcript_url': '{directory}{uuid}.sjson'.format(
-                        directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
+                    'language_code': 'en',
+                    'name': '{directory}{uuid}.sjson'.format(
+                        directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
                     ),
                     'provider': TranscriptProvider.THREE_PLAY
-                }),
+                },
                 'headers': {
                     'Authorization': 'Bearer 1234567890',
                     'content-type': 'application/json'
-                }
+                },
+                'decode_func': json.loads,
             },
             # request - 4
             {
@@ -718,16 +733,21 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             # request - 5
             {
                 'url': transcripts.THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=self.file_id),
-                'body': json.dumps({
+                'body': {
                     'apikey': self.transcript_prefs.api_key,
                     'api_secret_key': self.transcript_prefs.api_secret,
                     'translation_service_id': 30,
-                })
+                },
+                'decode_func': json.loads,
             },
         ]
 
         for position, expected_request in enumerate(expected_requests):
-            self.assert_request(responses.calls[position].request, expected_request)
+            self.assert_request(
+                responses.calls[position].request,
+                expected_request,
+                expected_request.pop('decode_func', None),
+            )
 
         # verify sjson data uploaded to s3
         self.assert_uploaded_transcript_on_s3(connection=conn)
@@ -1114,34 +1134,40 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 # request - 3
                 {
                     'url': CONFIG_DATA['val_token_url'],
-                    'body': urllib.urlencode({
-                        'grant_type': 'password',
-                        'client_id': CONFIG_DATA['val_client_id'],
-                        'client_secret': CONFIG_DATA['val_secret_key'],
-                        'username': CONFIG_DATA['val_username'],
-                        'password': CONFIG_DATA['val_password'],
-                    })
+                    'body': {
+                        'grant_type': ['password'],
+                        'client_id': [CONFIG_DATA['val_client_id']],
+                        'client_secret': [CONFIG_DATA['val_secret_key']],
+                        'username': [CONFIG_DATA['val_username']],
+                        'password': [CONFIG_DATA['val_password']],
+                    },
+                    'decode_func': urlparse.parse_qs,
                 },
                 # request - 4
                 {
                     'url': CONFIG_DATA['val_transcript_create_url'],
-                    'body': json.dumps({
-                        'transcript_format': transcripts.TRANSCRIPT_SJSON,
+                    'body': {
+                        'file_format': transcripts.TRANSCRIPT_SJSON,
                         'video_id': self.video.studio_id,
-                        'language': lang_code,
-                        'transcript_url': '{directory}{uuid}.sjson'.format(
-                            directory=CONFIG_DATA['transcript_bucket_directory'], uuid=self.uuid_hex
+                        'language_code': lang_code,
+                        'name': '{directory}{uuid}.sjson'.format(
+                            directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
                         ),
                         'provider': TranscriptProvider.THREE_PLAY
-                    }),
+                    },
                     'headers': {
                         'Authorization': 'Bearer 1234567890',
                         'content-type': 'application/json'
-                    }
+                    },
+                    'decode_func': json.loads,
                 }
             ]
             for expected_request in expected_requests:
-                self.assert_request(responses.calls[position].request, expected_request)
+                self.assert_request(
+                    responses.calls[position].request,
+                    expected_request,
+                    expected_request.pop('decode_func', None),
+                )
                 position += 1
 
             # Asserts the transcript sjson data uploaded to s3
@@ -1162,16 +1188,20 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         # upon receiving all the translations
         expected_video_status_update_request = {
             'url': CONFIG_DATA['val_video_transcript_status_url'],
-            'body': json.dumps({
+            'body': {
                 'status': transcripts.VideoStatus.TRANSCRIPTION_READY,
                 'edx_video_id': self.video.studio_id
-            }),
+            },
             'headers': {
                 'Authorization': 'Bearer 1234567890',
                 'content-type': 'application/json'
             }
         }
-        self.assert_request(responses.calls[position].request, expected_video_status_update_request)
+        self.assert_request(
+            responses.calls[position].request,
+            expected_video_status_update_request,
+            decode_func=json.loads,
+        )
 
 
     @data(
