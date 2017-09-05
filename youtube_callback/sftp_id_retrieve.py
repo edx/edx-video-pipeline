@@ -31,7 +31,7 @@ Defaults:
 """
 homedir = expanduser("~")
 workdir = os.path.join(homedir, 'download_data_holding')
-YOUTUBE_LOOKBACK_DAYS = 15
+YOUTUBE_LOOKBACK_DAYS = 4
 
 
 def callfunction(course):

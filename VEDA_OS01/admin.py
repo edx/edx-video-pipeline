@@ -59,17 +59,19 @@ class EncodeAdmin(admin.ModelAdmin):
 class URLAdmin(admin.ModelAdmin):
     model = URL
     list_display = [
-        'videoID',
-        'encode_get',
-        'encode_url',
+        'video_id_get',
         'url_date',
-        'val_input',
-        'xuetang_input'
+        'encode_url',
+        'encode_get',
+        'val_input'
     ]
     list_filter = ['videoID__inst_class__institution']
 
     def encode_get(self, obj):
         return obj.encode_profile.encode_name
+
+    def video_id_get(self, obj):
+        return obj.videoID.edx_id
 
     search_fields = [
         'videoID__edx_id',

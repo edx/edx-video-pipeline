@@ -370,7 +370,7 @@ class URL (models.Model):
         get_latest_by = 'url_date'
 
     def __unicode__(self):
-        return u'%s : %s : %s'.format(self.videoID, self.encode_profile.encode_name, self.url_date) or u''
+        return u'%s : %s : %s'.format(self.videoID.edx_id, self.encode_profile.encode_name, self.url_date) or u''
 
 
 class VedaUpload (models.Model):
