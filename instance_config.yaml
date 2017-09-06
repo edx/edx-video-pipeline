@@ -3,23 +3,23 @@
 # Database information
 # ---
 
-#SANDBOX
-DATABASES:
-    default:
-        ENGINE: django.db.backends.sqlite3
-        NAME: sandbox.db
-
-### PRODUCTION
+# SANDBOX
 #DATABASES:
 #    default:
-#        ENGINE: 'django.db.backends.mysql'
-#        NAME:
-#        USER:
-#        PASSWORD:
-#        HOST:
-#        PORT: '3306'
+#        ENGINE: django.db.backends.sqlite3
+#        NAME: sandbox.db
 
-django_secret_key: insecure_secret_key
+## PRODUCTION
+DATABASES:
+    default:
+        ENGINE: 'django.db.backends.mysql'
+        NAME:
+        USER:
+        PASSWORD:
+        HOST:
+        PORT: '3306'
+
+django_secret_key: ""
 
 # Django DEBUG global
 # (set to false in prod)
