@@ -87,7 +87,7 @@ class ThreePlayMediaClientTests(TestCase):
         responses.add(
             responses.POST,
             u'https://api.3playmedia.com/files',
-            body=u'000-111-222',
+            body=u'111222',
             status=200
         )
 

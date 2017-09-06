@@ -111,15 +111,14 @@ class ThreePLayMediaClient(object):
                 )
             )
 
-        try:
-            # A normal response should be a text containing file id and if we're getting a deserializable dict, there
-            # must be an error: http://support.3playmedia.com/hc/en-us/articles/227729828-Files-API-Methods
-            if isinstance(json.loads(response.text), dict):
-                raise ThreePlayMediaPerformTranscriptionError(
-                    'Expected file id but got: {response}'.format(response=response.text)
-                )
-        except ValueError:
-            return response.text
+        # A normal response should be a text containing file id and if we're getting a deserializable dict, there
+        # must be an error: http://support.3playmedia.com/hc/en-us/articles/227729828-Files-API-Methods
+        if isinstance(json.loads(response.text), dict):
+            raise ThreePlayMediaPerformTranscriptionError(
+                'Expected file id but got: {response}'.format(response=response.text)
+            )
+
+        return response.text
 
     def generate_transcripts(self):
         """
