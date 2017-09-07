@@ -9,7 +9,6 @@ from django_secrets import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname((__file__)))
 
-
 ADMINS = (
     DJANGO_ADMIN,
 )
@@ -32,6 +31,8 @@ if DATABASES is None:
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = DJANGO_SECRET_KEY
+
+DEBUG = DJANGO_DEBUG
 
 ALLOWED_HOSTS = ['*']
 TIME_ZONE = 'UTC'

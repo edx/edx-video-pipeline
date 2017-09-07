@@ -104,6 +104,9 @@ def main():
         VH.send_encodes()
         return None
 
+    # TODO: Data backup
+    # TODO: API key purge
+
     if schedule is True:
         HC = HealCli()
         HC.schedule()
