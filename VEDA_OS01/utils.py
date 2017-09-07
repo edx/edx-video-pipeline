@@ -66,3 +66,21 @@ def build_url(*urls, **query_params):
         url = '{}?{}'.format(url, urllib.urlencode(query_params))
 
     return url
+
+
+def update_video_status(val_api_client, video, status):
+    """
+    Updates video status both in edx-val and edx-video-pipeline.
+
+    Arguments:
+        video(Video): Video data model object
+        status(Str): Video status to be updated
+    """
+    # update edx-val's video status
+    val_api_client.update_video_status(
+        video.studio_id, status
+    )
+
+    # update edx-video-pipeline's video status
+    video.video_trans_status = status
+    video.save()
