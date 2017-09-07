@@ -2,9 +2,6 @@
 from __future__ import absolute_import
 from celery import Celery
 import yaml
-
-from VEDA_OS01.transcripts import retrieve_three_play_translations
-
 """
 Start Celery Worker
 
@@ -50,19 +47,6 @@ app.conf.update(
     CELERYD_PREFETCH_MULTIPLIER=1,
     CELERY_ACCEPT_CONTENT=['pickle', 'json', 'msgpack', 'yaml']
 )
-
-app.conf.beat_schedule = {
-    'check-3play-translations-every-30-seconds': {
-        'task': 'tasks.fetch_three_play_translations',
-        'schedule': 30.0,
-    },
-}
-
-
-@app.task(name='fetch_three_play_translations')
-def fetch_three_play_translations():
-    retrieve_three_play_translations()
-
 
 @app.task(name='worker_encode')
 def worker_task_fire(veda_id, encode_profile, jobid):

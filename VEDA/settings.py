@@ -2,6 +2,8 @@
 Settings
 
 """
+from os.path import join, dirname, abspath
+
 DATABASES = None
 
 import os
@@ -176,3 +178,7 @@ LOGGING = {
         },
     }
 }
+
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error, wildcard-import
