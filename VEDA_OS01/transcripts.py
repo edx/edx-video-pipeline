@@ -230,7 +230,11 @@ def cielo24_transcript_callback(sender, **kwargs):
         # update transcript status for video in edx-val only if all langauge transcripts are ready
         video_jobs = TranscriptProcessMetadata.objects.filter(video__studio_id=video_id)
         if all(video_job.status == TranscriptStatus.READY for video_job in video_jobs):
-            val_api.update_video_status(process_metadata.video.studio_id, VideoStatus.TRANSCRIPT_READY)
+            utils.update_video_status(
+                val_api_client=val_api,
+                video=process_metadata.video,
+                status=VideoStatus.TRANSCRIPT_READY
+            )
 
 
 def fetch_srt_data(url, **request_params):
@@ -713,7 +717,11 @@ def three_play_transcription_callback(sender, **kwargs):
         # It will be for edx-val as well as edx-video-pipeline and this will be the case when
         # there is only one transcript language for a video(that is, already been processed).
         if not target_languages:
-            val_api.update_video_status(process.video.studio_id, VideoStatus.TRANSCRIPT_READY)
+            utils.update_video_status(
+                val_api_client=val_api,
+                video=process.video,
+                status=VideoStatus.TRANSCRIPT_READY
+            )
 
         # On success, a happy farewell log.
         LOGGER.info(
@@ -907,4 +915,8 @@ def retrieve_three_play_translations():
             # update transcript status for video in edx-val as well as edx-video-pipeline.
             video_jobs = TranscriptProcessMetadata.objects.filter(video__studio_id=translation_process.video.studio_id)
             if all(video_job.status == TranscriptStatus.READY for video_job in video_jobs):
-                val_api.update_video_status(translation_process.video.studio_id, VideoStatus.TRANSCRIPT_READY)
+                utils.update_video_status(
+                    val_api_client=val_api,
+                    video=translation_process.video,
+                    status=VideoStatus.TRANSCRIPT_READY
+                )

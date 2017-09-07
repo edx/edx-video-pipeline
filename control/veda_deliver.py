@@ -553,9 +553,12 @@ class VedaDelivery:
             )
         )
 
-        # update transcript status for video in edx-val
-        VALAPICall(video_proto=None, val_status=None).update_video_status(
-            self.video_query.studio_id, VideoStatus.TRANSCRIPTION_IN_PROGRESS
+        # update transcript status for video.
+        val_api_client = VALAPICall(video_proto=None, val_status=None)
+        utils.update_video_status(
+            val_api_client=val_api_client,
+            video=self.video_query,
+            status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
         )
 
         cielo24 = Cielo24Transcript(
@@ -580,9 +583,12 @@ class VedaDelivery:
             org = utils.extract_course_org(self.video_proto.platform_course_url[0])
             transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider)
 
-            # update transcript status for video in edx-val
-            VALAPICall(video_proto=None, val_status=None).update_video_status(
-                self.video_query.studio_id, VideoStatus.TRANSCRIPTION_IN_PROGRESS
+            # update transcript status for video.
+            val_api_client = VALAPICall(video_proto=None, val_status=None)
+            utils.update_video_status(
+                val_api_client=val_api_client,
+                video=self.video_query,
+                status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
             )
 
             # Initialize 3playMedia client and start transcription process

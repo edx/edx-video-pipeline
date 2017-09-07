@@ -236,6 +236,10 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertEqual(responses.calls[3].request.url, CONFIG_DATA['val_video_transcript_status_url'])
         self.assertEqual(json.loads(responses.calls[3].request.body), self.video_transcript_ready_status_data)
 
+        # Assert edx-video-pipeline's video status
+        video = Video.objects.get(studio_id=self.video.studio_id)
+        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
+
         # verify sjson data uploaded to s3
         bucket = conn.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
         key = Key(bucket)
@@ -585,6 +589,10 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 expected_request,
                 expected_request.pop('decode_func', None)
             )
+
+        # Assert edx-video-pipeline's video status
+        video = Video.objects.get(studio_id=self.video.studio_id)
+        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
 
         # verify transcript sjson data uploaded to s3
         self.assert_uploaded_transcript_on_s3(connection=conn)
@@ -1201,6 +1209,10 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             expected_video_status_update_request,
             decode_func=json.loads,
         )
+
+        # Asserts edx-video-pipeline's video status
+        video = Video.objects.get(studio_id=self.video.studio_id)
+        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
 
     @data(
         # not-an-ok response on translation status fetch request.
