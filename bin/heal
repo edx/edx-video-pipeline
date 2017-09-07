@@ -12,7 +12,8 @@ if project_path not in sys.path:
 
 from control.celeryapp import maintainer_healer
 from control.veda_heal import VedaHeal
-from VEDA_OS01.models import Video
+from VEDA_OS01.models import Course, Video
+from VEDA_OS01.transcripts import retrieve_three_play_translations
 
 """
 Deliver
@@ -79,6 +80,11 @@ def main():
         VH = VedaHeal()
         VH.discovery()
         VH.purge()
+
+        # Kicks off a round of retrieving successful
+        # translations from 3Play Media
+        retrieve_three_play_translations()
+
         HC = HealCli()
         HC.schedule()
         return None

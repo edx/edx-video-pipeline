@@ -413,10 +413,11 @@ class VALAPICall():
 
         if not response.ok:
             LOGGER.error(
-                'update_val_transcript failed -- video_id=%s -- provider=% -- status=%s',
+                'update_val_transcript failed -- video_id=%s -- provider=% -- status=%s -- content=%s',
                 video_id,
                 provider,
-                response.status_code
+                response.status_code,
+                response.content,
             )
 
     def update_video_status(self, video_id, status):
