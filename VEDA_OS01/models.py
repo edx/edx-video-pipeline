@@ -127,7 +127,7 @@ class VideoStatus(object):
     PROGRESS = 'Progress'
     COMPLETE = 'Complete'
     TRANSCRIPTION_IN_PROGRESS = 'transcription_in_progress'
-    TRANSCRIPTION_READY = 'transcription_ready'
+    TRANSCRIPT_READY = 'transcript_ready'
 
     CHOICES = (
         (SI, 'System Ingest'),
@@ -147,7 +147,7 @@ class VideoStatus(object):
         (PROGRESS, 'In Progress'),
         (COMPLETE, 'Complete'),
         (TRANSCRIPTION_IN_PROGRESS, 'Transcription In Progress'),
-        (TRANSCRIPTION_READY, 'Transcription Ready'),
+        (TRANSCRIPT_READY, 'Transcript Ready'),
     )
 
 

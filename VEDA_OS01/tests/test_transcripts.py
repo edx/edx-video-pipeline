@@ -128,7 +128,7 @@ class Cielo24TranscriptTests(APITestCase):
         }
 
         self.video_transcript_ready_status_data = {
-            'status': transcripts.VideoStatus.TRANSCRIPTION_READY,
+            'status': transcripts.VideoStatus.TRANSCRIPT_READY,
             'edx_video_id': self.video.studio_id
         }
 
@@ -568,7 +568,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'url': CONFIG_DATA['val_video_transcript_status_url'],
                 'body': {
-                    'status': transcripts.VideoStatus.TRANSCRIPTION_READY,
+                    'status': transcripts.VideoStatus.TRANSCRIPT_READY,
                     'edx_video_id': self.video.studio_id
                 },
                 'headers': {
@@ -1189,7 +1189,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         expected_video_status_update_request = {
             'url': CONFIG_DATA['val_video_transcript_status_url'],
             'body': {
-                'status': transcripts.VideoStatus.TRANSCRIPTION_READY,
+                'status': transcripts.VideoStatus.TRANSCRIPT_READY,
                 'edx_video_id': self.video.studio_id
             },
             'headers': {

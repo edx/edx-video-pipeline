@@ -230,7 +230,7 @@ def cielo24_transcript_callback(sender, **kwargs):
         # update transcript status for video in edx-val only if all langauge transcripts are ready
         video_jobs = TranscriptProcessMetadata.objects.filter(video__studio_id=video_id)
         if all(video_job.status == TranscriptStatus.READY for video_job in video_jobs):
-            val_api.update_video_status(process_metadata.video.studio_id, VideoStatus.TRANSCRIPTION_READY)
+            val_api.update_video_status(process_metadata.video.studio_id, VideoStatus.TRANSCRIPT_READY)
 
 
 def fetch_srt_data(url, **request_params):
@@ -618,7 +618,7 @@ def three_play_transcription_callback(sender, **kwargs):
         # in case if there is only one language which has already been processed.
         if not target_languages:
             val_api.update_video_status(
-                process.video.studio_id, VideoStatus.TRANSCRIPTION_READY
+                process.video.studio_id, VideoStatus.TRANSCRIPT_READY
             )
 
         # On success, a happy farewell log.
@@ -785,4 +785,4 @@ def retrieve_three_play_translations():
             # update transcript status for video in edx-val only if all language transcripts are ready
             video_jobs = TranscriptProcessMetadata.objects.filter(video__studio_id=translation_process.video.studio_id)
             if all(video_job.status == TranscriptStatus.READY for video_job in video_jobs):
-                val_api.update_video_status(translation_process.video.studio_id, VideoStatus.TRANSCRIPTION_READY)
+                val_api.update_video_status(translation_process.video.studio_id, VideoStatus.TRANSCRIPT_READY)
