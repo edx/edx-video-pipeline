@@ -661,6 +661,17 @@ class TranscriptProcessMetadata(TimeStampedModel):
         verbose_name_plural = 'Transcript process metadata'
         get_latest_by = 'modified'
 
+    def update(self, **fields):
+        """
+        Updates a process.
+
+        Keyword Arguments:
+            fields(dict): dict containing all the fields to be updated.
+        """
+        for attr, value in fields.iteritems():
+            setattr(self, attr, value)
+        self.save()
+
     def __unicode__(self):
         return u'{video} - {provider} - {lang}'.format(
             video=self.video.edx_id,

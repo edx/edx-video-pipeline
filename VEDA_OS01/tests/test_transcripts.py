@@ -765,21 +765,22 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {'body': json.dumps({'iserror': True}), 'content_type': 'application/json', 'status': 200},
             'error',
             (
-                '[3PlayMedia Task] Transcript fetch error for video=%s -- lang_code=%s -- process=%s -- response=%s',
-                ANY,
-                ANY,
-                ANY,
-                ANY
+                u'[%s] Transcript fetch error for video=%s -- lang_code=%s -- process=%s -- response=%s',
+                u'3PlayMedia Callback',
+                u'12345',
+                u'en',
+                u'112233',
+                json.dumps({'iserror': True}),
             ),
         ),
         (
             {'body': None, 'status': 400},
             'exception',
             (
-                '[3PlayMedia Callback] Fetch request failed for video=%s -- lang=%s -- process_id=%s',
-                ANY,
-                ANY,
-                ANY,
+                u'[3PlayMedia Callback] Fetch request failed for video=%s -- lang_code=%s -- process_id=%s',
+                u'12345',
+                u'en',
+                u'112233',
             ),
         )
     )
@@ -870,10 +871,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'exception',
                 'args': (
-                    '[3PlayMedia Callback] Translation could not be performed - org=%s, edx_video_id=%s, '
-                    'file_id=%s.',
-                    'MAx',
+                    '[3PlayMedia Callback] Translation could not be performed - video=%s, lang_code=%s, file_id=%s.',
                     '12345',
+                    'en',
                     '112233'
                 )
             }
@@ -893,10 +893,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'exception',
                 'args': (
-                    '[3PlayMedia Callback] Translation could not be performed - org=%s, edx_video_id=%s, '
-                    'file_id=%s.',
-                    'MAx',
+                    '[3PlayMedia Callback] Translation could not be performed - video=%s, lang_code=%s, file_id=%s.',
                     '12345',
+                    'en',
                     '112233'
                 )
             }
@@ -1203,7 +1202,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             decode_func=json.loads,
         )
 
-
     @data(
         # not-an-ok response on translation status fetch request.
         (
@@ -1228,7 +1226,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     400,
                 )
             },
-            TranscriptStatus.IN_PROGRESS
+            TranscriptStatus.FAILED
         ),
         # 3Play Error response on fetching translations status.
         (
@@ -1245,7 +1243,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] Translation error for video=%s -- lang_code=%s -- process_id=%s -- response=%s',
+                    '[3PlayMedia Task] unable to get translation status for '
+                    'video=%s -- lang_code=%s -- process_id=%s -- response=%s',
                     VIDEO_DATA['studio_id'],
                     'ro',
                     '112233',
@@ -1268,7 +1267,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     'status': 200,
                 },
                 {
-                    'mothod': responses.GET,
+                    'method': responses.GET,
                     'url': transcripts.THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
                         file_id='112233', translation_id='1q2w3e'
                     ),
@@ -1302,7 +1301,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     'status': 200,
                 },
                 {
-                    'mothod': responses.GET,
+                    'method': responses.GET,
                     'url': transcripts.THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
                         file_id='112233', translation_id='1q2w3e'
                     ),
@@ -1314,7 +1313,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] Translation error for video=%s -- lang_code=%s -- process_id=%s -- response=%s',
+                    '[%s] Transcript fetch error for video=%s -- lang_code=%s -- process=%s -- response=%s',
+                    '3PlayMedia Task',
                     VIDEO_DATA['studio_id'],
                     'ro',
                     '112233',
@@ -1328,7 +1328,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
     @responses.activate
     @mock_s3_deprecated
     @patch('VEDA_OS01.transcripts.LOGGER')
-    def translations_retrieval_exceptions(self, mock_responses, expected_logging, transcript_status, mock_logger):
+    def test_translations_retrieval_exceptions(self, mock_responses, expected_logging, transcript_status, mock_logger):
         """
         Tests possible error cases during translation fetch process form 3PlayMedia.
         """

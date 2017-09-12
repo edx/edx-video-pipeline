@@ -337,6 +337,101 @@ class ThreePlayMediaCallbackHandlerView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+def get_translation_services(api_key):
+    """
+    GET available 3Play Media Translation services
+
+    Arguments:
+        api_key(unicode): api key which is required to make an authentic call to 3Play Media
+
+    Returns:
+        Available 3Play Media Translation services.
+    """
+    response = requests.get(utils.build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key))
+    if not response.ok:
+        raise TranscriptTranslationError(
+            u'[3PlayMedia Callback] Error while fetching the translation services -- {status}, {response}'.format(
+                status=response.status_code,
+                response=response.text,
+            )
+        )
+
+    # Response should be a list containing services, details:
+    # http://support.3playmedia.com/hc/en-us/articles/227729988-Translations-API-Methods
+    available_services = json.loads(response.text)
+    if not isinstance(available_services, list):
+        raise TranscriptTranslationError(
+            u'[3PlayMedia Callback] Expected list but got: -- {response}.'.format(
+                response=response.text,
+            )
+        )
+
+    return available_services
+
+
+def get_standard_translation_service(translation_services, target_language):
+    """
+    Get standard translation service
+    Arguments:
+         translation_services(list): List of available 3play media translation services.
+         target_language(str): A language code whose standard translation service is needed.
+
+    Returns:
+        A translation service id or None.
+    """
+    translation_service_id = None
+    for service in translation_services:
+        service_found = (
+            service['target_language_iso_639_1_code'] == target_language and
+            service['service_level'] == 'standard'
+        )
+        if service_found:
+            translation_service_id = service['id']
+            break
+
+    return translation_service_id
+
+
+def place_translation_order(api_key, api_secret, translation_service_id, target_language, file_id):
+    """
+    Places a translation order on 3play media.
+
+    Arguments:
+        api_key(unicode): api key
+        api_secret(unicode): api secret
+        translation_service_id(unicode): translation service id got from 3Play Media
+        target_language(unicode): A language code translation is being ordered
+        file_id(unicode): 3play media file id / process id
+    """
+    order_response = requests.post(THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=file_id), json={
+        'apikey': api_key,
+        'api_secret_key': api_secret,
+        'translation_service_id': translation_service_id,
+    })
+    if not order_response.ok:
+        LOGGER.error(
+            '[3PlayMedia Callback] An error occurred during translation, target language=%s, file_id=%s, status=%s',
+            target_language,
+            file_id,
+            order_response.status_code,
+        )
+        return
+
+    # Translation Order API returns `success` attribute specifying whether the order has been placed
+    # successfully: http://support.3playmedia.com/hc/en-us/articles/227729988-Translations-API-Methods
+    translation_order = json.loads(order_response.text)
+    if not translation_order.get('success'):
+        LOGGER.error(
+            '[3PlayMedia Callback] Translation failed fot target language=%s, file_id=%s, response=%s',
+            target_language,
+            file_id,
+            order_response.text,
+        )
+        return
+
+    return translation_order
+
+
 def order_translations(file_id, api_key, api_secret, target_languages):
     """
     Order translations on 3PlayMedia for all the target languages.
@@ -359,6 +454,9 @@ def order_translations(file_id, api_key, api_secret, target_languages):
     Raises:
         TranscriptTranslationError: when an error occurred while fetching the translation services.
     """
+    if not target_languages:
+        return
+
     translation_processes = TranscriptProcessMetadata.objects.filter(
         process_id=file_id,
         provider=TranscriptProvider.THREE_PLAY,
@@ -366,32 +464,16 @@ def order_translations(file_id, api_key, api_secret, target_languages):
         lang_code__in=target_languages,
     )
 
-    response = requests.get(utils.build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key))
-    if not response.ok:
+    # Retrieve available translation services.
+    try:
+        available_services = get_translation_services(api_key)
+    except TranscriptTranslationError:
         # Fail all the pending translation processes associated with this file id.
         translation_processes.update(status=TranscriptStatus.FAILED)
-
-        raise TranscriptTranslationError(
-            u'[3PlayMedia Callback] Error while fetching the translation services -- {status}, {response}'.format(
-                status=response.status_code,
-                response=response.text,
-            )
-        )
-
-    # Response should be a list containing services, details:
-    # http://support.3playmedia.com/hc/en-us/articles/227729988-Translations-API-Methods
-    available_services = json.loads(response.text)
-    if not isinstance(available_services, list):
-        # Fail all the pending translation processes associated with this file id.
-        translation_processes.update(status=TranscriptStatus.FAILED)
-
-        raise TranscriptTranslationError(
-            u'[3PlayMedia Callback] Expected list but got: -- {response}.'.format(
-                response=response.text,
-            )
-        )
+        raise
 
     for target_language in target_languages:
+        # 1 - get a translation process for the target language
         try:
             translation_process = translation_processes.filter(lang_code=target_language).latest()
         except TranscriptProcessMetadata.DoesNotExist:
@@ -402,63 +484,93 @@ def order_translations(file_id, api_key, api_secret, target_languages):
             )
             continue
 
-        # 1 - Find a standard service for translation in the target language.
-        translation_service_id = None
-        for service in available_services:
-            service_found = (
-                service['target_language_iso_639_1_code'] == target_language and
-                service['service_level'] == 'standard'
-            )
-            if service_found:
-                translation_service_id = service['id']
-                break
-
+        # 2 - Find a standard service for translation for the target language.
+        translation_service_id = get_standard_translation_service(available_services, target_language)
         if translation_service_id is None:
             # Fail the process
-            translation_process.status = TranscriptStatus.FAILED
-            translation_process.save()
+            translation_process.update(status=TranscriptStatus.FAILED)
             LOGGER.error(
-                '[3PlayMedia Callback] No translation service found for target language %s -- process id %s',
+                u'[3PlayMedia Callback] No translation service found for target language %s -- process id %s',
                 target_language,
                 file_id,
             )
             continue
 
-        # 2 - At this point, we've got our service ready to use. Now, place an order for the translation.
-        response = requests.post(THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=file_id), json={
-            'apikey': api_key,
-            'api_secret_key': api_secret,
-            'translation_service_id': translation_service_id,
-        })
-
-        if not response.ok:
-            # Fail the process
-            translation_process.status = TranscriptStatus.FAILED
-            translation_process.save()
-            LOGGER.error(
-                '[3PlayMedia Callback] An error occurred during translation, target language=%s, file_id=%s, status=%s',
-                target_language,
-                file_id,
-                response.status_code,
+        # 3 - Place an order
+        # At this point, we've got our service ready to use. Now, place an order for the translation.
+        translation_order = place_translation_order(
+            api_key=api_key,
+            api_secret=api_secret,
+            translation_service_id=translation_service_id,
+            target_language=target_language,
+            file_id=file_id,
+        )
+        if translation_order:
+            translation_process.update(
+                translation_id=translation_order['translation_id'],
+                status=TranscriptStatus.IN_PROGRESS
             )
-            continue
-
-        # Translation Order API returns `success` attribute specifying whether the order has been placed
-        # successfully: http://support.3playmedia.com/hc/en-us/articles/227729988-Translations-API-Methods
-        translation_order = json.loads(response.text)
-        if translation_order.get('success'):
-            translation_process.status = TranscriptStatus.IN_PROGRESS
-            translation_process.translation_id = translation_order['translation_id']
-            translation_process.save()
         else:
-            translation_process.status = TranscriptStatus.FAILED
-            translation_process.save()
-            LOGGER.error(
-                '[3PlayMedia Callback] Translation failed fot target language=%s, file_id=%s, response=%s',
-                target_language,
-                file_id,
-                response.text,
-            )
+            translation_process.update(status=TranscriptStatus.FAILED)
+
+
+def validate_transcript_response(edx_video_id, file_id, transcript, lang_code, log_prefix):
+    """
+    This validates transcript response received from 3Play Media.
+
+     Arguments:
+         edx_video_id(unicode): studio video identifier
+         file_id(unicode): file identifier
+         transcript(unicode): SRT transcript content ideally
+         lang_code(unicode): language code
+         log_prefix(unicode): A prefix for the emitted logs
+
+    transcript is going to be SRT content and if this is not so, then it'll be a json response
+    describing the error and process will be marked as failed. Error response will be logged
+    along with the validation.
+    """
+    try:
+        json.loads(transcript)
+        # Log the details.
+        LOGGER.error(
+            u'[%s] Transcript fetch error for video=%s -- lang_code=%s -- process=%s -- response=%s',
+            log_prefix,
+            edx_video_id,
+            lang_code,
+            file_id,
+            transcript,
+        )
+        return False
+    except ValueError:
+        pass
+
+    return True
+
+
+def get_transcript_credentials(provider, org, edx_video_id, file_id, log_prefix):
+    """
+    Get org-specific transcript credentials.
+
+    Arguments:
+        provider(TranscriptProvider): transcript provider
+        org(unicode): organization extracted from course id
+        log_prefix(unicode): A prefix for the emitted logs
+        edx_video_id(unicode): studio video identifier
+        file_id(unicode): file identifier or process identifier
+    """
+    transcript_secrets = None
+    try:
+        transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=provider)
+    except TranscriptCredentials.DoesNotExist:
+        LOGGER.exception(
+            u'[%s] Unable to get transcript secrets for org=%s, edx_video_id=%s, file_id=%s.',
+            log_prefix,
+            org,
+            edx_video_id,
+            file_id,
+        )
+
+    return transcript_secrets
 
 
 @django.dispatch.receiver(THREE_PLAY_TRANSCRIPTION_DONE, dispatch_uid="three_play_transcription_done")
@@ -477,6 +589,7 @@ def three_play_transcription_callback(sender, **kwargs):
         * order translations for all the preferred languages
         * update transcript status in VAL
     """
+    log_prefix = u'3PlayMedia Callback'
     # Extract all the must have attributes
     org = kwargs['org']
     edx_video_id = kwargs['edx_video_id']
@@ -499,62 +612,51 @@ def three_play_transcription_callback(sender, **kwargs):
         )
         return
 
+    # On completion of a transcript
+    # Indicates that the default video speech transcription has been done successfully.
     if state == COMPLETE:
-        # Indicates that the default video speech transcription has been done successfully.
-        try:
-            transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
-        except TranscriptCredentials.DoesNotExist:
-            # Fail the process
-            process.status = TranscriptStatus.FAILED
-            process.save()
-            # Log the failure
-            LOGGER.exception(
-                u'[3PlayMedia Callback] Unable to get transcript secrets for org=%s, edx_video_id=%s, file_id=%s.',
-                org,
-                edx_video_id,
-                file_id,
-            )
+        log_args = (edx_video_id, lang_code, file_id)
+
+        # 1 - Retrieve transcript credentials
+        transcript_secrets = get_transcript_credentials(
+            provider=TranscriptProvider.THREE_PLAY,
+            org=org,
+            edx_video_id=edx_video_id,
+            file_id=file_id,
+            log_prefix=log_prefix,
+        )
+        if not transcript_secrets:
+            process.update(status=TranscriptStatus.FAILED)
             return
 
-        # Fetch the transcript from 3PlayMedia
+        # 2 - Fetch the transcript from 3Play Media.
         try:
             srt_transcript = fetch_srt_data(
                 THREE_PLAY_TRANSCRIPT_URL.format(file_id=file_id),
                 apikey=transcript_secrets.api_key,
             )
         except TranscriptFetchError:
-            process.status = TranscriptStatus.FAILED
-            process.save()
             LOGGER.exception(
-                '[3PlayMedia Callback] Fetch request failed for video=%s -- lang=%s -- process_id=%s',
-                edx_video_id,
-                lang_code,
-                file_id
+                u'[3PlayMedia Callback] Fetch request failed for video=%s -- lang_code=%s -- process_id=%s',
+                *log_args
             )
+            process.update(status=TranscriptStatus.FAILED)
             return
 
-        # fetched transcript is going to be SRT content and if this is not so, it'll be a json response
-        # describing the error.
-        try:
-            json.loads(srt_transcript)
-            # Fail the process and log all the details.
-            process.status = TranscriptStatus.FAILED
-            process.save()
-            LOGGER.error(
-                '[3PlayMedia Task] Transcript fetch error for video=%s -- lang_code=%s -- process=%s -- response=%s',
-                process.video.studio_id,
-                process.lang_code,
-                process.process_id,
-                srt_transcript,
-            )
-            return
-        except ValueError:
-            pass
+        # 3 - Validate transcript content received from 3Play Media and mark the transcription process.
+        is_valid_transcript = validate_transcript_response(
+            edx_video_id=edx_video_id,
+            file_id=file_id,
+            transcript=srt_transcript,
+            lang_code=lang_code,
+            log_prefix=log_prefix,
+        )
+        if is_valid_transcript:
+            process.update(status=TranscriptStatus.READY)
+        else:
+            process.update(status=TranscriptStatus.FAILED)
 
-        # We've got the transcript from 3PlayMedia, now update process status accordingly.
-        process.status = TranscriptStatus.READY
-        process.save()
-
+        # 4 - Convert SRT transcript to SJson format and upload it to S3.
         try:
             sjson_transcript = convert_srt_to_sjson(srt_transcript)
             sjson_file = upload_sjson_to_s3(CONFIG, sjson_transcript)
@@ -562,13 +664,11 @@ def three_play_transcription_callback(sender, **kwargs):
             # in case of any exception, log and raise.
             LOGGER.exception(
                 u'[3PlayMedia Callback] Request failed for video=%s -- lang_code=%s -- process_id=%s',
-                edx_video_id,
-                lang_code,
-                file_id,
+                *log_args
             )
             raise
 
-        # Update edx-val with completed transcript information
+        # 5 - Update edx-val with completed transcript information.
         val_api = VALAPICall(video_proto=None, val_status=None)
         val_api.update_val_transcript(
             video_id=process.video.studio_id,
@@ -578,56 +678,48 @@ def three_play_transcription_callback(sender, **kwargs):
             provider=TranscriptProvider.THREE_PLAY,
         )
 
-        # Translation Phase
+        # 6 - Translation Phase
+        # That's the phase for kicking off translation processes for all the
+        # preferred languages except the video's speech language.
         target_languages = list(process.video.preferred_languages)
-        # Remove the language that is already processed - in our case, its en.
         target_languages.remove(lang_code)
 
-        # Check if the translations are needed.
-        if target_languages:
-            # Create the translation tracking processes for all the target languages.
-            for target_language in target_languages:
-                TranscriptProcessMetadata.objects.create(
-                    video=process.video,
-                    provider=TranscriptProvider.THREE_PLAY,
-                    process_id=file_id,
-                    lang_code=target_language,
-                    status=TranscriptStatus.PENDING,
-                )
-
-            try:
-                # Order translations for target languages
-                order_translations(file_id, transcript_secrets.api_key, transcript_secrets.api_secret, target_languages)
-            except TranscriptTranslationError:
-                LOGGER.exception(
-                    u'[3PlayMedia Callback] Translation could not be performed - org=%s, edx_video_id=%s, file_id=%s.',
-                    org,
-                    edx_video_id,
-                    file_id,
-                )
-            except Exception:
-                LOGGER.exception(
-                    (u'[3PlayMedia Callback] Error while translating the transcripts - org=%s, edx_video_id=%s, '
-                     u'file_id=%s.'),
-                    org,
-                    edx_video_id,
-                    file_id,
-                )
-                raise
-
-        # in case if there is only one language which has already been processed.
-        if not target_languages:
-            val_api.update_video_status(
-                process.video.studio_id, VideoStatus.TRANSCRIPT_READY
+        # Create the translation tracking processes for all the target languages.
+        for target_language in target_languages:
+            TranscriptProcessMetadata.objects.create(
+                video=process.video,
+                provider=TranscriptProvider.THREE_PLAY,
+                process_id=file_id,
+                lang_code=target_language,
+                status=TranscriptStatus.PENDING,
             )
+
+        # Order translations for target languages
+        try:
+            order_translations(file_id, transcript_secrets.api_key, transcript_secrets.api_secret, target_languages)
+        except TranscriptTranslationError:
+            LOGGER.exception(
+                u'[3PlayMedia Callback] Translation could not be performed - video=%s, lang_code=%s, file_id=%s.',
+                *log_args
+            )
+        except Exception:
+            LOGGER.exception(
+                u'[3PlayMedia Callback] Error while translating the transcripts - video=%s, lang_code=%s, file_id=%s',
+                *log_args
+            )
+            raise
+
+        # 7 - Update transcript status.
+        # It will be for edx-val as well as edx-video-pipeline and this will be the case when
+        # there is only one transcript language for a video(that is, already been processed).
+        if not target_languages:
+            val_api.update_video_status(process.video.studio_id, VideoStatus.TRANSCRIPT_READY)
 
         # On success, a happy farewell log.
         LOGGER.info(
-            u'[3PlayMedia Callback] Video speech transcription was successful for video=%s -- lang_code=%s -- '
-            u'process_id=%s',
-            edx_video_id,
-            lang_code,
-            file_id,
+            (u'[3PlayMedia Callback] Video speech transcription was successful for'
+             u' video=%s -- lang_code=%s -- process_id=%s'),
+            *log_args
         )
 
     elif state == ERROR:
@@ -654,6 +746,54 @@ def three_play_transcription_callback(sender, **kwargs):
         )
 
 
+def get_translation_status(api_key, file_id, translation_id, edx_video_id, lang_code):
+    """
+    Get translation status for a translation process from 3Play Media.
+
+    Arguments:
+        api_key(unicode): api key
+        file_id(unicode): file identifier or process identifier
+        translation_id(unicode): translation identifier associated with that file identifier
+        edx_video_id(unicode): video studio identifier
+        lang_code(unicode): language code
+
+    Returns:
+        A translation status retrieved from 3play media or None in case of a faulty response.
+    """
+    translation_status_url = utils.build_url(
+        THREE_PLAY_TRANSLATION_STATUS_URL.format(
+            file_id=file_id,
+            translation_id=translation_id,
+        ),
+        apikey=api_key
+    )
+    translation_status_response = requests.get(translation_status_url)
+    if not translation_status_response.ok:
+        LOGGER.error(
+            (u'[3PlayMedia Task] Translation status request failed for video=%s -- '
+             u'lang_code=%s -- process_id=%s -- status=%s'),
+            edx_video_id,
+            lang_code,
+            file_id,
+            translation_status_response.status_code,
+        )
+        return
+
+    translation_status = json.loads(translation_status_response.text)
+    if translation_status.get('iserror'):
+        LOGGER.error(
+            (u'[3PlayMedia Task] unable to get translation status for video=%s -- '
+             u'lang_code=%s -- process_id=%s -- response=%s'),
+            edx_video_id,
+            lang_code,
+            file_id,
+            translation_status_response.text,
+        )
+        return
+
+    return translation_status
+
+
 def retrieve_three_play_translations():
     """
     Checks translation status on 3PlayMedia for all the progressing processes, fetches them if they're complete.
@@ -665,63 +805,56 @@ def retrieve_three_play_translations():
     4. If its done, mark the process as complete, fetch translated transcript, convert to sjson, upload it to s3 and
     finally, update it in edx-val.
     """
-
+    log_prefix = u'3PlayMedia Task'
     translation_processes = TranscriptProcessMetadata.objects.filter(
         provider=TranscriptProvider.THREE_PLAY,
         status=TranscriptStatus.IN_PROGRESS,
     ).exclude(Q(translation_id__isnull=True) | Q(translation_id__exact=''))
 
     for translation_process in translation_processes:
+
+        log_args = (
+            translation_process.video.studio_id,
+            translation_process.lang_code,
+            translation_process.process_id,
+        )
+
         course_id = translation_process.video.inst_class.local_storedir.split(',')[0]
         org = utils.extract_course_org(course_id=course_id)
 
-        try:
-            three_play_secrets = TranscriptCredentials.objects.get(org=org, provider=TranscriptProvider.THREE_PLAY)
-        except TranscriptCredentials.DoesNotExist:
-            LOGGER.exception(
-                u'[3PlayMedia Task] 3Play secrets not found for video=%s -- lang_code=%s -- process_id=%s',
-                translation_process.video.studio_id,
-                translation_process.lang_code,
-                translation_process.process_id,
-            )
-            continue
-
-        translation_status_url = utils.build_url(
-            THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                file_id=translation_process.process_id,
-                translation_id=translation_process.translation_id,
-            ),
-            apikey=three_play_secrets.api_key
+        # Retrieve transcript credentials
+        three_play_secrets = get_transcript_credentials(
+            provider=TranscriptProvider.THREE_PLAY,
+            org=org,
+            edx_video_id=translation_process.video.studio_id,
+            file_id=translation_process.process_id,
+            log_prefix=log_prefix
         )
-        response = requests.get(translation_status_url)
-        if not response.ok:
-            LOGGER.error(
-                (u'[3PlayMedia Task] Translation status request failed for video=%s -- '
-                 u'lang_code=%s -- process_id=%s -- status=%s'),
-                translation_process.video.studio_id,
-                translation_process.lang_code,
-                translation_process.process_id,
-                response.status_code,
-            )
+        if not three_play_secrets:
+            # Fail the process
+            translation_process.update(status=TranscriptStatus.FAILED)
             continue
 
-        translation_status = json.loads(response.text)
-        if translation_status.get('iserror'):
-            translation_process.status = TranscriptStatus.FAILED
-            translation_process.save()
-            LOGGER.error(
-                (u'[3PlayMedia Task] unable to get translation status for video=%s -- '
-                 u'lang_code=%s -- process_id=%s -- response=%s'),
-                translation_process.video.studio_id,
-                translation_process.lang_code,
-                translation_process.process_id,
-                response.text,
-            )
+        # Check transcript status
+        translation_status = get_translation_status(
+            three_play_secrets.api_key,
+            translation_process.process_id,
+            translation_process.translation_id,
+            translation_process.video.studio_id,
+            translation_process.lang_code,
+        )
+
+        if not translation_status:
+            # Fail the process
+            translation_process.update(status=TranscriptStatus.FAILED)
             continue
 
-        if translation_status['state'] == 'complete':
+        # On a complete translation
+        if translation_status['state'] == COMPLETE:
+
+            # 1 - Fetch translation content from 3Play Media.
             try:
-                response = fetch_srt_data(
+                srt_transcript = fetch_srt_data(
                     url=THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
                         file_id=translation_process.process_id, translation_id=translation_process.translation_id
                     ),
@@ -730,48 +863,37 @@ def retrieve_three_play_translations():
             except TranscriptFetchError:
                 LOGGER.exception(
                     u'[3PlayMedia Task] Translation download failed for video=%s -- lang_code=%s -- process_id=%s.',
-                    translation_process.video.studio_id,
-                    translation_process.lang_code,
-                    translation_process.process_id
+                    *log_args
                 )
                 continue
 
-            # its going to be SRT content and `json.loads` should raise
-            # ValueError if its a valid response, otherwise it'll be json
-            # response in result of an error.
-            try:
-                json.loads(response)
-                translation_process.status = TranscriptStatus.FAILED
-                translation_process.save()
-                LOGGER.error(
-                    u'[3PlayMedia Task] Translation error for video=%s -- lang_code=%s -- process_id=%s -- response=%s',
-                    translation_process.video.studio_id,
-                    translation_process.lang_code,
-                    translation_process.process_id,
-                    response.text,
-                )
+            # 2 - Validate the translation's SRT content received from 3Play Media.
+            is_transcript_valid = validate_transcript_response(
+                edx_video_id=translation_process.video.studio_id,
+                file_id=translation_process.process_id,
+                transcript=srt_transcript,
+                lang_code=translation_process.lang_code,
+                log_prefix=log_prefix
+            )
+            if is_transcript_valid:
+                translation_process.update(status=TranscriptStatus.READY)
+            else:
+                translation_process.update(status=TranscriptStatus.FAILED)
                 continue
-            except ValueError:
-                pass
 
-            # We've got the transcript from 3PlayMedia, now update process status accordingly.
-            translation_process.status = TranscriptStatus.READY
-            translation_process.save()
-
+            # 3 - Convert SRT translation to SJson format and upload it to S3.
             try:
-                sjson_transcript = convert_srt_to_sjson(response)
+                sjson_transcript = convert_srt_to_sjson(srt_transcript)
                 sjson_file = upload_sjson_to_s3(CONFIG, sjson_transcript)
             except Exception:
                 # in case of any exception, log and raise.
                 LOGGER.exception(
                     u'[3PlayMedia Task] translation failed for video=%s -- lang_code=%s -- process_id=%s',
-                    translation_process.video.studio_id,
-                    translation_process.lang_code,
-                    translation_process.process_id,
+                    *log_args
                 )
                 raise
 
-            # Update edx-val with completed transcript information
+            # 4 Update edx-val with completed transcript information
             val_api = VALAPICall(video_proto=None, val_status=None)
             val_api.update_val_transcript(
                 video_id=translation_process.video.studio_id,
@@ -781,8 +903,8 @@ def retrieve_three_play_translations():
                 provider=TranscriptProvider.THREE_PLAY,
             )
 
-            # if all the processes for this video are complete, update video status in edx-val
-            # update transcript status for video in edx-val only if all language transcripts are ready
+            # 5 - if all the processes for this video are complete, update video status in edx-val
+            # update transcript status for video in edx-val as well as edx-video-pipeline.
             video_jobs = TranscriptProcessMetadata.objects.filter(video__studio_id=translation_process.video.studio_id)
             if all(video_job.status == TranscriptStatus.READY for video_job in video_jobs):
                 val_api.update_video_status(translation_process.video.studio_id, VideoStatus.TRANSCRIPT_READY)
