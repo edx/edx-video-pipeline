@@ -10,7 +10,7 @@ from mock import patch
 
 from django.test import TestCase
 from control.veda_deliver_3play import (
-    ThreePLayMediaClient,
+    ThreePlayMediaClient,
     ThreePlayMediaUrlError,
     ThreePlayMediaPerformTranscriptionError,
 )
@@ -75,7 +75,7 @@ class ThreePlayMediaClientTests(TestCase):
         """
         Verify 3PlayMedia happy transcription flow
         """
-        three_play_client = ThreePLayMediaClient(**self.video_transcript_preferences)
+        three_play_client = ThreePlayMediaClient(**self.video_transcript_preferences)
 
         responses.add(
             responses.HEAD,
@@ -145,7 +145,7 @@ class ThreePlayMediaClientTests(TestCase):
         Tests media url validations.
         """
         responses.add(responses.HEAD, u'https://s3.amazonaws.com/bkt/video.mp4', **response)
-        three_play_client = ThreePLayMediaClient(**self.video_transcript_preferences)
+        three_play_client = ThreePlayMediaClient(**self.video_transcript_preferences)
         with self.assertRaises(ThreePlayMediaUrlError):
             three_play_client.validate_media_url()
 
@@ -172,7 +172,7 @@ class ThreePlayMediaClientTests(TestCase):
         )
         responses.add(responses.POST, u'https://api.3playmedia.com/files', **response)
 
-        three_play_client = ThreePLayMediaClient(**self.video_transcript_preferences)
+        three_play_client = ThreePlayMediaClient(**self.video_transcript_preferences)
         with self.assertRaises(ThreePlayMediaPerformTranscriptionError):
             three_play_client.submit_media()
 
@@ -207,7 +207,7 @@ class ThreePlayMediaClientTests(TestCase):
         """
         responses.add(responses.HEAD, u'https://s3.amazonaws.com/bkt/video.mp4', **first_response)
         responses.add(responses.POST, u'https://api.3playmedia.com/files', **second_response)
-        three_play_client = ThreePLayMediaClient(**self.video_transcript_preferences)
+        three_play_client = ThreePlayMediaClient(**self.video_transcript_preferences)
         three_play_client.generate_transcripts()
 
         self.assertFalse(mock_log.info.called)

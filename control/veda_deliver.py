@@ -13,7 +13,7 @@ from boto.s3.key import Key
 from django.core.urlresolvers import reverse
 
 import veda_deliver_xuetang
-from control.veda_deliver_3play import ThreePLayMediaClient
+from control.veda_deliver_3play import ThreePlayMediaClient
 from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
@@ -601,7 +601,7 @@ class VedaDelivery:
                 org=org,
                 edx_video_id=self.video_query.studio_id,
             )
-            three_play_media = ThreePLayMediaClient(
+            three_play_media = ThreePlayMediaClient(
                 org=org,
                 video=self.video_query,
                 media_url=s3_video_url,

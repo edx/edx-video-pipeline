@@ -43,7 +43,7 @@ class ThreePlayMediaUrlError(ThreePlayMediaError):
     pass
 
 
-class ThreePLayMediaClient(object):
+class ThreePlayMediaClient(object):
 
     def __init__(self, org, video, media_url, api_key, api_secret, callback_url, turnaround_level):
         """
