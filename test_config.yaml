@@ -9,6 +9,12 @@ s3_base_url: https://s3.amazonaws.com
 aws_video_transcripts_bucket: bucket_name
 aws_video_transcripts_prefix:  video-transcripts/
 
+# cielo24 api urls
+cielo24_api_base_url: https://sandbox.cielo24.com/api
+
+# 3playmedia api urls
+three_play_api_base_url: https://api.3playmedia.com/
+three_play_api_transcript_url: https://static.3playmedia.com/
 
 # a token identifying a valid request from transcript provider
 transcript_provider_request_token: 1234a5a67cr890

@@ -569,7 +569,8 @@ class VedaDelivery:
             self.video_query.cielo24_fidelity,
             self.video_query.preferred_languages,
             s3_video_url,
-            callback_base_url
+            callback_base_url,
+            self.auth_dict['cielo24_api_base_url'],
         )
         cielo24.start_transcription_flow()
 
@@ -615,6 +616,7 @@ class VedaDelivery:
                 api_secret=transcript_secrets.api_secret,
                 callback_url=callback_url,
                 turnaround_level=self.video_query.three_play_turnaround,
+                three_play_api_base_url=self.auth_dict['three_play_api_base_url'],
             )
             three_play_media.generate_transcripts()
 
