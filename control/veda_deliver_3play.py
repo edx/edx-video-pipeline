@@ -45,7 +45,17 @@ class ThreePlayMediaUrlError(ThreePlayMediaError):
 
 class ThreePlayMediaClient(object):
 
-    def __init__(self, org, video, media_url, api_key, api_secret, callback_url, turnaround_level):
+    def __init__(
+            self,
+            org,
+            video,
+            media_url,
+            api_key,
+            api_secret,
+            callback_url,
+            turnaround_level,
+            three_play_api_base_url
+    ):
         """
         Initialize 3play media client
         """
@@ -57,7 +67,7 @@ class ThreePlayMediaClient(object):
         self.callback_url = callback_url
         self.turnaround_level = turnaround_level
         # default attributes
-        self.base_url = u'https://api.3playmedia.com/'
+        self.base_url = three_play_api_base_url
         self.upload_media_file_url = u'files/'
         self.available_languages_url = u'caption_imports/available_languages/'
         self.allowed_content_type = u'video/mp4'
