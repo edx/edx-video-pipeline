@@ -49,7 +49,18 @@ class Cielo24Transcript(object):
     """
     Cielo24 Integration
     """
-    def __init__(self, video, org, api_key, turnaround, fidelity, preferred_languages, s3_video_url, callback_base_url):
+    def __init__(
+            self,
+            video,
+            org,
+            api_key,
+            turnaround,
+            fidelity,
+            preferred_languages,
+            s3_video_url,
+            callback_base_url,
+            cielo24_api_base_url
+    ):
         self.org = org
         self.video = video
         self.api_key = api_key
@@ -60,7 +71,7 @@ class Cielo24Transcript(object):
         self.callback_base_url = callback_base_url
 
         # Defaults
-        self.cielo24_site = 'https://api.cielo24.com/api'
+        self.cielo24_api_base_url = cielo24_api_base_url
         self.cielo24_new_job = '/job/new'
         self.cielo24_add_media = '/job/add_media'
         self.cielo24_perform_transcription = '/job/perform_transcription'
@@ -115,7 +126,7 @@ class Cielo24Transcript(object):
 
         response = requests.get(
             build_url(
-                self.cielo24_site,
+                self.cielo24_api_base_url,
                 self.cielo24_perform_transcription,
                 v=1,
                 job_id=job_id,
@@ -156,12 +167,12 @@ class Cielo24Transcript(object):
         """
         response = requests.get(
             build_url(
-                self.cielo24_site,
+                self.cielo24_api_base_url,
                 self.cielo24_add_media,
                 v=1,
                 job_id=job_id,
                 api_token=self.api_key,
-                media_url=urllib.quote_plus(self.s3_video_url)
+                media_url=self.s3_video_url
             )
         )
 
@@ -190,7 +201,7 @@ class Cielo24Transcript(object):
             cielo24 job id
         """
         create_job_url = build_url(
-            self.cielo24_site,
+            self.cielo24_api_base_url,
             self.cielo24_new_job,
             v=1,
             language='en',
