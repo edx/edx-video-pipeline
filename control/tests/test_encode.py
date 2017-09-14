@@ -63,7 +63,7 @@ class TestEncode(TestCase):
         ).delete()
         encode_list = self.E.determine_encodes()
         baseline = len(encode_list)
-        self.assertTrue(isinstance(encode_list, list))
+        self.assertTrue(isinstance(encode_list, set))
 
         self.E.encode_list = set()
         url = URL(
