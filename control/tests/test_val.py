@@ -39,16 +39,9 @@ class TestVALAPI(TestCase):
                 val_status='complete'
             )
 
-        self.auth_yaml = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'instance_config.yaml'
-        )
+        self.auth_yaml = CONFIG_DATA
 
     def test_val_setup(self):
-        if not os.path.exists(self.auth_yaml):
-            self.assertTrue(self.VAC.auth_dict is None)
-            return None
-
         # register val url to send api response
         responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
 
@@ -65,10 +58,6 @@ class TestVALAPI(TestCase):
 
     @responses.activate
     def test_val_connection(self):
-        if not os.path.exists(self.auth_yaml):
-            self.assertTrue(self.VAC.auth_dict is None)
-            return None
-
         # register val url to send api response
         responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
         responses.add(responses.GET, CONFIG_DATA['val_api_url'], status=200)
