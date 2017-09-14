@@ -8,11 +8,10 @@ import sys
 from django.test import TestCase
 from datetime import timedelta
 from ddt import data, ddt, unpack
-from pytest import skip
+from unittest import skip
 import responses
 from django.utils.timezone import utc
 from mock import PropertyMock, patch
-import yaml
 
 from control.veda_heal import VedaHeal
 from VEDA_OS01.models import URL, Course, Destination, Encode, Video
@@ -24,6 +23,7 @@ sys.path.append(os.path.dirname(os.path.dirname(
 
 CONFIG_DATA = get_config('test_config.yaml')
 
+
 @ddt
 class HealTests(TestCase):
     """
@@ -32,15 +32,11 @@ class HealTests(TestCase):
 
     def setUp(self):
         self.heal_instance = VedaHeal()
-        self.auth_yaml = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-            'instance_config.yaml'
-        )
         self.encode_list = set()
-        with open(self.auth_yaml, 'r') as stream:
-            for key, entry in yaml.load(stream)['encode_dict'].items():
-                for e in entry:
-                    self.encode_list.add(e)
+
+        for key, entry in CONFIG_DATA['encode_dict'].items():
+            for e in entry:
+                self.encode_list.add(e)
 
         self.video_id = '12345'
         self.course_object = Course.objects.create(
