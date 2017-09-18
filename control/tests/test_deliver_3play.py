@@ -53,7 +53,8 @@ class ThreePlayMediaClientTests(TestCase):
             'api_key': u'insecure_api_key',
             'api_secret': u'insecure_api_secret',
             'turnaround_level': ThreePlayTurnaround.DEFAULT,
-            'callback_url': 'https://veda.edx.org/3playmedia/transcripts/handle/123123?org=MAx&edx_video_id=12345'
+            'callback_url': 'https://veda.edx.org/3playmedia/transcripts/handle/123123?org=MAx&edx_video_id=12345',
+            'three_play_api_base_url': 'https://api.3playmedia.com/',
         }
 
     def assert_request(self, received_request, expected_request):

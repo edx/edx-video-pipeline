@@ -46,6 +46,7 @@ class Cielo24TranscriptTests(TestCase):
             'preferred_languages': ['en', 'ur'],
             's3_video_url': 'https://s3.amazonaws.com/bkt/video.mp4',
             'callback_base_url': 'https://veda.edx.org/cielo24/transcript_completed/1234567890',
+            'cielo24_api_base_url': 'https://sandbox.cielo24.com/api',
         }
 
     def tearDown(self):
@@ -65,7 +66,7 @@ class Cielo24TranscriptTests(TestCase):
         Returns:
             absolute url
         """
-        return build_url(cielo24.cielo24_site, endpoint)
+        return build_url(cielo24.cielo24_api_base_url, endpoint)
 
     def assert_request(self, received_request, expected_request):
         """
@@ -116,17 +117,44 @@ class Cielo24TranscriptTests(TestCase):
         # pylint: disable=line-too-long
         expected_data = [
             {
-                'url': 'https://api.cielo24.com/api/job/new?api_token=cielo24_api_key&job_name=12345&language=en&v=1',
+                'url': build_url(
+                    'https://sandbox.cielo24.com/api/job/new',
+                    v=1,
+                    job_name='12345',
+                    language='en',
+                    api_token='cielo24_api_key',
+                ),
                 'body': None,
                 'method': 'GET'
             },
             {
-                'url': 'https://api.cielo24.com/api/job/add_media?media_url=https%253A%252F%252Fs3.amazonaws.com%252Fbkt%252Fvideo.mp4&api_token=cielo24_api_key&job_id=000-111-222&v=1',
+                'url': build_url(
+                    'https://sandbox.cielo24.com/api/job/add_media',
+                    v=1,
+                    job_id='000-111-222',
+                    api_token='cielo24_api_key',
+                    media_url='https://s3.amazonaws.com/bkt/video.mp4',
+                ),
                 'body': None,
-                'method': 'GET'
+                'method': 'GET',
             },
             {
-                'url': 'https://api.cielo24.com/api/job/perform_transcription?transcription_fidelity=PROFESSIONAL&job_id=000-111-222&v=1&priority=PRIORITY&api_token=cielo24_api_key&callback_url=https%3A%2F%2Fveda.edx.org%2Fcielo24%2Ftranscript_completed%2F1234567890%3Flang_code%3D{}%26video_id%3D12345%26job_id%3D000-111-222%26org%3DMAx&target_language={}',
+                'url': build_url(
+                    'https://sandbox.cielo24.com/api/job/perform_transcription',
+                    v=1,
+                    job_id='000-111-222',
+                    target_language='TARGET_LANG',
+                    callback_url=build_url(
+                        'https://veda.edx.org/cielo24/transcript_completed/1234567890',
+                        lang_code='TARGET_LANG',
+                        video_id='12345',
+                        job_id='000-111-222',
+                        org='MAx',
+                    ),
+                    api_token='cielo24_api_key',
+                    priority='PRIORITY',
+                    transcription_fidelity='PROFESSIONAL',
+                ),
                 'body': None,
                 'method': 'GET'
             }
@@ -138,7 +166,7 @@ class Cielo24TranscriptTests(TestCase):
                 # replace target language with appropriate value
                 if 'api/job/perform_transcription' in request_data['url']:
                     request_data = dict(request_data)
-                    request_data['url'] = request_data['url'].format(preferred_language, preferred_language)
+                    request_data['url'] = request_data['url'].replace('TARGET_LANG', preferred_language)
 
                 self.assert_request(
                     responses.calls[received_request_index].request,

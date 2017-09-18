@@ -36,20 +36,39 @@ ERROR = 'error'
 # Transcript format
 TRANSCRIPT_SJSON = 'sjson'
 CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=['job_id', 'lang_code', 'org', 'video_id'])
-CIELO24_GET_CAPTION_URL = 'https://api.cielo24.com/api/job/get_caption'
 CONFIG = utils.get_config()
+
+# Cielo24 API URLs
+CIELO24_GET_CAPTION_URL = utils.build_url(
+    CONFIG['cielo24_api_base_url'],
+    'api/job/get_caption'
+)
 
 # 3PlayMedia callback signal
 THREE_PLAY_TRANSCRIPTION_DONE = django.dispatch.Signal(
     providing_args=['org', 'lang_code', 'edx_video_id', 'file_id', 'status', 'error_description']
 )
 # 3PlayMedia API URLs.
-THREE_PLAY_TRANSCRIPT_URL = u'https://static.3playmedia.com/files/{file_id}/transcript.srt'
-THREE_PLAY_TRANSLATION_SERVICES_URL = u'https://static.3playmedia.com/translation_services'
-THREE_PLAY_ORDER_TRANSLATION_URL = u'https://api.3playmedia.com/files/{file_id}/translations/order'
-THREE_PLAY_TRANSLATION_STATUS_URL = u'https://static.3playmedia.com/files/{file_id}/translations/{translation_id}'
-THREE_PLAY_TRANSLATION_DOWNLOAD_URL = (u'https://static.3playmedia.com/files/{file_id}/translations/{translation_id}/'
-                                       u'captions.srt')
+THREE_PLAY_TRANSCRIPT_URL = utils.build_url(
+    CONFIG['three_play_api_transcript_url'],
+    'files/{file_id}/transcript.srt'
+)
+THREE_PLAY_TRANSLATION_SERVICES_URL = utils.build_url(
+    CONFIG['three_play_api_transcript_url'],
+    'translation_services'
+)
+THREE_PLAY_ORDER_TRANSLATION_URL = utils.build_url(
+    CONFIG['three_play_api_base_url'],
+    'files/{file_id}/translations/order'
+)
+THREE_PLAY_TRANSLATION_STATUS_URL = utils.build_url(
+    CONFIG['three_play_api_transcript_url'],
+    'files/{file_id}/translations/{translation_id}'
+)
+THREE_PLAY_TRANSLATION_DOWNLOAD_URL = utils.build_url(
+    CONFIG['three_play_api_transcript_url'],
+    'files/{file_id}/translations/{translation_id}/captions.srt'
+)
 
 
 class TranscriptError(Exception):
