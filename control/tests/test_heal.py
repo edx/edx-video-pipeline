@@ -5,10 +5,15 @@ import datetime
 import os
 from datetime import timedelta
 from unittest import TestCase
+import sys
 
 import yaml
 from ddt import data, ddt, unpack
 from django.utils.timezone import utc
+
+path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if path not in sys.path:
+    sys.path.append(path)
 
 from veda_heal import VedaHeal
 from VEDA_OS01.models import Course, Video
@@ -191,6 +196,3 @@ class HealTests(TestCase):
             self.assertEqual(longterm_corrupt, False)
         elif video_instance.edx_id == '3':
             self.assertEqual(longterm_corrupt, True)
-
-if __name__ == '__main__':
-    unittest.main()
