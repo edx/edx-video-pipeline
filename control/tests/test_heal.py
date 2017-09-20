@@ -59,6 +59,10 @@ class HealTests(TestCase):
             product_spec='mobile_low',
             encode_destination=Destination.objects.create(destination_name='destination_name')
         )
+        self.encode = Encode.objects.create(
+            product_spec='hls',
+            encode_destination=Destination.objects.create(destination_name='destination_name')
+        )
 
         url = URL(
             videoID=self.video,
