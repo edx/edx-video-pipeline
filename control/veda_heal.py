@@ -65,8 +65,8 @@ class VedaHeal(object):
                 hours=self.auth_dict['heal_end']
             )
         )
-
-        self.send_encodes()
+        if self.auth_dict['rabbitmq_broker'] is not None:
+            self.send_encodes()
 
     def send_encodes(self):
         for v in self.video_query:
