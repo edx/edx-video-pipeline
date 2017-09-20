@@ -149,7 +149,7 @@ class HealTests(TestCase):
             video_trans_status=video_trans_status,
             video_trans_start=video_trans_start,
             video_active=video_active,
-            inst_class=Course()
+            inst_class=self.course_object
         )
         video_instance.save()
 
@@ -194,7 +194,7 @@ class HealTests(TestCase):
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
 
         video_instance.save()
@@ -249,7 +249,7 @@ class HealTests(TestCase):
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
 
         video_instance.save()
