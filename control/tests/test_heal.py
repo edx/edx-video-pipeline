@@ -59,6 +59,10 @@ class HealTests(TestCase):
             product_spec='mobile_low',
             encode_destination=Destination.objects.create(destination_name='destination_name')
         )
+        self.hls_encode = Encode.objects.create(
+            product_spec='hls',
+            encode_destination=Destination.objects.create(destination_name='destination_name')
+        )
 
         url = URL(
             videoID=self.video,
@@ -140,7 +144,6 @@ class HealTests(TestCase):
         },
     )
     @unpack
-    @skip("Failing from day 1 https://github.com/edx/edx-video-pipeline/pull/26")
     def test_determine_fault(self, edx_id, video_trans_status, video_trans_start, video_active):
         """
         Tests that determine_fault works in various video states.
@@ -150,8 +153,10 @@ class HealTests(TestCase):
             video_trans_status=video_trans_status,
             video_trans_start=video_trans_start,
             video_active=video_active,
-            inst_class=Course()
+            inst_class=self.course_object
         )
+        video_instance.save()
+
         encode_list = self.heal_instance.determine_fault(video_instance)
 
         if video_instance.edx_id == '1':
@@ -193,8 +198,10 @@ class HealTests(TestCase):
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
+
+        video_instance.save()
 
         encode_list = self.heal_instance.differentiate_encodes(
             uncompleted_encodes,
@@ -240,15 +247,16 @@ class HealTests(TestCase):
         }
     )
     @unpack
-    @skip("Failing from day 1 https://github.com/edx/edx-video-pipeline/pull/26")
     def test_determine_longterm_corrupt(self, uncompleted_encodes, expected_encodes, video_object):
         video_instance = Video(
             edx_id=video_object['edx_id'],
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
+
+        video_instance.save()
 
         longterm_corrupt = self.heal_instance.determine_longterm_corrupt(
             uncompleted_encodes,

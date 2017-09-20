@@ -121,7 +121,7 @@ class VedaHeal(object):
         try:
             if uncompleted_encodes:
                 uncompleted_encodes.remove('review')
-        except ValueError:
+        except KeyError:
             pass
 
         # list comparison
