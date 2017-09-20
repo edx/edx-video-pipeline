@@ -1,4 +1,5 @@
-## NOTE: This is not a working req file -- merely a collection for notes.
+##
+ddt
 django==1.9
 djangorestframework
 django-cors-headers
