@@ -1,186 +1,228 @@
-
-import os
-import sys
-import requests
-from requests.auth import HTTPBasicAuth
+"""
+Cielo24 Integration
+"""
 import ast
+import logging
 import urllib
 
-"""
-Cielo24 API Job Start and Download
+import requests
+from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 
-Options (reflected in Course.models):
-transcription_fidelity =
-  Mechanical (75%),
-  Premium (95%)(3-72h),
-  Professional (99+%)(3-72h)
+from VEDA_OS01.models import (TranscriptProcessMetadata, TranscriptProvider,
+                              TranscriptStatus)
+from VEDA_OS01.utils import build_url
 
-priority =
-  standard (24h),
-  priority (48h)
+requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
-turnaround_hours = number, overrides 'priority' call, will change a standard to a priority silently
-
-"""
-from control_env import *
-from veda_utils import ErrorObject, Output
-
-requests.packages.urllib3.disable_warnings()
+LOGGER = logging.getLogger(__name__)
 
 
-class Cielo24Transcript():
-
-    def __init__(self, veda_id):
-        self.veda_id = veda_id
-        '''Defaults'''
-        self.c24_site = 'https://api.cielo24.com/api'
-        self.c24_login = '/account/login'
-        self.c24_joblist = '/job/list'
-        self.c24_newjob = '/job/new'
-        self.add_media = '/job/add_media'
-        self.transcribe = '/job/perform_transcription'
-
-        '''Retreive C24 Course-based defaults'''
-        self.c24_defaults = self.retrieve_defaults()
-
-    def perform_transcription(self):
-        if self.c24_defaults['c24_user'] is None:
-            return None
-        '''
-        GET /api/job/perform_transcription?v=1 HTTP/1.1
-        &api_token=xxxx
-        &job_id=xxxx
-        &transcription_fidelity=PREMIUM&priority=STANDARD
-        Host: api.cielo24.com
-        '''
-        api_token = self.tokengenerator()
-        if api_token is None:
-            return None
-
-        job_id = self.generate_jobs(api_token)
-        task_id = self.embed_url(api_token, job_id)
-
-        r5 = requests.get(
-            ''.join((
-                self.c24_site,
-                self.transcribe,
-                '?v=1&api_token=',
-                api_token,
-                '&job_id=',
-                job_id,
-                '&transcription_fidelity=',
-                self.c24_defaults['c24_fidelity'],
-                '&priority=',
-                self.c24_defaults['c24_speed']
-            ))
-        )
-        return ast.literal_eval(r5.text)['TaskId']
-
-    def retrieve_defaults(self):
-        video_query = Video.objects.filter(
-            edx_id=self.veda_id
-        ).latest()
-
-        if video_query.inst_class.mobile_override is True:
-            url_query = URL.objects.filter(
-                videoID=video_query,
-                encode_url__icontains='_LBO.mp4',
-            ).latest()
-        else:
-            url_query = URL.objects.filter(
-                videoID=video_query,
-                encode_url__icontains='_DTH.mp4',
-            ).latest()
-        if video_query.inst_class.c24_username is None:
-            ErrorObject.print_error(
-                message='Cielo24 Record Incomplete',
-            )
-            return None
-
-        c24_defaults = {
-            'c24_user': video_query.inst_class.c24_username,
-            'c24_pass': video_query.inst_class.c24_password,
-            'c24_speed': video_query.inst_class.c24_speed,
-            'c24_fidelity': video_query.inst_class.c24_fidelity,
-            'edx_id': self.veda_id,
-            'url': url_query.encode_url
-        }
-        return c24_defaults
-
-    def tokengenerator(self):
-        token_url = self.c24_site + self.c24_login + \
-            '?v=1&username=' + self.c24_defaults['c24_user'] + \
-            '&password=' + self.c24_defaults['c24_pass']
-
-        # Generate Token
-        r1 = requests.get(token_url)
-        if r1.status_code > 299:
-            ErrorObject.print_error(
-                message='Cielo24 API Access Error',
-            )
-            return None
-        api_token = ast.literal_eval(r1.text)["ApiToken"]
-        return api_token
-
-    def listjobs(self):
-        """List Jobs"""
-        api_token = self.tokengenerator()
-        r2 = requests.get(
-            ''.join((
-                self.c24_site,
-                self.c24_joblist,
-                '?v=1&api_token=',
-                api_token
-            ))
-        )
-        job_list = r2.text
-        return job_list
-
-    def generate_jobs(self, api_token):
-        """
-        'https://api.cielo24.com/job/new?v=1&\
-        api_token=xxx&job_name=xxx&language=en'
-        """
-        r3 = requests.get(
-            ''.join((
-                self.c24_site,
-                self.c24_newjob,
-                '?v=1&api_token=',
-                api_token,
-                '&job_name=',
-                self.c24_defaults['edx_id'],
-                '&language=en'
-            ))
-        )
-        job_id = ast.literal_eval(r3.text)['JobId']
-        return job_id
-
-    def embed_url(self, api_token, job_id):
-        """
-        GET /api/job/add_media?v=1&api_token=xxxx
-        &job_id=xxxxx
-        &media_url=http%3A%2F%2Fwww.domain.com%2Fvideo.mp4 HTTP/1.1
-        Host: api.cielo24.com
-        """
-        r4 = requests.get(
-            ''.join((
-                self.c24_site,
-                self.add_media,
-                '?v=1&api_token=',
-                api_token,
-                '&job_id=',
-                job_id,
-                '&media_url=',
-                urllib.quote_plus(self.c24_defaults['url'])
-            ))
-        )
-        print str(r4.status_code) + ' : Cielo24 Status Code'
-        return ast.literal_eval(r4.text)['TaskId']
-
-
-def main():
+class Cielo24Error(Exception):
+    """
+    An error that occurs during cielo24 actions.
+    """
     pass
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+class Cielo24CreateJobError(Cielo24Error):
+    """
+    An error occurred during new job creation.
+    """
+    pass
+
+
+class Cielo24AddMediaError(Cielo24Error):
+    """
+    An error occurred during add media.
+    """
+    pass
+
+
+class Cielo24PerformTranscriptError(Cielo24Error):
+    """
+    An error occurred during perform transcript.
+    """
+    pass
+
+
+class Cielo24Transcript(object):
+    """
+    Cielo24 Integration
+    """
+    def __init__(
+            self,
+            video,
+            org,
+            api_key,
+            turnaround,
+            fidelity,
+            preferred_languages,
+            s3_video_url,
+            callback_base_url,
+            cielo24_api_base_url
+    ):
+        self.org = org
+        self.video = video
+        self.api_key = api_key
+        self.fidelity = fidelity
+        self.turnaround = turnaround
+        self.preferred_languages = preferred_languages
+        self.s3_video_url = s3_video_url
+        self.callback_base_url = callback_base_url
+
+        # Defaults
+        self.cielo24_api_base_url = cielo24_api_base_url
+        self.cielo24_new_job = '/job/new'
+        self.cielo24_add_media = '/job/add_media'
+        self.cielo24_perform_transcription = '/job/perform_transcription'
+
+    def start_transcription_flow(self):
+        """
+        Start cielo24 transcription flow.
+
+        This will do the following steps:
+        For each preferred language:
+            1. create a new job
+            2. add media url
+            3. perform transcript
+        """
+        job_id = None
+
+        for preferred_lang in self.preferred_languages:
+            try:
+                job_id = self.create_job()
+                transcript_process_metadata = TranscriptProcessMetadata.objects.create(
+                    video=self.video,
+                    process_id=job_id,
+                    lang_code=preferred_lang,
+                    provider=TranscriptProvider.CIELO24,
+                    status=TranscriptStatus.IN_PROGRESS
+                )
+                self.embed_media_url(job_id)
+                self.perform_transcript(job_id, preferred_lang)
+            except Cielo24Error as ex:
+                if job_id:
+                    transcript_process_metadata.status = TranscriptStatus.FAILED
+                    transcript_process_metadata.save()
+
+                LOGGER.exception(
+                    '[CIELO24] Request failed for video=%s -- lang=%s -- job_id=%s',
+                    self.video.studio_id,
+                    preferred_lang,
+                    job_id
+                )
+
+    def perform_transcript(self, job_id, lang_code):
+        """
+        Request cielo24 to generate transcripts for a video.
+        """
+        callback_url = build_url(
+            self.callback_base_url,
+            job_id=job_id,
+            lang_code=lang_code,
+            org=self.org,
+            video_id=self.video.studio_id
+        )
+
+        response = requests.get(
+            build_url(
+                self.cielo24_api_base_url,
+                self.cielo24_perform_transcription,
+                v=1,
+                job_id=job_id,
+                target_language=lang_code,
+                callback_url=callback_url,
+                api_token=self.api_key,
+                priority=self.turnaround,
+                transcription_fidelity=self.fidelity,
+            )
+        )
+
+        if not response.ok:
+            raise Cielo24PerformTranscriptError(
+                '[PERFORM TRANSCRIPT ERROR] status={} -- text={}'.format(
+                    response.status_code,
+                    response.text
+                )
+            )
+
+        task_id = ast.literal_eval(response.text)['TaskId']
+        LOGGER.info(
+            '[CIELO24] Perform transcript request successful for video=%s with job_id=%s and task_id=%s',
+            self.video.studio_id,
+            job_id,
+            task_id
+        )
+        return job_id
+
+    def embed_media_url(self, job_id):
+        """
+        Create cielo24 add media url.
+
+        Arguments:
+            job_id (str): cielo24 job id
+
+        Returns:
+            cielo24 task id
+        """
+        response = requests.get(
+            build_url(
+                self.cielo24_api_base_url,
+                self.cielo24_add_media,
+                v=1,
+                job_id=job_id,
+                api_token=self.api_key,
+                media_url=self.s3_video_url
+            )
+        )
+
+        if not response.ok:
+            raise Cielo24AddMediaError(
+                '[ADD MEDIA ERROR] status={} -- text={}'.format(
+                    response.status_code,
+                    response.text
+                )
+            )
+
+        task_id = ast.literal_eval(response.text)['TaskId']
+        LOGGER.info(
+            '[CIELO24] Media url created for video=%s with job_id=%s and task_id=%s',
+            self.video.studio_id,
+            job_id,
+            task_id
+        )
+        return task_id
+
+    def create_job(self):
+        """
+        Create new job for transcription.
+
+        Returns:
+            cielo24 job id
+        """
+        create_job_url = build_url(
+            self.cielo24_api_base_url,
+            self.cielo24_new_job,
+            v=1,
+            language='en',
+            api_token=self.api_key,
+            job_name=self.video.studio_id
+        )
+        response = requests.get(create_job_url)
+
+        if not response.ok:
+            raise Cielo24CreateJobError(
+                '[CREATE JOB ERROR] url={} -- status={} -- text={}'.format(
+                    create_job_url,
+                    response.status_code,
+                    response.text,
+                )
+            )
+
+        job_id = ast.literal_eval(response.text)['JobId']
+        LOGGER.info(
+            '[CIELO24] New job created for video=%s with job_id=%s',
+            self.video.studio_id,
+            job_id
+        )
+        return job_id

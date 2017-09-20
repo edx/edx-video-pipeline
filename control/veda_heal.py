@@ -127,8 +127,9 @@ class VedaHeal(object):
             course_object=video_object.inst_class,
         ).determine_encodes()
         try:
-            uncompleted_encodes.remove('review')
-        except KeyError:
+            if uncompleted_encodes:
+                uncompleted_encodes.remove('review')
+        except ValueError:
             pass
 
         # list comparison

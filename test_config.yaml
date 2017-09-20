@@ -1,0 +1,87 @@
+---
+veda_s3_hotstore_bucket: s3_hotstore_bucket
+multi_upload_barrier: 2000000000
+veda_base_url: https://veda.edx.org
+s3_base_url: https://s3.amazonaws.com
+
+
+# transcript bucket config
+aws_video_transcripts_bucket: bucket_name
+aws_video_transcripts_prefix:  video-transcripts/
+
+# cielo24 api urls
+cielo24_api_base_url: https://sandbox.cielo24.com/api
+
+# 3playmedia api urls
+three_play_api_base_url: https://api.3playmedia.com/
+three_play_api_transcript_url: https://static.3playmedia.com/
+
+# a token identifying a valid request from transcript provider
+transcript_provider_request_token: 1234a5a67cr890
+
+# ---
+# VAL
+# ---
+val_api_url: http://val.edx.org/api
+val_token_url: http://val.edx.org/token
+val_video_images_url:
+# Credentials
+val_client_id: client
+val_secret_key: secret
+val_password: password
+val_username: username
+val_transcript_create_url: http://val.edx.org/transcript/create
+val_video_transcript_status_url: http://val.edx.org/video/status
+
+# ----------
+##---
+# This is a list of encodes and their respective course
+# boolean matches
+encode_dict:
+    review_proc:
+        - review
+    mobile_override:
+        - override
+    s3_proc:
+        - mobile_high
+        - mobile_low
+        - audio_mp3
+        - desktop_webm
+        - desktop_mp4
+        - hls
+
+    yt_proc:
+        - youtube
+
+# This is a list of encode profiles and their val profile matches
+# boolean matches
+val_profile_dict:
+    mobile_low:
+        - mobile_low
+
+    desktop_mp4:
+        - desktop_mp4
+
+    override:
+        - desktop_mp4
+        - mobile_low
+        - mobile_high
+
+    mobile_high:
+        - mobile_high
+
+    audio_mp3:
+        - audio_mp3
+
+    desktop_webm:
+        - desktop_webm
+
+    youtube:
+        - youtube
+    review:
+    hls:
+        - hls
+
+# Heal settings
+heal_start: 2
+heal_end: 50
