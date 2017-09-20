@@ -65,8 +65,8 @@ class VedaHeal(object):
                 hours=self.auth_dict['heal_end']
             )
         )
-
-        self.send_encodes()
+        if self.auth_dict['rabbitmq_broker'] is not None:
+            self.send_encodes()
 
     def send_encodes(self):
         for v in self.video_query:
@@ -127,8 +127,13 @@ class VedaHeal(object):
             course_object=video_object.inst_class,
         ).determine_encodes()
         try:
+<<<<<<< HEAD
+            if uncompleted_encodes:
+                uncompleted_encodes.remove('review')
+=======
             uncompleted_encodes.remove('review')
-        except ValueError:
+>>>>>>> parent of 2d9f37a... Merge branch 'transcripts-3rd-party-integration' into yro/fix_heal_tests
+        except KeyError:
             pass
 
         # list comparison

@@ -4,13 +4,18 @@ Tests HEAL process
 import datetime
 import os
 from datetime import timedelta
-from unittest import TestCase, skip
+from unittest import TestCase
+import sys
 
 import yaml
 from ddt import data, ddt, unpack
 from django.utils.timezone import utc
 
-from control.veda_heal import VedaHeal
+path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if path not in sys.path:
+    sys.path.append(path)
+
+from veda_heal import VedaHeal
 from VEDA_OS01.models import Course, Video
 
 
@@ -26,11 +31,74 @@ class HealTests(TestCase):
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
             'instance_config.yaml'
         )
+<<<<<<< HEAD
+
+        self.video = Video.objects.create(
+            inst_class=self.course_object,
+            studio_id=self.video_id,
+            edx_id='XXXXXXXX2014-V00TES1',
+            video_trans_start=datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(
+                hours=CONFIG_DATA['heal_start']
+            ),
+            video_trans_end=datetime.datetime.utcnow().replace(tzinfo=utc),
+        )
+
+        self.encode = Encode.objects.create(
+            product_spec='mobile_low',
+            encode_destination=Destination.objects.create(destination_name='destination_name')
+        )
+        self.encode = Encode.objects.create(
+            product_spec='hls',
+            encode_destination=Destination.objects.create(destination_name='destination_name')
+        )
+
+        url = URL(
+            videoID=self.video,
+            encode_profile=self.encode,
+            encode_bitdepth='22',
+            encode_url='http://veda.edx.org/encode')
+        url.save()
+
+    @patch('control.veda_heal.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @responses.activate
+    def test_heal(self):
+        val_response = {
+            'courses': [{u'WestonHS/PFLC1x/3T2015': None}],
+            'encoded_videos': [{
+                'url': 'https://testurl.mp4',
+                'file_size': 8499040,
+                'bitrate': 131,
+                'profile': 'mobile_low',
+            }]
+        }
+        responses.add(
+            responses.POST,
+            CONFIG_DATA['val_token_url'],
+            '{"access_token": "1234567890"}',
+            status=200
+        )
+        responses.add(
+            responses.GET,
+            build_url(CONFIG_DATA['val_api_url'], self.video_id),
+            body=json.dumps(val_response),
+            content_type='application/json',
+            status=200
+        )
+        responses.add(
+            responses.PUT,
+            build_url(CONFIG_DATA['val_api_url'], self.video_id),
+            status=200
+        )
+
+        heal = VedaHeal()
+        heal.discovery()
+=======
         self.encode_list = set()
         with open(self.auth_yaml, 'r') as stream:
             for key, entry in yaml.load(stream)['encode_dict'].items():
                 for e in entry:
                     self.encode_list.add(e)
+>>>>>>> parent of 2d9f37a... Merge branch 'transcripts-3rd-party-integration' into yro/fix_heal_tests
 
     @data(
         {
@@ -71,7 +139,6 @@ class HealTests(TestCase):
         },
     )
     @unpack
-    @skip("Failing from day 1 https://github.com/edx/edx-video-pipeline/pull/26")
     def test_determine_fault(self, edx_id, video_trans_status, video_trans_start, video_active):
         """
         Tests that determine_fault works in various video states.
@@ -81,8 +148,10 @@ class HealTests(TestCase):
             video_trans_status=video_trans_status,
             video_trans_start=video_trans_start,
             video_active=video_active,
-            inst_class=Course()
+            inst_class=self.course_object
         )
+        video_instance.save()
+
         encode_list = self.heal_instance.determine_fault(video_instance)
 
         if video_instance.edx_id == '1':
@@ -124,8 +193,10 @@ class HealTests(TestCase):
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
+
+        video_instance.save()
 
         encode_list = self.heal_instance.differentiate_encodes(
             uncompleted_encodes,
@@ -171,15 +242,16 @@ class HealTests(TestCase):
         }
     )
     @unpack
-    @skip("Failing from day 1 https://github.com/edx/edx-video-pipeline/pull/26")
     def test_determine_longterm_corrupt(self, uncompleted_encodes, expected_encodes, video_object):
         video_instance = Video(
             edx_id=video_object['edx_id'],
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
-            inst_class=Course()
+            inst_class=self.course_object
         )
+
+        video_instance.save()
 
         longterm_corrupt = self.heal_instance.determine_longterm_corrupt(
             uncompleted_encodes,
