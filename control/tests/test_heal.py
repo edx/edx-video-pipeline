@@ -151,6 +151,8 @@ class HealTests(TestCase):
             video_active=video_active,
             inst_class=Course()
         )
+        video_instance.save()
+
         encode_list = self.heal_instance.determine_fault(video_instance)
 
         if video_instance.edx_id == '1':
@@ -194,6 +196,8 @@ class HealTests(TestCase):
             video_active=video_object['video_active'],
             inst_class=Course()
         )
+
+        video_instance.save()
 
         encode_list = self.heal_instance.differentiate_encodes(
             uncompleted_encodes,
@@ -247,6 +251,8 @@ class HealTests(TestCase):
             video_active=video_object['video_active'],
             inst_class=Course()
         )
+
+        video_instance.save()
 
         longterm_corrupt = self.heal_instance.determine_longterm_corrupt(
             uncompleted_encodes,

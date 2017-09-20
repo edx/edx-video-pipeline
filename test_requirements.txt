@@ -1,5 +1,6 @@
 ## NOTE:  Test requirements.
 codecov==2.0.9
+ddt
 pep8==1.7.0
 coverage==4.2
 isort==4.2.15

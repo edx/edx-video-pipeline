@@ -1,5 +1,4 @@
 ##
-ddt
 django==1.9
 djangorestframework
 django-cors-headers
