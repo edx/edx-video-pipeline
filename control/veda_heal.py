@@ -94,10 +94,11 @@ class VedaHeal(object):
                     veda_id = v.edx_id
                     encode_profile = e
                     jobid = uuid.uuid1().hex[0:10]
-                    celeryapp.worker_task_fire.apply_async(
-                        (veda_id, encode_profile, jobid),
-                        queue=cel_queue
-                    )
+                    if self.auth_dict['rabbitmq_broker'] is not None:
+                        celeryapp.worker_task_fire.apply_async(
+                            (veda_id, encode_profile, jobid),
+                            queue=cel_queue
+                        )
 
     def determine_fault(self, video_object):
         """
@@ -129,7 +130,7 @@ class VedaHeal(object):
         try:
             if uncompleted_encodes:
                 uncompleted_encodes.remove('review')
-        except ValueError:
+        except KeyError:
             pass
 
         # list comparison
