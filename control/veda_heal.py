@@ -127,8 +127,12 @@ class VedaHeal(object):
             course_object=video_object.inst_class,
         ).determine_encodes()
         try:
+<<<<<<< HEAD
             if uncompleted_encodes:
                 uncompleted_encodes.remove('review')
+=======
+            uncompleted_encodes.remove('review')
+>>>>>>> parent of 2d9f37a... Merge branch 'transcripts-3rd-party-integration' into yro/fix_heal_tests
         except KeyError:
             pass
 

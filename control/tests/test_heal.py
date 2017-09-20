@@ -1,27 +1,22 @@
 """
-Test heal processor
+Tests HEAL process
 """
 import datetime
-import json
 import os
-import sys
-from django.test import TestCase
 from datetime import timedelta
+from unittest import TestCase
+import sys
+
+import yaml
 from ddt import data, ddt, unpack
-from unittest import skip
-import responses
 from django.utils.timezone import utc
-from mock import PropertyMock, patch
 
-from control.veda_heal import VedaHeal
-from VEDA_OS01.models import URL, Course, Destination, Encode, Video
-from VEDA_OS01.utils import build_url, get_config
+path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if path not in sys.path:
+    sys.path.append(path)
 
-sys.path.append(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)
-)))
-
-CONFIG_DATA = get_config('test_config.yaml')
+from veda_heal import VedaHeal
+from VEDA_OS01.models import Course, Video
 
 
 @ddt
@@ -32,18 +27,11 @@ class HealTests(TestCase):
 
     def setUp(self):
         self.heal_instance = VedaHeal()
-        self.encode_list = set()
-
-        for key, entry in CONFIG_DATA['encode_dict'].items():
-            for e in entry:
-                self.encode_list.add(e)
-
-        self.video_id = '12345'
-        self.course_object = Course.objects.create(
-            institution='XXX',
-            edx_classid='XXXXX',
-            local_storedir='WestonHS/PFLC1x/3T2015'
+        self.auth_yaml = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            'instance_config.yaml'
         )
+<<<<<<< HEAD
 
         self.video = Video.objects.create(
             inst_class=self.course_object,
@@ -104,6 +92,13 @@ class HealTests(TestCase):
 
         heal = VedaHeal()
         heal.discovery()
+=======
+        self.encode_list = set()
+        with open(self.auth_yaml, 'r') as stream:
+            for key, entry in yaml.load(stream)['encode_dict'].items():
+                for e in entry:
+                    self.encode_list.add(e)
+>>>>>>> parent of 2d9f37a... Merge branch 'transcripts-3rd-party-integration' into yro/fix_heal_tests
 
     @data(
         {

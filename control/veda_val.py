@@ -1,5 +1,4 @@
 
-import logging
 import os
 import sys
 import requests
@@ -7,8 +6,6 @@ import ast
 import json
 import datetime
 import yaml
-
-LOGGER = logging.getLogger(__name__)
 
 requests.packages.urllib3.disable_warnings()
 
@@ -387,64 +384,6 @@ class VALAPICall():
                     'Check VAL Config',
                     r4.status_code
                 )
-            )
-
-    def update_val_transcript(self, video_id, lang_code, name, transcript_format, provider):
-        """
-        Update status for a completed transcript.
-        """
-        if self.val_token is None:
-            self.val_tokengen()
-
-        post_data = {
-            'video_id': video_id,
-            'name': name,
-            'provider': provider,
-            'language_code': lang_code,
-            'file_format': transcript_format,
-        }
-
-        response = requests.post(
-            self.auth_dict['val_transcript_create_url'],
-            json=post_data,
-            headers=self.headers,
-            timeout=20
-        )
-
-        if not response.ok:
-            LOGGER.error(
-                'update_val_transcript failed -- video_id=%s -- provider=% -- status=%s -- content=%s',
-                video_id,
-                provider,
-                response.status_code,
-                response.content,
-            )
-
-    def update_video_status(self, video_id, status):
-        """
-        Update video transcript status.
-        """
-        if self.val_token is None:
-            self.val_tokengen()
-
-        val_data = {
-            'edx_video_id': video_id,
-            'status': status
-        }
-
-        response = requests.patch(
-            self.auth_dict['val_video_transcript_status_url'],
-            json=val_data,
-            headers=self.headers,
-            timeout=20
-        )
-
-        if not response.ok:
-            LOGGER.error(
-                'update_video_status failed -- video_id=%s -- status=%s -- text=%s',
-                video_id,
-                response.status_code,
-                response.text
             )
 
 

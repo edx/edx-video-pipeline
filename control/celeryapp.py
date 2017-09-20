@@ -1,15 +1,23 @@
-"""
-Start Celery Worker
-"""
 
 from __future__ import absolute_import
-
 import os
+import sys
 from celery import Celery
 import yaml
 
-from control.veda_deliver import VedaDelivery
+"""
+Start Celery Worker
 
+"""
+try:
+    from control.control_env import *
+except:
+    from control_env import *
+
+try:
+    from control.veda_deliver import VedaDelivery
+except:
+    from veda_deliver import VedaDelivery
 
 auth_yaml = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -51,14 +59,12 @@ def worker_task_fire(veda_id, encode_profile, jobid):
 
 @app.task(name='supervisor_deliver')
 def deliverable_route(veda_id, encode_profile):
-    """
-    Task for deliverable route.
-    """
-    veda_deliver = VedaDelivery(
+
+    VD = VedaDelivery(
         veda_id=veda_id,
         encode_profile=encode_profile
     )
-    veda_deliver.run()
+    VD.run()
 
 
 @app.task

@@ -1,22 +1,19 @@
 # .coveragerc for edx-video-pipeline
 [run]
-data_file = .coverage
+data_file = reports/.coverage
 source =
-    VEDA
     VEDA_OS01
     control
     frontend
-# do not calculate coverage for these for now
-#    youtube_callback
-#    scripts
+    youtube_callback
+    scripts
 
 omit =
     templates/*
     frontend/tests/*
     dependencies/*
-    control/tests/*
+    control/*
     VEDA/tests/*
-    VEDA_OS01/tests/*
 
 concurrency=multiprocessing
 
@@ -31,3 +28,5 @@ exclude_lines =
 title = edx-video-worker Python Test Coverage Report
 directory = reports/cover
 
+[xml]
+output = reports/coverage.xml

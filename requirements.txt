@@ -4,7 +4,6 @@ djangorestframework
 django-cors-headers
 django-oauth-toolkit==0.11.0
 django-filter
-django-model-utils==3.0.0
 newrelic
 uwsgi
 pysftp
@@ -12,5 +11,3 @@ boto
 pyyaml
 requests==2.18.1
 celery==3.1.18
-pysrt==1.1.1
-edx-opaque-keys==0.4

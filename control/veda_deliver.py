@@ -1,33 +1,16 @@
 
-import datetime
-import logging
-import shutil
-from os.path import expanduser
-
+import os
+import sys
+import yaml
 import boto
 import boto.s3
-import requests
-import yaml
-from boto.exception import S3ResponseError
 from boto.s3.key import Key
-from django.core.urlresolvers import reverse
-
-import veda_deliver_xuetang
-from control.veda_deliver_3play import ThreePlayMediaClient
-from control_env import *
-from veda_deliver_cielo import Cielo24Transcript
-from veda_deliver_youtube import DeliverYoutube
-from VEDA_OS01 import utils
-from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
-                              VideoStatus)
-from VEDA_OS01.utils import build_url
-from veda_utils import ErrorObject, Metadata, Output, VideoProto
-from veda_val import VALAPICall
-from veda_video_validation import Validation
-from watchdog import Watchdog
-
-LOGGER = logging.getLogger(__name__)
-
+from boto.exception import S3ResponseError
+from os.path import expanduser
+import requests
+import datetime
+import ftplib
+import shutil
 
 
 try:
@@ -45,6 +28,14 @@ and upload to the appropriate endpoint via the approp. methods
 """
 homedir = expanduser("~")
 
+from control_env import *
+from veda_utils import ErrorObject, Output, Metadata, VideoProto
+from veda_video_validation import Validation
+from veda_val import VALAPICall
+from veda_deliver_cielo import Cielo24Transcript
+import veda_deliver_xuetang
+from veda_deliver_youtube import DeliverYoutube
+from watchdog import Watchdog
 
 watchdog_time = 10.0
 
@@ -179,7 +170,8 @@ class VedaDelivery:
         """
         Transcript, Xuetang
         """
-
+        self._THREEPLAY_UPLOAD()
+        self._CIELO24_UPLOAD()
         self._XUETANG_ROUTE()
 
         self.status = self._DETERMINE_STATUS()
@@ -187,18 +179,6 @@ class VedaDelivery:
         self._UPDATE_DATA()
 
         self._CLEANUP()
-
-        # Transcription Process
-        # We only want to generate transcripts for `desktop_mp4` profile.
-        if self.encode_profile == 'desktop_mp4' and self.video_query.process_transcription:
-
-            # 3PlayMedia
-            if self.video_query.provider == TranscriptProvider.THREE_PLAY:
-                self.start_3play_transcription_process()
-
-            # Cielo24
-            if self.video_query.provider == TranscriptProvider.CIELO24:
-                self.cielo24_transcription_flow()
 
     def _INFORM_INTAKE(self):
         """
@@ -527,105 +507,63 @@ class VedaDelivery:
         os.chdir(homedir)
         return True
 
-    def cielo24_transcription_flow(self):
-        """
-        Cielo24 transcription flow.
-        """
-        org = utils.extract_course_org(self.video_proto.platform_course_url[0])
-
-        try:
-            api_key = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider).api_key
-        except TranscriptCredentials.DoesNotExist:
-            LOGGER.warn('[cielo24] Unable to find api_key for org=%s', org)
+    def _CIELO24_UPLOAD(self):
+        if self.video_query.inst_class.c24_proc is False:
             return None
 
-        s3_video_url = build_url(
-            self.auth_dict['s3_base_url'],
-            self.auth_dict['edx_s3_endpoint_bucket'],
-            self.encoded_file
+        if self.video_query.inst_class.mobile_override is False:
+            if self.encode_profile != 'desktop_mp4':
+                return None
+
+        C24 = Cielo24Transcript(
+            veda_id=self.video_query.edx_id
+        )
+        output = C24.perform_transcription()
+        print '[ %s ] : %s' % (
+            'Cielo24 JOB', self.video_query.edx_id
         )
 
-        callback_base_url = build_url(
-            self.auth_dict['veda_base_url'],
-            reverse(
-                'cielo24_transcript_completed',
-                args=[self.auth_dict['transcript_provider_request_token']]
-            )
-        )
+    def _THREEPLAY_UPLOAD(self):
 
-        # update transcript status for video.
-        val_api_client = VALAPICall(video_proto=None, val_status=None)
-        utils.update_video_status(
-            val_api_client=val_api_client,
-            video=self.video_query,
-            status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
-        )
+        if self.video_query.inst_class.tp_proc is False:
+            return None
+        if self.video_query.inst_class.mobile_override is False:
+            if self.encode_profile != 'desktop_mp4':
+                return None
 
-        cielo24 = Cielo24Transcript(
-            self.video_query,
-            org,
-            api_key,
-            self.video_query.cielo24_turnaround,
-            self.video_query.cielo24_fidelity,
-            self.video_query.preferred_languages,
-            s3_video_url,
-            callback_base_url,
-            self.auth_dict['cielo24_api_base_url'],
+        ftp1 = ftplib.FTP(
+            self.auth_dict['threeplay_ftphost']
         )
-        cielo24.start_transcription_flow()
-
-    def start_3play_transcription_process(self):
-        """
-        3PlayMedia Transcription Flow
-        """
+        user = self.video_query.inst_class.tp_username.strip()
+        passwd = self.video_query.inst_class.tp_password.strip()
         try:
-            # Picks the first course from the list as there may be multiple
-            # course runs in that list (i.e. all having the same org).
-            org = utils.extract_course_org(self.video_proto.platform_course_url[0])
-            transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider)
-
-            # update transcript status for video.
-            val_api_client = VALAPICall(video_proto=None, val_status=None)
-            utils.update_video_status(
-                val_api_client=val_api_client,
-                video=self.video_query,
-                status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
+            ftp1.login(user, passwd)
+        except:
+            ErrorObject.print_error(
+                message='3Play Authentication Failure'
             )
+        try:
+            ftp1.cwd(
+                self.video_query.inst_class.tp_speed
+            )
+        except:
+            ftp1.mkd(
+                self.video_query.inst_class.tp_speed
+            )
+            ftp1.cwd(
+                self.video_query.inst_class.tp_speed
+            )
+            os.chdir(self.node_work_directory)
 
-            # Initialize 3playMedia client and start transcription process
-            s3_video_url = build_url(
-                self.auth_dict['s3_base_url'],
-                self.auth_dict['edx_s3_endpoint_bucket'],
+        ftp1.storbinary(
+            'STOR ' + self.encoded_file,
+            open(os.path.join(
+                self.node_work_directory,
                 self.encoded_file
-            )
-            callback_url = build_url(
-                self.auth_dict['veda_base_url'],
-                reverse(
-                    '3play_media_callback',
-                    args=[self.auth_dict['transcript_provider_request_token']]
-                ),
-                # Additional attributes that'll come back with the callback
-                org=org,
-                edx_video_id=self.video_query.studio_id,
-            )
-            three_play_media = ThreePlayMediaClient(
-                org=org,
-                video=self.video_query,
-                media_url=s3_video_url,
-                api_key=transcript_secrets.api_key,
-                api_secret=transcript_secrets.api_secret,
-                callback_url=callback_url,
-                turnaround_level=self.video_query.three_play_turnaround,
-                three_play_api_base_url=self.auth_dict['three_play_api_base_url'],
-            )
-            three_play_media.generate_transcripts()
+            ), 'rb')
+        )
 
-        except TranscriptCredentials.DoesNotExist:
-            LOGGER.warning(
-                'Transcript preference is not found for provider=%s, video=%s',
-                self.video_query.provider,
-                self.video_query.studio_id,
-            )
+        os.chdir(homedir)
 
     def _XUETANG_ROUTE(self):
         if self.video_query.inst_class.xuetang_proc is False:

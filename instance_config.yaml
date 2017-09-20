@@ -32,38 +32,17 @@ debug: false
 edx_s3_ingest_prefix:
 edx_s3_ingest_bucket:
 edx_s3_endpoint_bucket:
-
 # CF
 edx_cloudfront_prefix:
-
 # Images
 aws_video_images_bucket:
 aws_video_images_prefix: "video-images/"
-
-
 # VEDA Internal
 veda_s3_upload_bucket:
 veda_s3_hotstore_bucket:
 veda_deliverable_bucket:
 # Settings
 multi_upload_barrier: 2000000000
-veda_base_url:
-s3_base_url: https://s3.amazonaws.com
-
-
-# Transcripts
-aws_video_transcripts_bucket:
-aws_video_transcripts_prefix: video-transcripts/
-
-# cielo24 api urls
-cielo24_api_base_url: https://sandbox.cielo24.com/api
-
-# 3playmedia api urls
-three_play_api_base_url: https://api.3playmedia.com/
-three_play_api_transcript_url: https://static.3playmedia.com/
-
-# a token identifying a valid request from transcript provider
-transcript_provider_request_token: test-token
 
 # Ingest Secret
 # TODO: Elminate access key after AWS Support ticket 08/20/17 regarding cross-account IAM role access.
@@ -97,8 +76,6 @@ val_client_id:
 val_secret_key:
 val_password:
 val_username:
-val_transcript_create_url:
-val_video_transcript_status_url:
 
 # ---
 # Celery Info

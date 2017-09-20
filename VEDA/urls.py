@@ -10,7 +10,7 @@ from rest_framework import routers
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
-from VEDA_OS01 import views, transcripts
+from VEDA_OS01 import views
 
 router = routers.DefaultRouter()
 admin.autodiscover()
@@ -33,16 +33,5 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # Cheap auth server
-    url(r'^veda_auth/', views.token_auth),
-    url(
-        regex=r'^cielo24/transcript_completed/(?P<token>[\w]+)$',
-        view=transcripts.Cielo24CallbackHandlerView.as_view(),
-        name='cielo24_transcript_completed'
-    ),
-    # 3PlayMedia callback handler view
-    url(
-        regex=r'^3playmedia/transcripts/handle/(?P<token>[\w]+)$',
-        view=transcripts.ThreePlayMediaCallbackHandlerView.as_view(),
-        name='3play_media_callback'
-    )
+    url(r'^veda_auth/', views.token_auth)
 ]

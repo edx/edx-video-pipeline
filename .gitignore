@@ -10,9 +10,3 @@ sandbox.db
 .coverage
 
 coverage/
-
-reports/
-
-.cache/
-
-VEDA/private.py

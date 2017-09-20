@@ -15,10 +15,6 @@ if project_path not in sys.path:
 This is a cheapo way to get a pager (using SES)
 
 """
-
-import django
-django.setup()
-
 from control.veda_file_discovery import FileDiscovery
 from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction

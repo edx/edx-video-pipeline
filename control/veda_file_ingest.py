@@ -1,4 +1,4 @@
-import logging
+
 import os
 import sys
 import subprocess
@@ -7,7 +7,6 @@ from datetime import timedelta
 import time
 import fnmatch
 import django
-from django.db.utils import DatabaseError
 from django.utils.timezone import utc
 from django.db import reset_queries
 import uuid
@@ -32,8 +31,6 @@ from veda_utils import ErrorObject, Output, Report
 from veda_val import VALAPICall
 from veda_encode import VedaEncode
 import celeryapp
-
-LOGGER = logging.getLogger(__name__)
 
 '''
 V = VideoProto(
@@ -62,16 +59,9 @@ class VideoProto():
         self.file_extension = kwargs.get('file_extension', None)
         self.platform_course_url = kwargs.get('platform_course_url', None)
         self.abvid_serial = kwargs.get('abvid_serial', None)
-
-        # Transcription Process related Attributes
-        self.process_transcription = kwargs.get('process_transcription', False)
-        self.provider = kwargs.get('provider', None)
-        self.three_play_turnaround = kwargs.get('three_play_turnaround', None)
-        self.cielo24_turnaround = kwargs.get('cielo24_turnaround', None)
-        self.cielo24_fidelity = kwargs.get('cielo24_fidelity', None)
-        self.preferred_languages = kwargs.get('preferred_languages', [])
-
-        # Determined Attributes
+        """
+        Determined Attrib
+        """
         self.valid = False
         self.filesize = 0
         self.duration = 0
@@ -343,15 +333,6 @@ class VedaIngest:
             self.complete = True
             return None
 
-        # Update transcription preferences for the Video
-        if self.video_proto.process_transcription:
-            v1.process_transcription = self.video_proto.process_transcription
-            v1.provider = self.video_proto.provider
-            v1.three_play_turnaround = self.video_proto.three_play_turnaround
-            v1.cielo24_turnaround = self.video_proto.cielo24_turnaround
-            v1.cielo24_fidelity = self.video_proto.cielo24_fidelity
-            v1.preferred_languages = self.video_proto.preferred_languages
-
         """
         Files Below are all valid
         """
@@ -372,8 +353,7 @@ class VedaIngest:
         """
         try:
             v1.save()
-        except DatabaseError:
-            # in case if the client title's length is too long
+        except:
             char_string = self.video_proto.client_title
             string_len = len(char_string)
             s1 = 0
@@ -387,11 +367,6 @@ class VedaIngest:
                 s1 += 1
             v1.client_title = final_string
             v1.save()
-
-        except Exception:
-            # Log the exception and raise.
-            LOGGER.exception('[VIDEO-PIPELINE] File Ingest - Cataloging of video=%s failed.', self.video_proto.veda_id)
-            raise
 
     def val_insert(self):
         if self.video_proto.abvid_serial is not None:
