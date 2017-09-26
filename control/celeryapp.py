@@ -8,7 +8,10 @@ import os
 from celery import Celery
 import yaml
 
-from control.veda_deliver import VedaDelivery
+try:
+    from control.veda_deliver import VedaDelivery
+except ImportError:
+    from veda_deliver import VedaDelivery
 
 
 auth_yaml = os.path.join(

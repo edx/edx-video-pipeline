@@ -63,7 +63,7 @@ three_play_api_base_url: https://api.3playmedia.com/
 three_play_api_transcript_url: https://static.3playmedia.com/
 
 # a token identifying a valid request from transcript provider
-transcript_provider_request_token: test-token
+transcript_provider_request_token: testtoken
 
 # Ingest Secret
 # TODO: Elminate access key after AWS Support ticket 08/20/17 regarding cross-account IAM role access.

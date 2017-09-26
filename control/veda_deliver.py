@@ -13,7 +13,6 @@ from boto.s3.key import Key
 from django.core.urlresolvers import reverse
 
 import veda_deliver_xuetang
-from control.veda_deliver_3play import ThreePlayMediaClient
 from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
@@ -25,6 +24,12 @@ from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
 from veda_video_validation import Validation
 from watchdog import Watchdog
+
+try:
+    from control.veda_deliver_3play import ThreePlayMediaClient
+except ImportError:
+    from veda_deliver_3play import ThreePlayMediaClient
+
 
 LOGGER = logging.getLogger(__name__)
 
