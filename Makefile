@@ -1,5 +1,7 @@
 PACKAGES = VEDA VEDA_OS01 control frontend youtube_callback scripts
 
+production-requirements: requirements
+
 requirements:
 	pip install -r requirements.txt
 	pip install -r test_requirements.txt
