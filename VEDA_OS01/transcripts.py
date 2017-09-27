@@ -41,7 +41,7 @@ CONFIG = utils.get_config()
 # Cielo24 API URLs
 CIELO24_GET_CAPTION_URL = utils.build_url(
     CONFIG['cielo24_api_base_url'],
-    'api/job/get_caption'
+    'job/get_caption'
 )
 
 # 3PlayMedia callback signal
