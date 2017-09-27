@@ -70,6 +70,7 @@ class VideoProto():
         self.cielo24_turnaround = kwargs.get('cielo24_turnaround', None)
         self.cielo24_fidelity = kwargs.get('cielo24_fidelity', None)
         self.preferred_languages = kwargs.get('preferred_languages', [])
+        self.source_language = kwargs.get('source_language', None)
 
         # Determined Attributes
         self.valid = False
@@ -343,6 +344,7 @@ class VedaIngest:
             v1.cielo24_turnaround = self.video_proto.cielo24_turnaround
             v1.cielo24_fidelity = self.video_proto.cielo24_fidelity
             v1.preferred_languages = self.video_proto.preferred_languages
+            v1.source_language = self.video_proto.source_language
 
         """
         Files Below are all valid
