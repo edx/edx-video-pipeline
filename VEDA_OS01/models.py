@@ -469,6 +469,13 @@ class Video (models.Model):
         null=True,
         blank=True,
     )
+    source_language = models.CharField(
+        'video source language',
+        help_text='This is only needed with 3Play Media Provider',
+        max_length=50,
+        null=True,
+        blank=True,
+    )
     preferred_languages = ListField(blank=True, default=[])
 
     class Meta:
@@ -650,7 +657,7 @@ class TranscriptProcessMetadata(TimeStampedModel):
     translation_id = models.CharField(
         'Translation id', help_text='Keeps track of 3Play Translations', max_length=255, null=True, blank=True
     )
-    lang_code = models.CharField('Language code', max_length=8)
+    lang_code = models.CharField('Language code', max_length=50)
     status = models.CharField(
         'Transcript status',
         max_length=50,

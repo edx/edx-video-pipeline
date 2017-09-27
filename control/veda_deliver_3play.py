@@ -43,6 +43,13 @@ class ThreePlayMediaUrlError(ThreePlayMediaError):
     pass
 
 
+class ThreePlayMediaLanguagesRetrievalError(ThreePlayMediaError):
+    """
+    An error Occurred while retrieving available 3PlayMedia languages.
+    """
+    pass
+
+
 class ThreePlayMediaClient(object):
 
     def __init__(
@@ -94,6 +101,41 @@ class ThreePlayMediaClient(object):
                 )
             )
 
+    def get_available_languages(self):
+        """
+        Gets all the 3Play Media supported languages
+        """
+        response = requests.get(url=build_url(self.base_url, self.available_languages_url, apikey=self.api_key))
+        if not response.ok:
+            raise ThreePlayMediaLanguagesRetrievalError(
+                'Error while retrieving available languages: {response} -- {status}'.format(
+                    response=response.text, status=response.status_code
+                )
+            )
+
+        # A normal response should be a list containing 3Play Media supported languages and if we're getting a dict,
+        # there must be an error: https://support.3playmedia.com/hc/en-us/articles/227729968-Captions-Imports-API
+        available_languages = json.loads(response.text)
+        if isinstance(available_languages, dict):
+            raise ThreePlayMediaLanguagesRetrievalError(
+                'Expected 3Play Media Supported languages but got: {response}'.format(response=response.text)
+            )
+
+        return available_languages
+
+    def get_source_language_id(self, languages, source_language_code):
+        """
+        Extracts language id for a language that matches `source_language_code`
+        from the given 3Play Media languages.
+
+        Arguments:
+            languages(list): 3PlayMedia supported languages.
+            source_language_code(unicode): A video source language code whose 3Play language id is required.
+        """
+        for language in languages:
+            if language['iso_639_1_code'] == source_language_code:
+                return language['language_id']
+
     def submit_media(self):
         """
         Submits the media to perform transcription.
@@ -111,6 +153,12 @@ class ThreePlayMediaClient(object):
             turnaround_level=self.turnaround_level,
             callback_url=self.callback_url,
         )
+
+        available_languages = self.get_available_languages()
+        source_language_id = self.get_source_language_id(available_languages, self.video.source_language)
+        if source_language_id:
+            payload['language_id'] = source_language_id
+
         upload_url = build_url(self.base_url, self.upload_media_file_url)
         response = requests.post(url=upload_url, json=payload)
 
@@ -140,24 +188,27 @@ class ThreePlayMediaClient(object):
             TranscriptProcessMetadata.objects.create(
                 video=self.video,
                 process_id=file_id,
-                lang_code=u'en',
+                lang_code=self.video.source_language,
                 provider=TranscriptProvider.THREE_PLAY,
                 status=TranscriptStatus.IN_PROGRESS,
             )
             # Successfully kicked off transcription process for a video with the given language.
             LOGGER.info(
-                '[3PlayMedia] Transcription process has been started for video=%s, language=en.',
+                '[3PlayMedia] Transcription process has been started for video=%s, source_language=%s.',
                 self.video.studio_id,
+                self.video.source_language,
             )
         except ThreePlayMediaError:
             LOGGER.exception(
-                '[3PlayMedia] Could not process transcripts for video=%s language=en.',
+                '[3PlayMedia] Could not process transcripts for video=%s source_language=%s.',
                 self.video.studio_id,
+                self.video.source_language,
             )
         except Exception:
             LOGGER.exception(
-                '[3PlayMedia] Unexpected error while transcription for video=%s language=en .',
+                '[3PlayMedia] Unexpected error while transcription for video=%s source_language=%s.',
                 self.video.studio_id,
+                self.video.source_language,
             )
             raise
 

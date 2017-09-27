@@ -265,6 +265,7 @@ class FileDiscovery(object):
                 'cielo24_turnaround': transcript_preferences.get('cielo24_turnaround'),
                 'cielo24_fidelity': transcript_preferences.get('cielo24_fidelity'),
                 'preferred_languages': transcript_preferences.get('preferred_languages'),
+                'source_language': transcript_preferences.get('video_source_language'),
             })
 
         ingest = VedaIngest(

@@ -333,7 +333,7 @@ class ThreePlayMediaCallbackHandlerView(APIView):
         """
         Handle 3PlayMedia callback request.
         """
-        required_attrs = ['file_id', 'status', 'org', 'edx_video_id']
+        required_attrs = ['file_id', 'lang_code', 'status', 'org', 'edx_video_id']
         received_attributes = request.data.keys() + request.query_params.keys()
         missing = [attr for attr in required_attrs if attr not in received_attributes]
         if missing:
@@ -350,7 +350,7 @@ class ThreePlayMediaCallbackHandlerView(APIView):
             sender=self,
             org=request.query_params['org'],
             edx_video_id=request.query_params['edx_video_id'],
-            lang_code='en',
+            lang_code=request.query_params['lang_code'],
             file_id=request.data['file_id'],
             status=request.data['status'],
             # Following is going to be an error description if an error occurs during
@@ -392,12 +392,13 @@ def get_translation_services(api_key):
     return available_services
 
 
-def get_standard_translation_service(translation_services, target_language):
+def get_standard_translation_service(translation_services, source_language, target_language):
     """
     Get standard translation service
     Arguments:
          translation_services(list): List of available 3play media translation services.
-         target_language(str): A language code whose standard translation service is needed.
+         source_language(unicode): A language code for video source/speech language.
+         target_language(unicode): A language code whose standard translation service is needed.
 
     Returns:
         A translation service id or None.
@@ -405,6 +406,7 @@ def get_standard_translation_service(translation_services, target_language):
     translation_service_id = None
     for service in translation_services:
         service_found = (
+            service['source_language_iso_639_1_code'] == source_language and
             service['target_language_iso_639_1_code'] == target_language and
             service['service_level'] == 'standard'
         )
@@ -455,7 +457,7 @@ def place_translation_order(api_key, api_secret, translation_service_id, target_
     return translation_order
 
 
-def order_translations(file_id, api_key, api_secret, target_languages):
+def order_translations(file_id, api_key, api_secret, source_language, target_languages):
     """
     Order translations on 3PlayMedia for all the target languages.
 
@@ -472,6 +474,7 @@ def order_translations(file_id, api_key, api_secret, target_languages):
         file_id(unicode): File identifier
         api_key(unicode): API key
         api_secret(unicode): API Secret
+        source_language(unicode): video source/speech language code
         target_languages(list): List of language codes
 
     Raises:
@@ -508,12 +511,14 @@ def order_translations(file_id, api_key, api_secret, target_languages):
             continue
 
         # 2 - Find a standard service for translation for the target language.
-        translation_service_id = get_standard_translation_service(available_services, target_language)
+        translation_service_id = get_standard_translation_service(available_services, source_language, target_language)
         if translation_service_id is None:
             # Fail the process
             translation_process.update(status=TranscriptStatus.FAILED)
             LOGGER.error(
-                u'[3PlayMedia Callback] No translation service found for target language %s -- process id %s',
+                u'[3PlayMedia Callback] No translation service found for source language "%s" '
+                u'target language "%s" -- process id %s',
+                source_language,
                 target_language,
                 file_id,
             )
@@ -719,7 +724,13 @@ def three_play_transcription_callback(sender, **kwargs):
 
         # Order translations for target languages
         try:
-            order_translations(file_id, transcript_secrets.api_key, transcript_secrets.api_secret, target_languages)
+            order_translations(
+                file_id,
+                transcript_secrets.api_key,
+                transcript_secrets.api_secret,
+                source_language=lang_code,
+                target_languages=target_languages
+            )
         except TranscriptTranslationError:
             LOGGER.exception(
                 u'[3PlayMedia Callback] Translation could not be performed - video=%s, lang_code=%s, file_id=%s.',
