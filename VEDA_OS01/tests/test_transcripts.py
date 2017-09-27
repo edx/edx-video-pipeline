@@ -329,6 +329,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         self.org = u'MAx'
         self.file_id = u'112233'
+        self.video_source_language = u'en'
         self.edx_video_id = VIDEO_DATA['studio_id']
 
         self.url = reverse('3play_media_callback', args=[CONFIG_DATA['transcript_provider_request_token']])
@@ -341,6 +342,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         )
         self.video = Video.objects.create(
             inst_class=self.course,
+            source_language=self.video_source_language,
             **VIDEO_DATA
         )
 
@@ -386,7 +388,10 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         response = self.client.post(
             # `build_url` strips `/`, putting it back and add necessary query params.
-            '/{}'.format(utils.build_url(self.url, edx_video_id=self.video.studio_id, org=self.org)),
+            '/{}'.format(utils.build_url(
+                self.url, edx_video_id=self.video.studio_id,
+                org=self.org, lang_code=self.video_source_language
+            )),
             content_type='application/x-www-form-urlencoded',
             data=urllib.urlencode(dict(file_id=self.file_id, status=state))
         )
@@ -446,7 +451,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Assert the logs
-        required_attrs = ['file_id', 'status', 'org', 'edx_video_id']
+        required_attrs = ['file_id', 'lang_code', 'status', 'org', 'edx_video_id']
         received_attrs = request_data['data'].keys() + request_data['query_params'].keys()
         missing_attrs = [attr for attr in required_attrs if attr not in received_attrs]
         mock_logger.warning.assert_called_with(
@@ -475,7 +480,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         Tests the callback for all the non-success statuses.
         """
-        self.url = '/{}'.format(utils.build_url(self.url, edx_video_id='12345', org='MAx'))
+        self.url = '/{}'.format(utils.build_url(
+            self.url, edx_video_id='12345', org='MAx', lang_code=self.video_source_language
+        ))
         self.client.post(self.url, content_type='application/x-www-form-urlencoded', data=urllib.urlencode({
             'file_id': self.file_id,
             'status': state,
@@ -993,8 +1000,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                             'id': 30,
                             'source_language_name': 'English',
                             'source_language_iso_639_1_code': 'en',
-                            'target_language_name': 'Romanian',
-                            'target_language_iso_639_1_code': 'da',
+                            'target_language_name': 'German',
+                            'target_language_iso_639_1_code': 'de',
                             'service_level': 'standard',
                             'per_word_rate': 0.16
                         }]
@@ -1005,7 +1012,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Callback] No translation service found for target language %s -- process id %s',
+                    '[3PlayMedia Callback] No translation service found for '
+                    'source language "%s" target language "%s" -- process id %s',
+                    'en',
                     'ro',
                     '112233',
                 )
