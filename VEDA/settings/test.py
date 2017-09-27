@@ -1,8 +1,8 @@
 """
-Test Settings
+Test settings
 
 """
-from settings import *
+from VEDA.settings.base import *
 
 DATABASES = {
     'default': {

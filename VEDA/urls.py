@@ -2,7 +2,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(__file__))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'VEDA.settings'
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 
 from django.conf import settings
 from rest_framework import routers

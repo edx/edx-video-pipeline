@@ -15,4 +15,4 @@ reports/
 
 .cache/
 
-VEDA/private.py
+VEDA/settings/private.py
