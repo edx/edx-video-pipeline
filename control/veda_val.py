@@ -106,7 +106,7 @@ class VALAPICall():
             'password': self.auth_dict['val_password'],
         }
 
-        r = requests.post(self.auth_dict['val_token_url'], data=payload, timeout=20)
+        r = requests.post(self.auth_dict['val_token_url'], data=payload, timeout=self.auth_dict['global_timeout'])
 
         if r.status_code != 200:
             ErrorObject.print_error(
@@ -222,7 +222,7 @@ class VALAPICall():
                 self.video_proto.val_id
             )),
             headers=self.headers,
-            timeout=20
+            timeout=self.auth_dict['global_timeout']
         )
 
         if r1.status_code != 200 and r1.status_code != 404:
@@ -327,7 +327,7 @@ class VALAPICall():
             self.auth_dict['val_api_url'] + '/',
             data=json.dumps(sending_data),
             headers=self.headers,
-            timeout=20
+            timeout=self.auth_dict['global_timeout']
         )
 
         if r2.status_code > 299:
@@ -374,7 +374,7 @@ class VALAPICall():
             )),
             data=json.dumps(sending_data),
             headers=self.headers,
-            timeout=20
+            timeout=self.auth_dict['global_timeout']
         )
 
         if r4.status_code > 299:
