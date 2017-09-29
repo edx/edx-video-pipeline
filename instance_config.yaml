@@ -14,7 +14,7 @@ DATABASES:
     default:
         ENGINE: 'django.db.backends.mysql'
         NAME: 'pipeline'
-        USER: 'video_pipeline'
+        USER: 'pipeline001'
         PASSWORD: 'password'
         HOST: 'localhost'
         PORT: 3306
