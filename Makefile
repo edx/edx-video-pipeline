@@ -7,7 +7,7 @@ requirements: production-requirements
 	pip install -r test_requirements.txt
 
 migrate:
-	python manage.py mirgate --noinput
+	python manage.py migrate --noinput
 
 static:
 	python manage.py collectstatic --noinput
