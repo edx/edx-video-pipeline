@@ -15,3 +15,4 @@ pysrt==1.1.1
 edx-opaque-keys==0.4
 MySQL-python==1.2.5
 gunicorn==0.17.4
+gevent==1.2.2
