@@ -612,6 +612,7 @@ class VedaDelivery:
                 # Additional attributes that'll come back with the callback
                 org=org,
                 edx_video_id=self.video_query.studio_id,
+                lang_code=self.video_query.source_language,
             )
             three_play_media = ThreePlayMediaClient(
                 org=org,
