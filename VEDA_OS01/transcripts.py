@@ -318,6 +318,7 @@ def upload_sjson_to_s3(config, sjson_data):
         uuid=uuid.uuid4().hex
     )
     k.set_contents_from_string(json.dumps(sjson_data))
+    k.set_acl('public-read')
     return k.key
 
 
