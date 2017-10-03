@@ -27,13 +27,20 @@ class TranscriptProvider(object):
 class TranscriptStatus(object):
     """
     Transcript statuses.
-    """
 
+    Note:
+        If this status is 'PENDING' for:
+            1. Video, then transcription is applicable to a video but its not started yet.
+            2. TranscriptProcessMetadata, then transcript/translation process is created but its not actually
+            sent for processing to the 3rd Party Transcription Services.
+    """
+    NOT_APPLICABLE = 'N/A'
     PENDING = 'PENDING'
     IN_PROGRESS = 'IN PROGRESS'
     FAILED = 'FAILED'
     READY = 'READY'
     CHOICES = (
+        (NOT_APPLICABLE, NOT_APPLICABLE),
         (PENDING, PENDING),
         (IN_PROGRESS, IN_PROGRESS),
         (FAILED, FAILED),
@@ -123,11 +130,9 @@ class VideoStatus(object):
     RR = 'Review Reject'
     RP = 'Final Publish'
     YD = 'Youtube Duplicate'
-    QUEUE = 'In Encode Queue'
+    QUEUE = 'Queue'
     PROGRESS = 'Progress'
     COMPLETE = 'Complete'
-    TRANSCRIPTION_IN_PROGRESS = 'transcription_in_progress'
-    TRANSCRIPT_READY = 'transcript_ready'
 
     CHOICES = (
         (SI, 'System Ingest'),
@@ -146,8 +151,6 @@ class VideoStatus(object):
         (QUEUE, 'In Encode Queue'),
         (PROGRESS, 'In Progress'),
         (COMPLETE, 'Complete'),
-        (TRANSCRIPTION_IN_PROGRESS, 'Transcription In Progress'),
-        (TRANSCRIPT_READY, 'Transcript Ready'),
     )
 
 
@@ -434,6 +437,12 @@ class Video (models.Model):
         max_length=100,
         choices=VideoStatus.CHOICES,
         default=VideoStatus.SI
+    )
+    transcript_status = models.CharField(
+        'Transcription Status',
+        max_length=100,
+        choices=TranscriptStatus.CHOICES,
+        default=TranscriptStatus.NOT_APPLICABLE
     )
 
     video_glacierid = models.CharField('Glacier Archive ID String', max_length=200, null=True, blank=True)
