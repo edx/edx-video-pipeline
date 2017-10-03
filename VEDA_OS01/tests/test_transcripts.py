@@ -12,7 +12,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from ddt import data, ddt, unpack
 from django.core.urlresolvers import reverse
-from mock import Mock, PropertyMock, patch, ANY
+from mock import Mock, PropertyMock, patch
 from moto import mock_s3_deprecated
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -128,7 +128,7 @@ class Cielo24TranscriptTests(APITestCase):
         }
 
         self.video_transcript_ready_status_data = {
-            'status': transcripts.VideoStatus.TRANSCRIPT_READY,
+            'status': utils.ValTranscriptStatus.TRANSCRIPT_READY,
             'edx_video_id': self.video.studio_id
         }
 
@@ -238,7 +238,7 @@ class Cielo24TranscriptTests(APITestCase):
 
         # Assert edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)
-        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
+        self.assertEqual(video.transcript_status, TranscriptStatus.READY)
 
         # verify sjson data uploaded to s3
         bucket = conn.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
@@ -579,7 +579,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'url': CONFIG_DATA['val_video_transcript_status_url'],
                 'body': {
-                    'status': transcripts.VideoStatus.TRANSCRIPT_READY,
+                    'status': utils.ValTranscriptStatus.TRANSCRIPT_READY,
                     'edx_video_id': self.video.studio_id
                 },
                 'headers': {
@@ -599,7 +599,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         # Assert edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)
-        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
+        self.assertEqual(video.transcript_status, TranscriptStatus.READY)
 
         # verify transcript sjson data uploaded to s3
         self.assert_uploaded_transcript_on_s3(connection=conn)
@@ -1205,7 +1205,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         expected_video_status_update_request = {
             'url': CONFIG_DATA['val_video_transcript_status_url'],
             'body': {
-                'status': transcripts.VideoStatus.TRANSCRIPT_READY,
+                'status': utils.ValTranscriptStatus.TRANSCRIPT_READY,
                 'edx_video_id': self.video.studio_id
             },
             'headers': {
@@ -1221,7 +1221,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         # Asserts edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)
-        self.assertEqual(video.video_trans_status, transcripts.VideoStatus.TRANSCRIPT_READY)
+        self.assertEqual(video.transcript_status, TranscriptStatus.READY)
 
     @data(
         # not-an-ok response on translation status fetch request.

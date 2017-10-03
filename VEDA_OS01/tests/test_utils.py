@@ -2,7 +2,7 @@
 Tests common utils
 """
 from ddt import data, ddt, unpack
-from mock import Mock
+from mock import MagicMock, Mock
 from unittest import TestCase
 
 from VEDA_OS01 import utils
@@ -87,23 +87,19 @@ class UtilTests(TestCase):
         config = utils.get_config()
         self.assertNotEqual(config, {})
 
-    def test_video_status_update(self):
+    @data(
+        ('IN PROGRESS', True),
+        ('FAILED', False)
+    )
+    @unpack
+    def test_video_status_update(self, status, update_val_status):
         """
         Tests that  utils.video_status_update works as expected.
         """
-        def update_video_status(*args):
-            expected_args = ('1234', 'afterwards status')
-            self.assertEqual(args, expected_args)
-
-        video = Mock(studio_id='1234', video_trans_status='earlier status')
-        val_api_client = Mock(update_video_status=update_video_status)
-
+        val_api_client = MagicMock()
+        video = Mock(studio_id='1234', transcript_status='earlier status')
         # Make call to update_video_status.
-        utils.update_video_status(
-            val_api_client=val_api_client,
-            video=video,
-            status='afterwards status'
-        )
-
-        # assert the status
-        self.assertEqual(video.video_trans_status, 'afterwards status')
+        utils.update_video_status(val_api_client=val_api_client, video=video, status=status)
+        # Assert the status and call to edx-val api method.
+        self.assertEqual(val_api_client.update_video_status.called, update_val_status)
+        self.assertEqual(video.transcript_status, status)

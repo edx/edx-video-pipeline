@@ -18,7 +18,7 @@ from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
-                              VideoStatus)
+                              TranscriptStatus)
 from VEDA_OS01.utils import build_url
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
@@ -563,7 +563,7 @@ class VedaDelivery:
         utils.update_video_status(
             val_api_client=val_api_client,
             video=self.video_query,
-            status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
+            status=TranscriptStatus.IN_PROGRESS
         )
 
         cielo24 = Cielo24Transcript(
@@ -594,7 +594,7 @@ class VedaDelivery:
             utils.update_video_status(
                 val_api_client=val_api_client,
                 video=self.video_query,
-                status=VideoStatus.TRANSCRIPTION_IN_PROGRESS
+                status=TranscriptStatus.IN_PROGRESS
             )
 
             # Initialize 3playMedia client and start transcription process
