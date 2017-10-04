@@ -27,7 +27,7 @@ django.setup()
 Defaults
 """
 data_window = datetime.datetime.utcnow().replace(tzinfo=utc) - \
-    timedelta(days=15)
+    timedelta(days=3)
 
 
 def get_course(course_id):
