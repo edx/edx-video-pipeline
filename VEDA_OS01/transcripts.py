@@ -21,8 +21,7 @@ from rest_framework.views import APIView
 from control.veda_val import VALAPICall
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
-                              TranscriptProvider, TranscriptStatus,
-                              VideoStatus)
+                              TranscriptProvider, TranscriptStatus)
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
@@ -252,7 +251,7 @@ def cielo24_transcript_callback(sender, **kwargs):
             utils.update_video_status(
                 val_api_client=val_api,
                 video=process_metadata.video,
-                status=VideoStatus.TRANSCRIPT_READY
+                status=TranscriptStatus.READY
             )
 
 
@@ -319,6 +318,7 @@ def upload_sjson_to_s3(config, sjson_data):
         uuid=uuid.uuid4().hex
     )
     k.set_contents_from_string(json.dumps(sjson_data))
+    k.set_acl('public-read')
     return k.key
 
 
@@ -750,7 +750,7 @@ def three_play_transcription_callback(sender, **kwargs):
             utils.update_video_status(
                 val_api_client=val_api,
                 video=process.video,
-                status=VideoStatus.TRANSCRIPT_READY
+                status=TranscriptStatus.READY
             )
 
         # On success, a happy farewell log.
@@ -948,5 +948,5 @@ def retrieve_three_play_translations():
                 utils.update_video_status(
                     val_api_client=val_api,
                     video=translation_process.video,
-                    status=VideoStatus.TRANSCRIPT_READY
+                    status=TranscriptStatus.READY
                 )

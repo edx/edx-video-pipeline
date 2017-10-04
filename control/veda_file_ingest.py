@@ -33,6 +33,8 @@ from veda_val import VALAPICall
 from veda_encode import VedaEncode
 import celeryapp
 
+from VEDA_OS01.models import TranscriptStatus
+
 LOGGER = logging.getLogger(__name__)
 
 '''
@@ -347,6 +349,7 @@ class VedaIngest:
         # Update transcription preferences for the Video
         if self.video_proto.process_transcription:
             v1.process_transcription = self.video_proto.process_transcription
+            v1.transcript_status = TranscriptStatus.PENDING
             v1.provider = self.video_proto.provider
             v1.three_play_turnaround = self.video_proto.three_play_turnaround
             v1.cielo24_turnaround = self.video_proto.cielo24_turnaround
