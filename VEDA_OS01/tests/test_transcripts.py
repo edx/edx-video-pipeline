@@ -43,7 +43,7 @@ TRANSCRIPT_PREFERENCES = {
     'api_secret': 'i_am_secret',
 }
 
-REQUEST_PARAMS = {'job_id': 100, 'lang_code': 'en', 'org': 'MAx', 'video_id': '111'}
+REQUEST_PARAMS = {'job_id': 100, 'iwp_name': 'FINAL', 'lang_code': 'en', 'org': 'MAx', 'video_id': '111'}
 
 TRANSCRIPT_SRT_DATA = """
 1
@@ -154,15 +154,15 @@ class Cielo24TranscriptTests(APITestCase):
         """
         response = self.client.get(
             url or self.url,
-            {'job_id': 3, 'lang_code': 'ar', 'org': 'edx', 'video_id': 12345}
+            {'job_id': 3, 'iwp_name': 'FINAL', 'lang_code': 'ar', 'org': 'edx', 'video_id': 12345}
         )
         self.assertEqual(response.status_code, status_code)
 
     @data(
-        ({}, ['job_id', 'lang_code', 'org', 'video_id']),
-        ({'job_id': 1}, ['lang_code', 'org', 'video_id']),
-        ({'job_id': 2, 'lang_code': 'en'}, ['org', 'video_id']),
-        ({'job_id': 3, 'lang_code': 'ar', 'org': 'edx'}, ['video_id']),
+        ({}, ['job_id', 'iwp_name', 'lang_code', 'org', 'video_id']),
+        ({'job_id': 1}, ['iwp_name', 'lang_code', 'org', 'video_id']),
+        ({'job_id': 2, 'lang_code': 'en'}, ['iwp_name', 'org', 'video_id']),
+        ({'job_id': 3, 'lang_code': 'ar', 'org': 'edx'}, ['iwp_name', 'video_id']),
     )
     @unpack
     @patch('VEDA_OS01.transcripts.LOGGER')
@@ -195,9 +195,10 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('VEDA_OS01.transcripts.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @patch('VEDA_OS01.transcripts.LOGGER')
     @responses.activate
     @mock_s3_deprecated
-    def test_cielo24_callback(self):
+    def test_cielo24_callback(self, mock_logger):
         """
         Verify that `cielo24_transcript_callback` method works as expected.
         """
@@ -220,6 +221,16 @@ class Cielo24TranscriptTests(APITestCase):
 
         transcripts.cielo24_transcript_callback(None, **REQUEST_PARAMS)
 
+        # Assert the logs.
+        mock_logger.info.assert_called_with(
+            '[CIELO24 TRANSCRIPTS] Transcript complete request received for '
+            'video=%s -- org=%s -- lang=%s -- job_id=%s -- iwp_name=%s',
+            REQUEST_PARAMS['video_id'],
+            REQUEST_PARAMS['org'],
+            REQUEST_PARAMS['lang_code'],
+            REQUEST_PARAMS['job_id'],
+            REQUEST_PARAMS['iwp_name']
+        )
         # Total of 4 HTTP requests are made as registered above
         self.assertEqual(len(responses.calls), 4)
 
