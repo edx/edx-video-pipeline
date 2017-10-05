@@ -34,7 +34,9 @@ ERROR = 'error'
 
 # Transcript format
 TRANSCRIPT_SJSON = 'sjson'
-CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=['job_id', 'lang_code', 'org', 'video_id'])
+CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=[
+    'job_id', 'iwp_name', 'lang_code', 'org', 'video_id'
+])
 CONFIG = utils.get_config()
 
 # Cielo24 API URLs
@@ -129,7 +131,7 @@ class Cielo24CallbackHandlerView(APIView):
         """
         Handle Cielo24 callback request.
         """
-        required_attrs = ('job_id', 'lang_code', 'org', 'video_id')
+        required_attrs = ('job_id', 'iwp_name', 'lang_code', 'org', 'video_id')
         missing = [attr for attr in required_attrs if attr not in request.query_params.keys()]
         if missing:
             LOGGER.warning(
@@ -142,6 +144,7 @@ class Cielo24CallbackHandlerView(APIView):
             sender=self,
             org=request.query_params['org'],
             job_id=request.query_params['job_id'],
+            iwp_name=request.query_params['iwp_name'],
             video_id=request.query_params['video_id'],
             lang_code=request.query_params['lang_code'],
         )
@@ -162,14 +165,17 @@ def cielo24_transcript_callback(sender, **kwargs):
     org = kwargs['org']
     job_id = kwargs['job_id']
     video_id = kwargs['video_id']
+    iwp_name = kwargs['iwp_name']
     lang_code = kwargs['lang_code']
 
     LOGGER.info(
-        '[CIELO24 TRANSCRIPTS] Transcript complete request received for video=%s -- org=%s -- lang=%s -- job_id=%s',
+        '[CIELO24 TRANSCRIPTS] Transcript complete request received for '
+        'video=%s -- org=%s -- lang=%s -- job_id=%s -- iwp_name=%s',
         video_id,
         org,
         lang_code,
-        job_id
+        job_id,
+        iwp_name
     )
 
     # get transcript credentials for an organization

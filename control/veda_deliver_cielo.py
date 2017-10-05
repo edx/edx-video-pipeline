@@ -3,7 +3,7 @@ Cielo24 Integration
 """
 import ast
 import logging
-import urllib
+import json
 
 import requests
 from requests.packages.urllib3.exceptions import InsecurePlatformWarning
@@ -119,6 +119,7 @@ class Cielo24Transcript(object):
         callback_url = build_url(
             self.callback_base_url,
             job_id=job_id,
+            iwp_name='{iwp_name}',
             lang_code=lang_code,
             org=self.org,
             video_id=self.video.studio_id
@@ -135,6 +136,7 @@ class Cielo24Transcript(object):
                 api_token=self.api_key,
                 priority=self.turnaround,
                 transcription_fidelity=self.fidelity,
+                options=json.dumps({"return_iwp": ["FINAL"]})
             )
         )
 

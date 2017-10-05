@@ -149,11 +149,13 @@ class Cielo24TranscriptTests(TestCase):
                         lang_code='TARGET_LANG',
                         video_id='12345',
                         job_id='000-111-222',
+                        iwp_name='{iwp_name}',
                         org='MAx',
                     ),
                     api_token='cielo24_api_key',
                     priority='PRIORITY',
                     transcription_fidelity='PROFESSIONAL',
+                    options='{"return_iwp": ["FINAL"]}'
                 ),
                 'body': None,
                 'method': 'GET'
