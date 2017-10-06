@@ -8,14 +8,19 @@ Roll through videos, check for completion
 
 """
 import datetime
-import uuid
 from datetime import timedelta
-
+import os
+import sys
+import uuid
 import yaml
+
 from django.utils.timezone import utc
 
+from VEDA_OS01.models import Encode, URL, Video
+from VEDA_OS01.utils import VAL_TRANSCRIPT_STATUS_MAP
+
 import celeryapp
-from control_env import *
+from control_env import WORK_DIRECTORY
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
 
@@ -73,6 +78,11 @@ class VedaHeal(object):
             encode_list = self.determine_fault(video_object=v)
             # Using the 'Video Proto' Model
             if self.val_status is not None:
+                # Update to VAL is also happening for those videos which are already marked complete,
+                # All these retries are for the data-parity between VAL and VEDA, as calls to VAL api are
+                # unreliable and times out. For a completed Video, VEDA heal will keep doing this unless
+                # the Video is old enough and escapes from the time-span that HEAL is picking up on.
+                # cc Greg Martin
                 VAC = VALAPICall(
                     video_proto=None,
                     video_object=v,
@@ -138,8 +148,19 @@ class VedaHeal(object):
                 # These encodes don't count towards 'file_complete'
                 if e != 'mobile_high' and e != 'audio_mp3' and e != 'review':
                     check_list.append(e)
+
+        # See if VEDA's Video data model is already having transcript status which corresponds
+        # to any of Val's Video transcript statuses. If its True, set `val_status` to that status
+        # instead of `file_complete` as transcription phase comes after encoding phase of a Video,
+        # and `file_complete` shows that a Video's encodes are complete, while there may be possibility
+        # that the Video has gone through transcription phase as well after the encodes were ready.
+        val_transcription_status = VAL_TRANSCRIPT_STATUS_MAP.get(video_object.transcript_status, None)
         if check_list is None or len(check_list) == 0:
-            self.val_status = 'file_complete'
+            if val_transcription_status:
+                self.val_status = val_transcription_status
+            else:
+                self.val_status = 'file_complete'
+
             # File is complete!
             # Check for data parity, and call done
             if video_object.video_trans_status != 'Complete':
@@ -156,7 +177,11 @@ class VedaHeal(object):
             if self.determine_longterm_corrupt(uncompleted_encodes, expected_encodes, video_object):
                 return []
 
-        if self.val_status != 'file_complete':
+        complete_statuses = ['file_complete']
+        if val_transcription_status:
+            complete_statuses.append(val_transcription_status)
+
+        if self.val_status not in complete_statuses:
             self.val_status = 'transcode_queue'
         return uncompleted_encodes
 

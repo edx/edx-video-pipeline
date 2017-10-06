@@ -8,14 +8,13 @@ import sys
 from django.test import TestCase
 from datetime import timedelta
 from ddt import data, ddt, unpack
-from unittest import skip
 import responses
 from django.utils.timezone import utc
 from mock import PropertyMock, patch
 
 from control.veda_heal import VedaHeal
-from VEDA_OS01.models import URL, Course, Destination, Encode, Video
-from VEDA_OS01.utils import build_url, get_config
+from VEDA_OS01.models import URL, Course, Destination, Encode, Video, TranscriptStatus
+from VEDA_OS01.utils import build_url, get_config, ValTranscriptStatus
 
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)
@@ -169,50 +168,103 @@ class HealTests(TestCase):
         {
             'uncompleted_encodes': [],
             'expected_encodes': ['test_obj'],
-            'video_object': {
+            'video_props': {
                 'edx_id': '1',
                 'video_trans_status': 'Complete',
                 'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
                 'video_active': True,
-            }
+            },
+            'result': []
         },
         {
             'uncompleted_encodes': ['test_obj'],
             'expected_encodes': ['test_obj'],
-            'video_object': {
+            'video_props': {
                 'edx_id': '2',
                 'video_trans_status': 'Ingest',
                 'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
                 'video_active': True,
-            }
+            },
+            'result': ['test_obj']
         }
     )
     @unpack
-    def test_differentiate_encodes(self, uncompleted_encodes, expected_encodes, video_object):
+    def test_differentiate_encodes(self, uncompleted_encodes, expected_encodes, video_props, result):
         """
         Tests that differentiate_encodes list comparison works as expected. This doesn't test video states,
         just the list comparison function.
         """
-        video_instance = Video(
-            edx_id=video_object['edx_id'],
-            video_trans_status=video_object['video_trans_status'],
-            video_trans_start=video_object['video_trans_start'],
-            video_active=video_object['video_active'],
-            inst_class=self.course_object
-        )
-
-        video_instance.save()
-
+        video_instance = Video.objects.create(inst_class=self.course_object, **video_props)
         encode_list = self.heal_instance.differentiate_encodes(
             uncompleted_encodes,
             expected_encodes,
             video_instance
         )
+        self.assertEqual(encode_list, result)
 
-        if video_instance.edx_id == '1':
-            self.assertEqual(encode_list, [])
-        elif video_instance.edx_id == '2':
-            self.assertEqual(encode_list, ['test_obj'])
+    @data(
+        {
+            'uncompleted_encodes': [],
+            'expected_encodes': ['test_obj'],
+            'video_props': {
+                'edx_id': '1',
+                'video_trans_status': 'Complete',
+                'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+                'video_active': True,
+                'transcript_status': TranscriptStatus.PENDING
+            },
+            'expected_val_status': 'file_complete'
+        },
+        {
+            'uncompleted_encodes': [],
+            'expected_encodes': ['test_obj'],
+            'video_props': {
+                'edx_id': '1',
+                'video_trans_status': 'Complete',
+                'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+                'video_active': True,
+                'transcript_status': TranscriptStatus.IN_PROGRESS
+            },
+            'expected_val_status': ValTranscriptStatus.TRANSCRIPTION_IN_PROGRESS
+        },
+        {
+            'uncompleted_encodes': [],
+            'expected_encodes': ['test_obj'],
+            'video_props': {
+                'edx_id': '1',
+                'video_trans_status': 'Complete',
+                'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+                'video_active': True,
+                'transcript_status': TranscriptStatus.READY
+            },
+            'expected_val_status': ValTranscriptStatus.TRANSCRIPT_READY
+        },
+        {
+            'uncompleted_encodes': ['test_obj'],
+            'expected_encodes': ['test_obj'],
+            'video_props': {
+                'edx_id': '2',
+                'video_trans_status': 'Ingest',
+                'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+                'video_active': True,
+                'transcript_status': TranscriptStatus.READY
+            },
+            'expected_val_status': 'transcode_queue'
+        }
+    )
+    @unpack
+    def test_differentiate_encodes_val_status(self, uncompleted_encodes,
+                                              expected_encodes, video_props, expected_val_status):
+        """
+        Tests that the val status changes as expected based on encode list.
+        """
+        video_instance = Video.objects.create(inst_class=self.course_object, **video_props)
+        self.heal_instance.differentiate_encodes(
+            uncompleted_encodes,
+            expected_encodes,
+            video_instance
+        )
+        self.assertEqual(self.heal_instance.val_status, expected_val_status)
 
     @data(
         {

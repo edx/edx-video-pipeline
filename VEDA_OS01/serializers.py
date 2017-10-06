@@ -72,9 +72,11 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_trans_start',
             'video_trans_end',
             'video_trans_status',
+            'transcript_status',
             'video_glacierid',
             'course_ids',
             'process_transcription',
+            'source_language',
             'provider',
             'three_play_turnaround',
             'cielo24_turnaround',
@@ -130,6 +132,10 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_trans_status',
             instance.video_trans_status
         )
+        instance.transcript_status = validated_data.get(
+            'transcript_status',
+            instance.transcript_status
+        )
         instance.video_glacierid = validated_data.get(
             'video_glacierid',
             instance.video_glacierid
@@ -137,6 +143,10 @@ class VideoSerializer(serializers.ModelSerializer):
         instance.process_transcription = validated_data.get(
             'process_transcription',
             instance.process_transcription
+        )
+        instance.source_language = validated_data.get(
+            'source_language',
+            instance.source_language
         )
         instance.provider = validated_data.get(
             'provider',
