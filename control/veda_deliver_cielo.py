@@ -206,7 +206,7 @@ class Cielo24Transcript(object):
             self.cielo24_api_base_url,
             self.cielo24_new_job,
             v=1,
-            language='en',
+            language=self.video.source_language,
             api_token=self.api_key,
             job_name=self.video.studio_id
         )
