@@ -480,7 +480,7 @@ class Video (models.Model):
     )
     source_language = models.CharField(
         'video source language',
-        help_text='This is only needed with 3Play Media Provider',
+        help_text="This is video speech language.",
         max_length=50,
         null=True,
         blank=True,

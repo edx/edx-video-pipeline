@@ -14,7 +14,8 @@ from VEDA_OS01.models import (Cielo24Fidelity, Cielo24Turnaround, Course,
 from VEDA_OS01.utils import build_url
 
 VIDEO_DATA = {
-    'studio_id': '12345'
+    'studio_id': '12345',
+    'source_language': 'en'
 }
 
 
@@ -121,7 +122,7 @@ class Cielo24TranscriptTests(TestCase):
                     'https://sandbox.cielo24.com/api/job/new',
                     v=1,
                     job_name='12345',
-                    language='en',
+                    language='en',  # A job's language.
                     api_token='cielo24_api_key',
                 ),
                 'body': None,
