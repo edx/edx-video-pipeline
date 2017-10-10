@@ -14,7 +14,8 @@ from mock import PropertyMock, patch
 
 from control.veda_heal import VedaHeal
 from VEDA_OS01.models import URL, Course, Destination, Encode, Video, TranscriptStatus
-from VEDA_OS01.utils import build_url, get_config, ValTranscriptStatus
+from VEDA_OS01.utils import ValTranscriptStatus
+from VEDA.utils import build_url, get_config
 
 sys.path.append(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)

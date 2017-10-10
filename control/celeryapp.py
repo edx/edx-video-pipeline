@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 from celery import Celery
-import yaml
+from VEDA.utils import get_config
 
 try:
     from control.veda_deliver import VedaDelivery
@@ -14,15 +14,7 @@ except ImportError:
     from veda_deliver import VedaDelivery
 
 
-auth_yaml = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'instance_config.yaml'
-)
-with open(auth_yaml, 'r') as stream:
-    try:
-        auth_dict = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        auth_dict = None
+auth_dict = get_config()
 
 CEL_BROKER = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.format(
     rabbitmq_user=auth_dict['rabbitmq_user'],

@@ -11,7 +11,7 @@ from control.veda_deliver_cielo import Cielo24Transcript
 from VEDA_OS01.models import (Cielo24Fidelity, Cielo24Turnaround, Course,
                               TranscriptProcessMetadata, TranscriptStatus,
                               Video)
-from VEDA_OS01.utils import build_url
+from VEDA.utils import build_url
 
 VIDEO_DATA = {
     'studio_id': '12345',

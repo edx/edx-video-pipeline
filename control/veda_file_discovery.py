@@ -5,10 +5,9 @@ import os.path
 import boto
 import boto.s3
 from boto.exception import S3ResponseError, S3DataError
-import yaml
 
 from VEDA_OS01.models import TranscriptCredentials
-from VEDA_OS01.utils import extract_course_org
+from VEDA.utils import extract_course_org, get_config
 
 try:
     boto.config.add_section('Boto')
@@ -39,16 +38,7 @@ class FileDiscovery(object):
     def __init__(self, **kwargs):
         self.video_info = {}
 
-        self.auth_dict = {}
-        self.auth_yaml = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'instance_config.yaml'
-        )
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                self.auth_dict = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                pass
+        self.auth_dict = get_config()
 
         self.bucket = None
         """

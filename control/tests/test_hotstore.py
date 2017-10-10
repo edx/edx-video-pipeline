@@ -9,7 +9,7 @@ from django.test import TestCase
 from boto.s3.connection import S3Connection
 from mock import PropertyMock, patch
 from moto import mock_s3_deprecated
-from VEDA_OS01 import utils
+from VEDA import utils
 
 from control.veda_file_ingest import VideoProto
 from control.veda_hotstore import Hotstore

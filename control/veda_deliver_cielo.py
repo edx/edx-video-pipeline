@@ -10,7 +10,7 @@ from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 
 from VEDA_OS01.models import (TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus)
-from VEDA_OS01.utils import build_url
+from VEDA.utils import build_url
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 

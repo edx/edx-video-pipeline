@@ -6,7 +6,6 @@ import unittest
 
 from django.test import TestCase
 import requests
-import yaml
 
 from veda_file_ingest import VedaIngest, VideoProto
 
