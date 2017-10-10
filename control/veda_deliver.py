@@ -7,7 +7,6 @@ from os.path import expanduser
 import boto
 import boto.s3
 import requests
-import yaml
 from boto.exception import S3ResponseError
 from boto.s3.key import Key
 from django.core.urlresolvers import reverse
@@ -19,7 +18,7 @@ from veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
                               TranscriptStatus)
-from VEDA_OS01.utils import build_url
+from VEDA.utils import build_url, extract_course_org, get_config
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
 from veda_video_validation import Validation
@@ -60,14 +59,7 @@ class VedaDelivery:
         self.veda_id = veda_id
         self.encode_profile = encode_profile
 
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            ),
-        )
-        self.auth_dict = self._READ_YAML(self.auth_yaml)
+        self.auth_dict = get_config()
         # Internal Methods
         self.video_query = None
         self.encode_query = None
@@ -77,19 +69,6 @@ class VedaDelivery:
         self.status = None
         self.endpoint_url = None
         self.video_proto = None
-
-    def _READ_YAML(self, read_yaml):
-        if read_yaml is None:
-            return None
-        if not os.path.exists(read_yaml):
-            return None
-
-        with open(read_yaml, 'r') as stream:
-            try:
-                return_dict = yaml.load(stream)
-                return return_dict
-            except yaml.YAMLError as exc:
-                return None
 
     def run(self):
         """
@@ -536,7 +515,7 @@ class VedaDelivery:
         """
         Cielo24 transcription flow.
         """
-        org = utils.extract_course_org(self.video_proto.platform_course_url[0])
+        org = extract_course_org(self.video_proto.platform_course_url[0])
 
         try:
             api_key = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider).api_key
@@ -586,7 +565,7 @@ class VedaDelivery:
         try:
             # Picks the first course from the list as there may be multiple
             # course runs in that list (i.e. all having the same org).
-            org = utils.extract_course_org(self.video_proto.platform_course_url[0])
+            org = extract_course_org(self.video_proto.platform_course_url[0])
             transcript_secrets = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider)
 
             # update transcript status for video.

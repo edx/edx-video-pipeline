@@ -4,11 +4,10 @@ import sys
 import uuid
 
 import django
-import yaml
 
 from control_env import *
 from dependencies.shotgun_api3 import Shotgun
-
+from VEDA.utils import get_config
 
 """
 Get a list of needed encodes from VEDA
@@ -31,30 +30,11 @@ class VedaEncode(object):
         self.overencode = kwargs.get('overencode', False)
         self.veda_id = kwargs.get('veda_id', None)
 
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            ),
-        )
-        self.encode_dict = self._READ_AUTH()['encode_dict']
-        self.sg_server_path = self._READ_AUTH()['sg_server_path']
-        self.sg_script_name = self._READ_AUTH()['sg_script_name']
-        self.sg_script_key = self._READ_AUTH()['sg_script_key']
-
-    def _READ_AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
+        config_data = get_config()
+        self.encode_dict = config_data['encode_dict']
+        self.sg_server_path = config_data['sg_server_path']
+        self.sg_script_name = config_data['sg_script_name']
+        self.sg_script_key = config_data['sg_script_key']
 
     def determine_encodes(self):
         """

@@ -7,6 +7,7 @@ import ast
 import json
 import datetime
 import yaml
+from VEDA.utils import get_config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,10 +60,6 @@ class VALAPICall():
         self.headers = None
 
         """Credentials"""
-        self.auth_yaml = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'instance_config.yaml'
-        )
         self.auth_dict = self._AUTH()
 
     def call(self):
@@ -81,21 +78,7 @@ class VALAPICall():
             self.send_val_data()
 
     def _AUTH(self):
-        if not os.path.exists(self.auth_yaml):
-            ErrorObject.print_error(
-                message='No Auth YAML'
-            )
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                ErrorObject.print_error(
-                    message='YAML READ ERROR'
-                )
-                return None
+        return get_config()
 
     def val_tokengen(self):
         """

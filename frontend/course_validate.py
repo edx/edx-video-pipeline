@@ -14,16 +14,6 @@ from frontend_env import *
 """
 Import Django Shit
 """
-auth_yaml = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'instance_config.yaml'
-)
-
-with open(auth_yaml, 'r') as stream:
-    try:
-        auth_dict = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        print 'AUTH ERROR'
 
 
 class VEDACat():
