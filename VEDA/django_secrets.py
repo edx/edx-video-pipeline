@@ -23,3 +23,10 @@ DJANGO_SECRET_KEY = return_dict['django_secret_key'] or 'test_secret_key'
 DJANGO_ADMIN = ('', '')
 DJANGO_DEBUG = return_dict['debug'] if 'debug' in return_dict else False
 DATABASES = return_dict['DATABASES']
+STATIC_ROOT_PATH = return_dict.get(
+    'STATIC_ROOT_PATH',
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'static'
+    )
+)

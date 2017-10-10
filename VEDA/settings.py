@@ -44,8 +44,9 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+
 # Absolute filesystem path to the directory that will hold user-uploaded files.
-STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+STATIC_ROOT = STATIC_ROOT_PATH
 STATIC_URL = '/static/'
 
 # Additional locations of static files
