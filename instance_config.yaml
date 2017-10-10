@@ -82,12 +82,10 @@ val_username:
 # ---
 celery_app_name: veda_production
 # can do multiple queues like so: foo,bar,baz
-main_celery_queue: encode_worker
-celery_receiver_queue: encode_worker
-largefile_celery_queue: large_encode_worker
-celery_stat_queue: transcode_stat
-largefile_queue_barrier: 1000000000
+celery_worker_queue: encode_worker
+celery_deliver_queue: deliver_worker
 celery_threads: 1
+
 
 rabbitmq_broker:
 rabbitmq_pass:

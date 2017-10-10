@@ -81,23 +81,15 @@ class VedaHeal(object):
                 VAC.call()
             self.val_status = None
 
-            if len(encode_list) > 0:
-                """
-                send job to queue
-                """
-                if v.video_orig_filesize > self.auth_dict['largefile_queue_barrier']:
-                    cel_queue = self.auth_dict['largefile_celery_queue']
-                else:
-                    cel_queue = self.auth_dict['main_celery_queue']
-
-                for e in encode_list:
-                    veda_id = v.edx_id
-                    encode_profile = e
-                    jobid = uuid.uuid1().hex[0:10]
-                    celeryapp.worker_task_fire.apply_async(
-                        (veda_id, encode_profile, jobid),
-                        queue=cel_queue
-                    )
+            # Enqueue
+            for e in encode_list:
+                veda_id = v.edx_id
+                encode_profile = e
+                jobid = uuid.uuid1().hex[0:10]
+                celeryapp.worker_task_fire.apply_async(
+                    (veda_id, encode_profile, jobid),
+                    queue=self.auth_dict['celery_worker_queue']
+                )
 
     def determine_fault(self, video_object):
         """
