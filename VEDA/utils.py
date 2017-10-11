@@ -2,9 +2,9 @@
 Common utils.
 """
 import os
-import yaml
 import urllib
 
+import yaml
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 

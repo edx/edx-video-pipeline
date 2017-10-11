@@ -2,11 +2,14 @@ import yaml
 from os import environ
 from VEDA.settings.base import *
 from VEDA.utils import get_config
+from VEDA.settings.utils import get_logger_config
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['*']
+
+LOGGING = get_logger_config()
 
 # Keep track of the names of settings that represent dicts. Instead of overriding the values in base.py,
 # the values read from disk should UPDATE the pre-configured dicts.
