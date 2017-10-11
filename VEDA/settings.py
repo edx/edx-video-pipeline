@@ -23,7 +23,6 @@ STATIC_ROOT_PATH = CONFIG_DATA.get(
     )
 )
 
-
 ADMINS = (
     DJANGO_ADMIN,
 )
@@ -31,18 +30,6 @@ ADMINS = (
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Port the warnings to the backend
 
 MANAGERS = ADMINS
-
-if DATABASES is None:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': pipeline_dbname,
-            'USER': DJANGO_DB_USER,
-            'PASSWORD': DJANGO_DB_PASS,
-            'HOST': DBHOST,
-            'PORT': '3306',
-        }
-    }
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = DJANGO_SECRET_KEY

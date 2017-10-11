@@ -81,7 +81,7 @@ def get_logger_config(log_dir='/var/tmp',
                       dev_env=False,
                       debug=False,
                       local_loglevel='INFO',
-                      service_variant='video-pipeline'):
+                      service_variant='pipeline'):
     """
     Return the appropriate logging config dictionary. You should assign the
     result of this to the LOGGING var in your settings.
