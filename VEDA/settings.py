@@ -2,14 +2,27 @@
 Settings
 
 """
-from os.path import join, dirname, abspath
-
-DATABASES = None
-
 import os
-from django_secrets import *
+from os.path import abspath, dirname, join
+
+from VEDA.utils import get_config, get_logger_config
 
 ROOT_DIR = os.path.dirname(os.path.dirname((__file__)))
+
+CONFIG_DATA = get_config()
+
+DJANGO_SECRET_KEY = CONFIG_DATA['django_secret_key']
+DJANGO_ADMIN = ('', '')
+DJANGO_DEBUG = CONFIG_DATA.get('debug', False)
+DATABASES = CONFIG_DATA.get('DATABASES')
+STATIC_ROOT_PATH = CONFIG_DATA.get(
+    'STATIC_ROOT_PATH',
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'static'
+    )
+)
+
 
 ADMINS = (
     DJANGO_ADMIN,
@@ -156,29 +169,7 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
+LOGGING = get_logger_config()
 
 # See if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
