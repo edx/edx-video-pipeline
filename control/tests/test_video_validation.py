@@ -29,10 +29,7 @@ class TestValidation(TestCase):
             videofile=self.videofile
         )
 
-    @unittest.skipIf(
-        'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true',
-        'Skipping this test on Travis CI due to unavailability of required ffprobe version.'
-    )
+    @unittest.skip('Skipping this test due to unavailability of required ffprobe version.')
     def test_validation(self):
         """
         Check a known file for validity

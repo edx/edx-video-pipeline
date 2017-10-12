@@ -354,6 +354,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         self.video = Video.objects.create(
             inst_class=self.course,
             source_language=self.video_source_language,
+            provider=TranscriptProvider.THREE_PLAY,
+            transcript_status=TranscriptStatus.IN_PROGRESS,
             **VIDEO_DATA
         )
 
@@ -407,6 +409,32 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             data=urllib.urlencode(dict(file_id=self.file_id, status=state))
         )
         return response
+
+    def setup_translations_prereqs(self, file_id, translation_lang_map, preferred_languages):
+        """
+        Sets up pre-requisites for 3Play Media translations retrieval process.
+        """
+        # Update preferred languages.
+        self.video.preferred_languages = preferred_languages
+        self.video.save()
+
+        # Assumes the speech transcript is ready.
+        TranscriptProcessMetadata.objects.filter(
+            process_id=self.file_id,
+            lang_code=self.video_source_language,
+        ).update(status=TranscriptStatus.READY)
+
+        # Create translation processes and set their statuses to 'IN PROGRESS'.
+        for target_language, translation_id in translation_lang_map.iteritems():
+            # Create translation processes for all the target languages.
+            TranscriptProcessMetadata.objects.create(
+                video=self.video,
+                provider=TranscriptProvider.THREE_PLAY,
+                process_id=file_id,
+                translation_id=translation_id,
+                lang_code=target_language,
+                status=TranscriptStatus.IN_PROGRESS,
+            )
 
     def assert_request(self, received_request, expected_request, decode_func):
         """
@@ -1086,41 +1114,26 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         # Setup an S3 bucket
         connection = self.setup_s3_bucket()
 
-        # Setup translation processes
-        mock_translations = {
+        # Setup translations
+        translations_lang_map = {
             'ro': '1z2x3c',
             'da': '1q2w3e',
         }
-        self.video.preferred_languages = ['en', 'ro', 'da']
-        self.video.save()
-
-        # Assume the speech transcript is ready.
-        TranscriptProcessMetadata.objects.filter(
-            process_id=self.file_id,
-            lang_code='en'
-        ).update(status=TranscriptStatus.READY)
-
-        # in progress translation processes (which will normally be done by the callback)
-        for lang_code, translation_id in mock_translations.iteritems():
-            TranscriptProcessMetadata.objects.create(
-                video=self.video,
-                provider=TranscriptProvider.THREE_PLAY,
-                process_id=self.file_id,
-                translation_id=translation_id,
-                lang_code=lang_code,
-                status=TranscriptStatus.IN_PROGRESS,
-            )
+        self.setup_translations_prereqs(
+            file_id=self.file_id,
+            translation_lang_map=translations_lang_map,
+            preferred_languages=['en', 'ro', 'da']
+        )
 
         # Setup mock responses
-        for __, translation_id in mock_translations.iteritems():
-            responses.add(
-                responses.GET,
-                transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                    file_id=self.file_id, translation_id=translation_id
-                ),
-                json.dumps({'state': 'complete'}),
-                status=200
-            )
+        translation_status_mock_response = []
+        for target_language, translation_id in translations_lang_map.iteritems():
+            translation_status_mock_response.append({
+                'id': translation_id,
+                'source_language_iso_639_1_code': 'en',
+                'target_language_iso_639_1_code': target_language,
+                'state': 'complete'
+            })
 
             responses.add(
                 responses.GET,
@@ -1136,29 +1149,42 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
 
         responses.add(responses.PATCH, CONFIG_DATA['val_video_transcript_status_url'], status=200)
+        responses.add(
+            responses.GET,
+            transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id=self.file_id),
+            json.dumps(translation_status_mock_response),
+            status=200
+        )
 
         # Call to retrieve translations
         transcripts.retrieve_three_play_translations()
 
-        # Total HTTP requests, 4 for first translation and 4 for second translation and 1 for updating video status.
-        self.assertEqual(len(responses.calls), 9)
+        # Total HTTP requests, 1 for retrieving translations metadata, 3 for first translation and
+        # 3 for second translation and 1 for updating video status.
+        self.assertEqual(len(responses.calls), 8)
 
-        position = 0
-        for lang_code, translation_id in mock_translations.iteritems():
+        # Assert that the first request was made for getting translations metadata from 3Play Media.
+        expected_video_status_update_request = {
+            'url': utils.build_url(
+                transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id=self.file_id),
+                apikey=self.transcript_prefs.api_key
+            )
+        }
+        self.assert_request(
+            responses.calls[0].request,
+            expected_video_status_update_request,
+            decode_func=json.loads,
+        )
+        position = 1
+        for lang_code, translation_id in translations_lang_map.iteritems():
             expected_requests = [
                 # request - 1
-                {
-                    'url': utils.build_url(transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                        file_id=self.file_id, translation_id=translation_id
-                    ), apikey=self.transcript_prefs.api_key)
-                },
-                # request - 2
                 {
                     'url': utils.build_url(transcripts.THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
                         file_id=self.file_id, translation_id=translation_id
                     ), apikey=self.transcript_prefs.api_key)
                 },
-                # request - 3
+                # request - 2
                 {
                     'url': CONFIG_DATA['val_token_url'],
                     'body': {
@@ -1170,7 +1196,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     },
                     'decode_func': urlparse.parse_qs,
                 },
-                # request - 4
+                # request - 3
                 {
                     'url': CONFIG_DATA['val_transcript_create_url'],
                     'body': {
@@ -1240,9 +1266,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             [
                 {
                     'method': responses.GET,
-                    'url': transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                        file_id='112233', translation_id='1q2w3e'
-                    ),
+                    'url': transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id='112233'),
                     'body': 'Your request was invalid.',
                     'status': 400,
                 }
@@ -1250,10 +1274,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] Translation status request failed for video=%s -- lang_code=%s -- '
-                    'process_id=%s -- status=%s',
+                    '[3PlayMedia Task] Translations metadata request failed for video=%s -- process_id=%s -- status=%s',
                     VIDEO_DATA['studio_id'],
-                    'ro',
                     '112233',
                     400,
                 )
@@ -1265,9 +1287,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             [
                 {
                     'method': responses.GET,
-                    'url': transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                        file_id='112233', translation_id='1q2w3e'
-                    ),
+                    'url': transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id='112233'),
                     'body': json.dumps({'iserror': True}),
                     'status': 200,
                 }
@@ -1275,10 +1295,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] unable to get translation status for '
-                    'video=%s -- lang_code=%s -- process_id=%s -- response=%s',
+                    '[3PlayMedia Task] unable to get translations metadata for video=%s -- '
+                    'process_id=%s -- response=%s',
                     VIDEO_DATA['studio_id'],
-                    'ro',
                     '112233',
                     json.dumps({'iserror': True}),
                 )
@@ -1290,12 +1309,13 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             [
                 {
                     'method': responses.GET,
-                    'url': transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                        file_id='112233', translation_id='1q2w3e'
-                    ),
-                    'body': json.dumps({
+                    'url': transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id='112233'),
+                    'body': json.dumps([{
+                        'id': '1q2w3e',
+                        'source_language_iso_639_1_code': 'en',
+                        'target_language_iso_639_1_code': 'ro',
                         'state': 'complete'
-                    }),
+                    }]),
                     'status': 200,
                 },
                 {
@@ -1324,12 +1344,13 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             [
                 {
                     'method': responses.GET,
-                    'url': transcripts.THREE_PLAY_TRANSLATION_STATUS_URL.format(
-                        file_id='112233', translation_id='1q2w3e'
-                    ),
-                    'body': json.dumps({
+                    'url': transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id='112233'),
+                    'body': json.dumps([{
+                        'id': '1q2w3e',
+                        'source_language_iso_639_1_code': 'en',
+                        'target_language_iso_639_1_code': 'ro',
                         'state': 'complete'
-                    }),
+                    }]),
                     'status': 200,
                 },
                 {
@@ -1366,17 +1387,10 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         # Setup translation processes
         translation_id = '1q2w3e'
-        self.video.preferred_languages = ['en', 'ro']
-        self.video.save()
-
-        # in progress translation processes (i.e. this was done as a part of callback)
-        TranscriptProcessMetadata.objects.create(
-            video=self.video,
-            provider=TranscriptProvider.THREE_PLAY,
-            process_id=self.file_id,
-            translation_id=translation_id,
-            lang_code='ro',
-            status=TranscriptStatus.IN_PROGRESS,
+        self.setup_translations_prereqs(
+            file_id=self.file_id,
+            translation_lang_map={'ro': translation_id},
+            preferred_languages=['en', 'ro']
         )
 
         for response in mock_responses:
@@ -1391,9 +1405,150 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         # Assert the transcript translation process
         self.assertEqual(
             TranscriptProcessMetadata.objects.get(
-                process_id=self.file_id,
                 provider=TranscriptProvider.THREE_PLAY,
+                process_id=self.file_id,
+                translation_id=translation_id,
                 lang_code='ro'
             ).status,
             transcript_status,
+        )
+
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    @patch('VEDA_OS01.transcripts.convert_srt_to_sjson', Mock(side_effect=ValueError))
+    def test_translations_retrieval_uncaught_exceptions(self, mock_logger):
+        """
+        Test that `convert_to_sjson_and_upload_to_s3` logs and throws any uncaught exceptions
+        during translation retrieval process.
+        """
+        with self.assertRaises(ValueError):
+            transcripts.convert_to_sjson_and_upload_to_s3(
+                srt_transcript='invalid SRT content}',
+                edx_video_id=self.video.studio_id,
+                file_id=self.file_id,
+                target_language='es'
+            )
+
+        mock_logger.exception.assert_called_with(
+            u'[3PlayMedia Task] translation failed for video=%s -- lang_code=%s -- process_id=%s',
+            self.video.studio_id,
+            self.file_id,
+            'es',
+        )
+
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    def test_translations_retrieval_with_zero_translation_process(self, mock_logger):
+        """
+        Tests the translations retrieval when a video doesn't have any 'in progress' translation processes.
+        """
+        # Try fetching translations
+        transcripts.retrieve_three_play_translations()
+        # Assert the logs
+        mock_logger.info.assert_called_with(
+            '[3PlayMedia Task] video=%s does not have any translation process who is in progress.',
+            self.video.studio_id,
+        )
+
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    def test_translations_retrieval_no_credentials(self, mock_logger):
+        """
+        Tests the the translations retrieval when 3Play Media credentials are deleted from the data model.
+        """
+        translation_id = '1q2w3e'
+        self.setup_translations_prereqs(
+            file_id=self.file_id,
+            translation_lang_map={'ro': translation_id},
+            preferred_languages=['en', 'ro']
+        )
+        # Delete transcript credentials
+        TranscriptCredentials.objects.all().delete()
+
+        # Try fetching translations
+        transcripts.retrieve_three_play_translations()
+
+        # assert the exception logs
+        mock_logger.exception.assert_called_with(
+            '[%s] Unable to get transcript secrets for org=%s, edx_video_id=%s, file_id=%s.',
+            '3PlayMedia Task',
+            self.org,
+            self.video.studio_id,
+            self.file_id,
+        )
+
+        # assert the translation process status
+        process = TranscriptProcessMetadata.objects.get(
+            provider=TranscriptProvider.THREE_PLAY,
+            process_id=self.file_id,
+            translation_id=translation_id,
+            lang_code='ro'
+        )
+        self.assertEqual(process.status, TranscriptStatus.FAILED)
+
+    @responses.activate
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    def test_translations_retrieval_with_removed_translation_process(self, mock_logger):
+        """
+        Tests the translations retrieval when a tracking translation process is not there or deleted.
+        """
+        translation_id = '1q2w3e'
+        non_existent_target_language = 'es'
+        self.setup_translations_prereqs(
+            file_id=self.file_id,
+            translation_lang_map={'ro': translation_id},
+            preferred_languages=['en', 'ro']
+        )
+
+        # We get Translations metadata for a language whose tracking process is no more in pipeline.
+        responses.add(
+            method=responses.GET,
+            url=transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id='112233'),
+            body=json.dumps([{
+                'id': translation_id,
+                'source_language_iso_639_1_code': 'en',
+                'target_language_iso_639_1_code': non_existent_target_language,
+                'state': 'complete'
+            }]),
+            status=200
+        )
+
+        # Try fetching translations
+        transcripts.retrieve_three_play_translations()
+
+        mock_logger.warning.assert_called_with(
+            (u'[3PlayMedia Task] Tracking process is either not found or already complete '
+             u'-- process_id=%s -- target_language=%s -- translation_id=%s.'),
+            '112233',
+            non_existent_target_language,
+            translation_id,
+        )
+
+    @data(None, 'invalid_course_id_1, invalid_course_id_2')
+    @patch('VEDA_OS01.transcripts.LOGGER')
+    def test_translation_retrieval_with_invalid_course_id(self, course_runs, mock_logger):
+        """
+        Tests the translations retrieval when an associated course does not have course ids or
+        have some invalid course ids.
+
+        Note:
+            Its insane for a course to not to have course id but we have to do as
+            `Course.local_storedir` is null=True, blank=True.
+        """
+        self.setup_translations_prereqs(
+            file_id=self.file_id,
+            translation_lang_map={'ro': '1q2w3e'},
+            preferred_languages=['en', 'ro']
+        )
+
+        # Make our course to not to have course ids.
+        self.course.local_storedir = course_runs
+        self.course.save()
+
+        # Now, Try fetching translations
+        transcripts.retrieve_three_play_translations()
+
+        mock_logger.exception.assert_called_with(
+            u'[%s] Unable to get transcript secrets for org=%s, edx_video_id=%s, file_id=%s.',
+            '3PlayMedia Task',
+            None,
+            self.edx_video_id,
+            self.file_id,
         )
