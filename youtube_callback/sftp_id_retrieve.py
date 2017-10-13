@@ -144,7 +144,7 @@ def domxml_parser(file):
     """
 
     if 'status-' not in file:
-        return None
+        return
 
     upload_data = {
         'datetime': None,
@@ -157,7 +157,9 @@ def domxml_parser(file):
     try:
         tree = ET.parse(os.path.join(workdir, file))
     except ET.ParseError:
-        return None
+        return
+    except IOError:
+        return
     root = tree.getroot()
     for child in root:
 

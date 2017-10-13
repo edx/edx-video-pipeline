@@ -66,7 +66,7 @@ class DeliverCli:
                     'worker',
                     '--loglevel=info',
                     '--concurrency=' + str(auth_dict['celery_threads']),
-                    '-Q ' + auth_dict['celery_stat_queue'],
+                    '-Q ' + auth_dict['celery_deliver_queue'],
                     '-n deliver.%h'
                 ))
             )

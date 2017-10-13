@@ -163,22 +163,14 @@ class VedaIngest:
         if len(self.encode_list) == 0:
             return None
 
-        """
-        send job to queue
-        """
-        if self.video_proto.filesize > self.auth_dict['largefile_queue_barrier']:
-            cel_queue = self.auth_dict['largefile_celery_queue']
-        else:
-            cel_queue = self.auth_dict['main_celery_queue']
-
+        # Enqueue
         for e in self.encode_list:
-            # print e
             veda_id = self.video_proto.veda_id
             encode_profile = e
             jobid = uuid.uuid1().hex[0:10]
             celeryapp.worker_task_fire.apply_async(
                 (veda_id, encode_profile, jobid),
-                queue=cel_queue
+                queue=self.auth_dict['celery_worker_queue']
             )
 
         """

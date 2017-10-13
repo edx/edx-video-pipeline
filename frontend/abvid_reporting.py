@@ -39,7 +39,10 @@ with open(auth_yaml, 'r') as stream:
 
 
 def report_status(status, abvid_serial, youtube_id):
-    v1 = VedaUpload.objects.filter(video_serial=abvid_serial).latest()
+    try:
+        v1 = VedaUpload.objects.filter(video_serial=abvid_serial).latest()
+    except ObjectDoesNotExist:
+        return
 
     if len(youtube_id) > 0:
         excuse = ''
