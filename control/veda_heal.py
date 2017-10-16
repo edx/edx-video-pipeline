@@ -92,14 +92,15 @@ class VedaHeal(object):
             self.val_status = None
 
             # Enqueue
-            for e in encode_list:
-                veda_id = v.edx_id
-                encode_profile = e
-                jobid = uuid.uuid1().hex[0:10]
-                celeryapp.worker_task_fire.apply_async(
-                    (veda_id, encode_profile, jobid),
-                    queue=self.auth_dict['celery_worker_queue']
-                )
+            if self.auth_dict['rabbitmq_broker'] is not None:
+                for e in encode_list:
+                    veda_id = v.edx_id
+                    encode_profile = e
+                    jobid = uuid.uuid1().hex[0:10]
+                    celeryapp.worker_task_fire.apply_async(
+                        (veda_id, encode_profile, jobid),
+                        queue=self.auth_dict['celery_worker_queue']
+                    )
 
     def determine_fault(self, video_object):
         """

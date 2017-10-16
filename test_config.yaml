@@ -33,6 +33,9 @@ val_username: username
 val_transcript_create_url: http://val.edx.org/transcript/create
 val_video_transcript_status_url: http://val.edx.org/video/status
 
+celery_worker_queue: encode_worker
+celery_deliver_queue: deliver_worker
+
 # ----------
 ##---
 # This is a list of encodes and their respective course
