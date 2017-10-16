@@ -6,6 +6,8 @@ import uuid
 from django.db import models
 from model_utils.models import TimeStampedModel
 
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
 
 def _createHex():
     return uuid.uuid1().hex
@@ -380,6 +382,23 @@ class Course (models.Model):
         unique=True
     )
 
+    @property
+    def org(self):
+        """
+        Get course organization.
+        """
+        org = None
+        course_runs = self.local_storedir
+        if course_runs:
+            course_id = course_runs.split(',')[0]
+            # Extract course organization.
+            try:
+                org = CourseKey.from_string(course_id).org
+            except InvalidKeyError:
+                pass
+
+        return org
+
     def __unicode__(self):
         return u'{institution} {edx_class_id} {course_name}'.format(
             institution=self.institution,
@@ -660,7 +679,7 @@ class TranscriptProcessMetadata(TimeStampedModel):
     """
     Model to contain third party transcript process metadata.
     """
-    video = models.ForeignKey(Video)
+    video = models.ForeignKey(Video, related_name='transcript_processes')
     provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
     process_id = models.CharField('Process id', max_length=255)
     translation_id = models.CharField(
