@@ -17,6 +17,10 @@ omit =
     control/tests/*
     VEDA/tests/*
     VEDA_OS01/tests/*
+    VEDA_OS01/migrations/*
+    VEDA_OS01/admin.py
+
+
 
 concurrency=multiprocessing
 

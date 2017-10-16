@@ -211,11 +211,3 @@ class ThreePlayMediaClient(object):
                 self.video.source_language,
             )
             raise
-
-
-def main():
-    pass
-
-
-if __name__ == '__main__':
-    sys.exit(main())
