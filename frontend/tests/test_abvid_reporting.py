@@ -2,6 +2,7 @@
 import os
 import sys
 import unittest
+from django.test import TestCase
 
 """
 A basic unittest for the "Course Addition Tool"
@@ -14,7 +15,7 @@ sys.path.append(
 import abvid_reporting
 from frontend.course_validate import VEDACat
 
-class TestVariables(unittest.TestCase):
+class TestVariables(TestCase):
 
     def setUp(self):
         self.VCT = VEDACat()

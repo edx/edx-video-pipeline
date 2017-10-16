@@ -1,5 +1,9 @@
 from django.contrib import admin
-from VEDA_OS01.models import Course, Video, Encode, URL, Destination, Institution, VedaUpload
+
+from VEDA_OS01.models import (
+    Course, Video, Encode, URL, Destination, Institution, VedaUpload,
+    TranscriptCredentials, TranscriptProcessMetadata
+)
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -30,7 +34,15 @@ class VideoAdmin(admin.ModelAdmin):
         'studio_id',
         'video_trans_start',
         'video_trans_status',
-        'video_active'
+        'transcript_status',
+        'video_active',
+        'process_transcription',
+        'source_language',
+        'provider',
+        'three_play_turnaround',
+        'cielo24_turnaround',
+        'cielo24_fidelity',
+        'preferred_languages',
     ]
     list_filter = ['inst_class__institution']
     search_fields = ['edx_id', 'client_title', 'studio_id']
@@ -101,6 +113,14 @@ class VideoUploadAdmin(admin.ModelAdmin):
     ]
 
 
+class TranscriptCredentialsAdmin(admin.ModelAdmin):
+    model = TranscriptCredentials
+
+
+class TranscriptProcessMetadataAdmin(admin.ModelAdmin):
+    model = TranscriptProcessMetadata
+
+
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Encode, EncodeAdmin)
@@ -108,3 +128,5 @@ admin.site.register(URL, URLAdmin)
 admin.site.register(Destination, DestinationAdmin)
 admin.site.register(Institution, InstitutionAdmin)
 admin.site.register(VedaUpload, VideoUploadAdmin)
+admin.site.register(TranscriptCredentials, TranscriptCredentialsAdmin)
+admin.site.register(TranscriptProcessMetadata, TranscriptProcessMetadataAdmin)

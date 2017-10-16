@@ -21,5 +21,5 @@ with open(read_yaml, 'r') as stream:
 
 DJANGO_SECRET_KEY = return_dict['django_secret_key'] or 'test_secret_key'
 DJANGO_ADMIN = ('', '')
-DJANGO_DEBUG = return_dict['debug']
+DJANGO_DEBUG = return_dict['debug'] if 'debug' in return_dict else False
 DATABASES = return_dict['DATABASES']

@@ -1,12 +1,219 @@
 """
 Models for Video Pipeline
 """
+import json
 import uuid
 from django.db import models
+from model_utils.models import TimeStampedModel
 
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
 
 def _createHex():
     return uuid.uuid1().hex
+
+
+class TranscriptProvider(object):
+    """
+    3rd party transcript providers.
+    """
+
+    THREE_PLAY = '3PlayMedia'
+    CIELO24 = 'Cielo24'
+    CHOICES = (
+        (THREE_PLAY, THREE_PLAY),
+        (CIELO24, CIELO24),
+    )
+
+
+class TranscriptStatus(object):
+    """
+    Transcript statuses.
+
+    Note:
+        If this status is 'PENDING' for:
+            1. Video, then transcription is applicable to a video but its not started yet.
+            2. TranscriptProcessMetadata, then transcript/translation process is created but its not actually
+            sent for processing to the 3rd Party Transcription Services.
+    """
+    NOT_APPLICABLE = 'N/A'
+    PENDING = 'PENDING'
+    IN_PROGRESS = 'IN PROGRESS'
+    FAILED = 'FAILED'
+    READY = 'READY'
+    CHOICES = (
+        (NOT_APPLICABLE, NOT_APPLICABLE),
+        (PENDING, PENDING),
+        (IN_PROGRESS, IN_PROGRESS),
+        (FAILED, FAILED),
+        (READY, READY)
+    )
+
+
+class Cielo24Turnaround(object):
+    """
+    Turnaround Enumeration.
+    Its the time taken by Cielo24 transcription process.
+    """
+    STANDARD = 'STANDARD'
+    PRIORITY = 'PRIORITY'
+    CHOICES = (
+        (STANDARD, 'Standard, 48h'),
+        (PRIORITY, 'Priority, 24h'),
+    )
+
+
+class Cielo24Fidelity(object):
+    """
+    Fidelity Enumeration.
+    This decides transcript's accuracy and supported languages.
+    """
+    MECHANICAL = 'MECHANICAL'
+    PREMIUM = 'PREMIUM'
+    PROFESSIONAL = 'PROFESSIONAL'
+    CHOICES = (
+        (MECHANICAL, 'Mechanical, 75% Accuracy'),
+        (PREMIUM, 'Premium, 95% Accuracy'),
+        (PROFESSIONAL, 'Professional, 99% Accuracy'),
+    )
+
+
+class ThreePlayTurnaround(object):
+    """
+    Turnaround Enumeration.
+    Its the time taken by 3PlayMedia transcription process.
+    """
+    EXTENDED_SERVICE = 'extended_service'
+    DEFAULT = 'default'
+    EXPEDITED_SERVICE = 'expedited_service'
+    RUSH_SERVICE = 'rush_service'
+    SAME_DAY_SERVICE = 'same_day_service'
+
+    CHOICES = (
+        (EXTENDED_SERVICE, '10-Day/Extended'),
+        (DEFAULT, '4-Day/Default'),
+        (EXPEDITED_SERVICE, '2-Day/Expedited'),
+        (RUSH_SERVICE, '24 hour/Rush'),
+        (SAME_DAY_SERVICE, 'Same Day'),
+    )
+
+
+class VideoStatus(object):
+    """
+    Video Status Enumeration
+
+    TODO: STATUS REMODEL:
+    Change to
+    'Ingest',
+    'Queued',
+    'In Progress',
+    'Corrupt',
+    'Complete',
+    'Error',
+    'Duplicate',
+    'Review',
+    'Reject'
+
+    Possibles:
+        'Invalid' (for ingest detected)
+        'Retry'
+        'Delivery' (for celery states?)
+    """
+    SI = 'Ingest'
+    TQ = 'Transcode Queue'
+    AT = 'Active Transcode'
+    TR = 'Transcode Retry'
+    TC = 'Transcode Complete'
+    DU = 'Deliverable Upload'
+    FC = 'File Complete'
+    TE = 'Transcode Error'
+    CF = 'Corrupt File'
+    RH = 'Review Hold'
+    RR = 'Review Reject'
+    RP = 'Final Publish'
+    YD = 'Youtube Duplicate'
+    QUEUE = 'Queue'
+    PROGRESS = 'Progress'
+    COMPLETE = 'Complete'
+
+    CHOICES = (
+        (SI, 'System Ingest'),
+        (TQ, 'Transcode Queue'),
+        (AT, 'Active Transcode'),
+        (TR, 'Transcode Retry'),
+        (TC, 'Transcode Complete'),
+        (DU, 'Deliverable Upload'),
+        (FC, 'File Complete'),
+        (TE, 'Transcode Error'),
+        (CF, 'Corrupt File on Ingest'),
+        (RH, 'Review Hold'),
+        (RR, 'Review Rejected'),
+        (RP, 'Review to Final Publish'),
+        (YD, 'Youtube Duplicate'),
+        (QUEUE, 'In Encode Queue'),
+        (PROGRESS, 'In Progress'),
+        (COMPLETE, 'Complete'),
+    )
+
+
+class ListField(models.TextField):
+    """
+    A List Field which can be used to store and retrieve pythonic list of strings.
+    """
+    def get_prep_value(self, value):
+        """
+        Converts a list to its json representation to store in database as text.
+        """
+        if value and not isinstance(value, list):
+            raise ValueError(u'The given value {} is not a list.'.format(value))
+
+        return json.dumps(self.validate_list(value) or [])
+
+    def from_db_value(self, value, expression, connection, context):
+        """
+        Converts a json list representation in a database to a python object.
+        """
+        return self.to_python(value)
+
+    def to_python(self, value):
+        """
+        Converts the value into a list.
+        """
+        if not value:
+            value = []
+
+        # If a list is set then validated its items
+        if isinstance(value, list):
+            py_list = self.validate_list(value)
+        else:  # try to de-serialize value and expect list and then validate
+            try:
+                py_list = json.loads(value)
+                if not isinstance(py_list, list):
+                    raise TypeError
+
+                self.validate_list(py_list)
+            except (ValueError, TypeError):
+                raise ValueError(u'Must be a valid list of strings.')
+
+        return py_list
+
+    def validate_list(self, value):
+        """
+        Validate the data before saving into the database.
+
+        Arguments:
+            value(list): list to be validated
+
+        Returns:
+            A list if validation is successful
+
+        Raises:
+            ValidationError
+        """
+        if all(isinstance(item, basestring) for item in value) is False:
+            raise ValueError(u'list must only contain strings.')
+
+        return value
 
 
 class Institution (models.Model):
@@ -14,7 +221,10 @@ class Institution (models.Model):
     institution_name = models.CharField(max_length=50)
 
     def __unicode__(self):
-        return u'%s %s'.format(self.institution_name, self.institution_code) or u''
+        return u'{institution_name} {institution_code}'.format(
+            institution_name=self.institution_name,
+            institution_code=self.institution_code,
+        )
 
 
 class Course (models.Model):
@@ -172,12 +382,29 @@ class Course (models.Model):
         unique=True
     )
 
+    @property
+    def org(self):
+        """
+        Get course organization.
+        """
+        org = None
+        course_runs = self.local_storedir
+        if course_runs:
+            course_id = course_runs.split(',')[0]
+            # Extract course organization.
+            try:
+                org = CourseKey.from_string(course_id).org
+            except InvalidKeyError:
+                pass
+
+        return org
+
     def __unicode__(self):
-        return u'%s %s %s'.format(
-            self.institution,
-            self.edx_classid,
-            self.course_name
-        ) or u''
+        return u'{institution} {edx_class_id} {course_name}'.format(
+            institution=self.institution,
+            edx_class_id=self.edx_classid,
+            course_name=self.course_name,
+        )
 
 
 class Video (models.Model):
@@ -224,73 +451,66 @@ class Video (models.Model):
     video_trans_start = models.DateTimeField('Process Start', null=True, blank=True)
     video_trans_end = models.DateTimeField('Process Complete', null=True, blank=True)
 
-    """
-    TODO: STATUS REMODEL:
-    Change to
-    'Ingest',
-    'Queued',
-    'In Progress',
-    'Corrupt',
-    'Complete',
-    'Error',
-    'Duplicate',
-    'Review',
-    'Reject'
-
-    Possile:
-        'Invalid' (for ingest detected)
-        'Retry'
-        'Delivery' (for celery states?)
-
-    """
-
-    SI = 'Ingest'
-    TQ = 'Transcode Queue'
-    AT = 'Active Transcode'
-    TR = 'Transcode Retry'
-    TC = 'Transcode Complete'
-    DU = 'Deliverable Upload'
-    FC = 'File Complete'
-    CF = 'Corrupt File'
-    RH = 'Review Hold'
-    RR = 'Review Reject'
-    RP = 'Final Publish'
-    YD = 'Youtube Duplicate'
-    TRANS_STATUS_OPTIONS = (
-        (SI, "System Ingest"),
-        (TQ, "Transcode Queue"),
-        (AT, "Active Transcode"),
-        (TR, "Transcode Retry"),
-        (TC, "Transcode Complete"),
-        (DU, "Deliverable Upload"),
-        (FC, "File Complete"),
-        ('Transcode Error', "Transcode Error"),
-        (CF, "Corrupt File on Ingest"),
-        (RH, "Review Hold"),
-        (RR, "Review Rejected"),
-        (RP, "Review to Final Publish"),
-        (YD, "Youtube Duplicate"),
-        ('Queue', "In Encode Queue"),
-        ('Progress', "In Progress"),
-        ('Complete', "Complete")
-
-    )
     video_trans_status = models.CharField(
         'Transcode Status',
         max_length=100,
-        choices=TRANS_STATUS_OPTIONS,
-        default=SI
+        choices=VideoStatus.CHOICES,
+        default=VideoStatus.SI
+    )
+    transcript_status = models.CharField(
+        'Transcription Status',
+        max_length=100,
+        choices=TranscriptStatus.CHOICES,
+        default=TranscriptStatus.NOT_APPLICABLE
     )
 
     video_glacierid = models.CharField('Glacier Archive ID String', max_length=200, null=True, blank=True)
     abvid_serial = models.CharField('VEDA Upload Process Serial', max_length=20, null=True, blank=True)
     stat_queuetime = models.FloatField('Video Avg. Queuetime (sec)', default=0)
 
+    # 3rd Party Transcription
+    process_transcription = models.BooleanField('Process transcripts from Cielo24/3PlayMedia', default=False)
+    provider = models.CharField(
+        'Transcription provider',
+        max_length=20,
+        choices=TranscriptProvider.CHOICES,
+        null=True,
+        blank=True,
+    )
+    three_play_turnaround = models.CharField(
+        '3PlayMedia Turnaround',
+        max_length=20,
+        choices=ThreePlayTurnaround.CHOICES,
+        null=True,
+        blank=True,
+    )
+    cielo24_turnaround = models.CharField(
+        'Cielo24 Turnaround', max_length=20,
+        choices=Cielo24Turnaround.CHOICES,
+        null=True,
+        blank=True,
+    )
+    cielo24_fidelity = models.CharField(
+        'Cielo24 Fidelity',
+        max_length=20,
+        choices=Cielo24Fidelity.CHOICES,
+        null=True,
+        blank=True,
+    )
+    source_language = models.CharField(
+        'video source language',
+        help_text="This is video speech language.",
+        max_length=50,
+        null=True,
+        blank=True,
+    )
+    preferred_languages = ListField(blank=True, default=[])
+
     class Meta:
         get_latest_by = 'video_trans_start'
 
     def __unicode__(self):
-        return u'%s'.format(self.edx_id) or u''
+        return u'{edx_id}'.format(edx_id=self.edx_id)
 
 
 class Destination (models.Model):
@@ -347,7 +567,7 @@ class Encode (models.Model):
     xuetang_proc = models.BooleanField('Submit to XuetangX', default=False)
 
     def __unicode__(self):
-        return u'%s'.format(self.encode_name)
+        return u'{encode_profile}'.format(encode_profile=self.encode_name)
 
 
 class URL (models.Model):
@@ -370,7 +590,11 @@ class URL (models.Model):
         get_latest_by = 'url_date'
 
     def __unicode__(self):
-        return u'%s : %s : %s'.format(self.videoID.edx_id, self.encode_profile.encode_name, self.url_date) or u''
+        return u'{video_id} : {encode_profile} : {date}'.format(
+            video_id=self.videoID.edx_id,
+            encode_profile=self.encode_profile.encode_name,
+            date=self.url_date,
+        )
 
 
 class VedaUpload (models.Model):
@@ -422,9 +646,72 @@ class VedaUpload (models.Model):
         get_latest_by = 'upload_date'
 
     def __unicode__(self):
-        return u'%s %s %s %s'.format(
-            self.client_information,
-            self.upload_filename,
-            self.status_email,
-            self.file_complete
+        return u'{client_information} {upload_filename} {status_email} {file_complete}'.format(
+            client_information=self.client_information,
+            upload_filename=self.upload_filename,
+            status_email=self.status_email,
+            file_complete=self.file_complete
+        )
+
+
+class TranscriptCredentials(TimeStampedModel):
+    """
+    Model to contain third party transcription service provider preferences.
+    """
+    org = models.CharField(
+        'Organization',
+        max_length=50,
+        help_text='This value must match the value of organization in studio/edx-platform.'
+    )
+    provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
+    api_key = models.CharField('API key', max_length=255)
+    api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('org', 'provider')
+        verbose_name_plural = 'Transcript Credentials'
+
+    def __unicode__(self):
+        return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
+
+
+class TranscriptProcessMetadata(TimeStampedModel):
+    """
+    Model to contain third party transcript process metadata.
+    """
+    video = models.ForeignKey(Video, related_name='transcript_processes')
+    provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
+    process_id = models.CharField('Process id', max_length=255)
+    translation_id = models.CharField(
+        'Translation id', help_text='Keeps track of 3Play Translations', max_length=255, null=True, blank=True
+    )
+    lang_code = models.CharField('Language code', max_length=50)
+    status = models.CharField(
+        'Transcript status',
+        max_length=50,
+        choices=TranscriptStatus.CHOICES,
+        default=TranscriptStatus.PENDING
+    )
+
+    class Meta:
+        verbose_name_plural = 'Transcript process metadata'
+        get_latest_by = 'modified'
+
+    def update(self, **fields):
+        """
+        Updates a process.
+
+        Keyword Arguments:
+            fields(dict): dict containing all the fields to be updated.
+        """
+        for attr, value in fields.iteritems():
+            setattr(self, attr, value)
+        self.save()
+
+    def __unicode__(self):
+        return u'{video} - {provider} - {lang} - {status}'.format(
+            video=self.video.edx_id,
+            provider=self.provider,
+            lang=self.lang_code,
+            status=self.status,
         )

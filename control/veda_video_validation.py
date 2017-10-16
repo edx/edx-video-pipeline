@@ -5,6 +5,9 @@ import subprocess
 import fnmatch
 import django
 
+from control.control_env import FFPROBE
+from VEDA_OS01.models import Video
+
 """
 VEDA Intake/Product Final Testing Suite
 
@@ -15,10 +18,9 @@ image files (which read as 0:00 duration or N/A)
 Mismatched Durations (within 5 sec)
 
 """
-from control_env import *
 
 
-class Validation():
+class Validation(object):
     """
     Expects a full filepath
     """
@@ -43,7 +45,6 @@ class Validation():
             FFPROBE,
             "\"" + self.videofile + "\""
         ))
-
         """
         Test if size is zero
         """
@@ -59,6 +60,10 @@ class Validation():
                 return False
 
             if "multiple edit list entries, a/v desync might occur, patch welcome" in line:
+                return False
+
+            if "command not found" in line:
+                print line
                 return False
 
             if "Duration: " in line:

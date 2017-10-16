@@ -1,8 +1,9 @@
-## NOTE: This is not a working req file -- merely a collection for notes.
+##
 django==1.9
 djangorestframework==3.6.4
 django-cors-headers
 django-oauth-toolkit==0.11.0
+django-model-utils==3.0.0
 django-filter==1.0.4
 newrelic
 uwsgi
@@ -11,3 +12,5 @@ boto
 pyyaml
 requests==2.18.1
 celery==3.1.18
+pysrt==1.1.1
+edx-opaque-keys==0.4
