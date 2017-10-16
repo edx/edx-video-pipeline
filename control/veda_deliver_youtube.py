@@ -38,7 +38,8 @@ class DeliverYoutube():
 
         self.youtubekey = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'dependencies',
+            'youtube_callback',
+            'static_files',
             'youtubekey'
         )
 
@@ -176,12 +177,14 @@ class DeliverYoutube():
 
         if not os.path.exists(os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'dependencies',
+            'youtube_callback',
+            'static_files',
             'delivery.complete'
         )):
             with open(os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'dependencies',
+                'youtube_callback',
+                'static_files',
                 'delivery.complete'
             ), 'w') as d1:
                 d1.write('')
@@ -212,7 +215,8 @@ class DeliverYoutube():
             s1.put(
                 os.path.join(
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                    'dependencies',
+                    'youtube_callback',
+                    'static_files',
                     'delivery.complete'
                 ),
                 callback=printTotals,

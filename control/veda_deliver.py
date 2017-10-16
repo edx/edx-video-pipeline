@@ -1,4 +1,9 @@
+"""
+VEDA Delivery:
+Determine the destination and upload to the appropriate
+endpoint via the custom methods
 
+"""
 import datetime
 import logging
 import shutil
@@ -6,12 +11,13 @@ from os.path import expanduser
 
 import boto
 import boto.s3
+from boto.s3.connection import S3Connection
 import requests
-from boto.exception import S3ResponseError
+
+from boto.exception import S3ResponseError, NoAuthHandlerFound
 from boto.s3.key import Key
 from django.core.urlresolvers import reverse
 
-import veda_deliver_xuetang
 from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
@@ -22,34 +28,20 @@ from VEDA.utils import build_url, extract_course_org, get_config
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
 from veda_video_validation import Validation
-from watchdog import Watchdog
 
 try:
     from control.veda_deliver_3play import ThreePlayMediaClient
 except ImportError:
     from veda_deliver_3play import ThreePlayMediaClient
 
-
 LOGGER = logging.getLogger(__name__)
-
-
 try:
     boto.config.add_section('Boto')
 except:
     pass
 boto.config.set('Boto', 'http_socket_timeout', '100')
 
-
-"""
-VEDA Delivery class - determine the destination
-and upload to the appropriate endpoint via the approp. methods
-
-
-"""
 homedir = expanduser("~")
-
-
-watchdog_time = 10.0
 
 
 class VedaDelivery:
@@ -57,8 +49,7 @@ class VedaDelivery:
     def __init__(self, veda_id, encode_profile, **kwargs):
         self.veda_id = veda_id
         self.encode_profile = encode_profile
-
-        self.auth_dict = get_config()
+        self.auth_dict = kwargs.get('CONFIG_DATA', get_config())
         # Internal Methods
         self.video_query = None
         self.encode_query = None
@@ -68,6 +59,7 @@ class VedaDelivery:
         self.status = None
         self.endpoint_url = None
         self.video_proto = None
+        self.val_status = None
 
     def run(self):
         """
@@ -75,29 +67,8 @@ class VedaDelivery:
         throw error if method is not extant
         """
         if self.encode_profile == 'hls':
-            self.video_query = Video.objects.filter(edx_id=self.veda_id).latest()
-            self.video_proto = VideoProto(
-                veda_id=self.video_query.edx_id,
-                val_id=self.video_query.studio_id,
-                client_title=self.video_query.client_title,
-                duration=self.video_query.video_orig_duration,
-                bitrate='0',
-                s3_filename=self.video_query.studio_id
-            )
-            self.encode_query = Encode.objects.get(
-                product_spec=self.encode_profile
-            )
-
-            Video.objects.filter(
-                edx_id=self.video_query.edx_id
-            ).update(
-                video_trans_status='Progress'
-            )
-
-            self.encoded_file = '/'.join((
-                self.video_query.edx_id,
-                self.video_query.edx_id + '.m3u8'
-            ))
+            # HLS encodes are a pass through
+            self.hls_run()
 
         else:
             if os.path.exists(WORK_DIRECTORY):
@@ -105,14 +76,6 @@ class VedaDelivery:
                 os.mkdir(WORK_DIRECTORY)
 
             self._INFORM_INTAKE()
-            """
-            Update Video Status
-            """
-            Video.objects.filter(
-                edx_id=self.video_proto.veda_id
-            ).update(
-                video_trans_status='Progress'
-            )
 
             if self._VALIDATE() is False and \
                     self.encode_profile != 'youtube' and self.encode_profile != 'review':
@@ -122,11 +85,8 @@ class VedaDelivery:
             self._DETERMINE_ROUTE()
 
         if self._VALIDATE_URL() is False and self.encode_profile != 'hls':
-            """
-            Remember: youtube will return 'None'
-            """
-            print 'ERROR: Invalid URL // Fail Out'
-            return None
+            # For youtube URLs (not able to validate right away)
+            return
 
         """
         if present, set cloudfront distribution
@@ -159,12 +119,6 @@ class VedaDelivery:
         u1.md5_sum = self.video_proto.hash_sum
         u1.save()
 
-        """
-        Transcript, Xuetang
-        """
-
-        self._XUETANG_ROUTE()
-
         self.status = self._DETERMINE_STATUS()
 
         self._UPDATE_DATA()
@@ -183,6 +137,29 @@ class VedaDelivery:
             if self.video_query.provider == TranscriptProvider.CIELO24:
                 self.cielo24_transcription_flow()
 
+    def hls_run(self):
+        """
+        Get information about encode for URL validation/record
+
+        """
+        self.video_query = Video.objects.filter(edx_id=self.veda_id).latest()
+        self.video_proto = VideoProto(
+            veda_id=self.video_query.edx_id,
+            val_id=self.video_query.studio_id,
+            client_title=self.video_query.client_title,
+            duration=self.video_query.video_orig_duration,
+            bitrate='0',
+            s3_filename=self.video_query.studio_id
+        )
+        self.encode_query = Encode.objects.get(
+            product_spec=self.encode_profile
+        )
+
+        self.encoded_file = '/'.join((
+            self.video_query.edx_id,
+            '{file_name}.{ext}'.format(file_name=self.video_query.edx_id, ext='m3u8')
+        ))
+
     def _INFORM_INTAKE(self):
         """
         Collect all salient metadata and
@@ -193,7 +170,6 @@ class VedaDelivery:
         self.encode_query = Encode.objects.get(
             product_spec=self.encode_profile
         )
-
         self.encoded_file = '%s_%s.%s' % (
             self.veda_id,
             self.encode_query.encode_suffix,
@@ -206,13 +182,25 @@ class VedaDelivery:
             self.auth_dict['veda_deliverable_bucket'],
             self.encoded_file
         ))
-        os.system(
-            ' '.join((
-                'wget -O',
-                os.path.join(self.node_work_directory, self.encoded_file),
-                self.hotstore_url
-            ))
+
+        try:
+            conn = S3Connection()
+            bucket = conn.get_bucket(self.auth_dict['veda_deliverable_bucket'])
+        except NoAuthHandlerFound:
+            LOGGER.error('[VIDEO_DELIVER] BOTO/S3 Communication error')
+            return
+        except S3ResponseError:
+            LOGGER.error('[VIDEO_DELIVER] Invalid Storage Bucket')
+            return
+        source_key = bucket.get_key(self.encoded_file)
+        if source_key is None:
+            LOGGER.error('[VIDEO_DELIVER] S3 Intake Object NOT FOUND')
+            return
+
+        source_key.get_contents_to_filename(
+            os.path.join(self.node_work_directory, self.encoded_file)
         )
+
         """
         Utilize Metadata method in veda_utils -- can later
         move this out into it's own utility method
@@ -300,15 +288,16 @@ class VedaDelivery:
             return None
 
         if self.status == 'Complete':
-            val_status = 'file_complete'
+            self.val_status = 'file_complete'
         else:
-            val_status = 'transcode_active'
-        print self.video_proto.val_id
+            self.val_status = 'transcode_active'
+
         VAC = VALAPICall(
             video_proto=self.video_proto,
-            val_status=val_status,
+            val_status=self.val_status,
             endpoint_url=self.endpoint_url,
-            encode_profile=self.encode_profile
+            encode_profile=self.encode_profile,
+            CONFIG_DATA=self.auth_dict
         )
         VAC.call()
 
@@ -610,49 +599,6 @@ class VedaDelivery:
                 self.video_query.provider,
                 self.video_query.studio_id,
             )
-
-    def _XUETANG_ROUTE(self):
-        if self.video_query.inst_class.xuetang_proc is False:
-            return None
-
-        if self.video_query.inst_class.mobile_override is False:
-            if self.encode_profile != 'desktop_mp4':
-                return None
-        # TODO: un-hardcode
-        reformat_url = self.endpoint_url.replace(
-            'https://d2f1egay8yehza.cloudfront.net/',
-            'http://s3.amazonaws.com/edx-course-videos/'
-        )
-
-        prepared_url = veda_deliver_xuetang.prepare_create_or_update_video(
-            edx_url=reformat_url,
-            download_urls=[reformat_url],
-            md5sum=self.video_proto.hash_sum
-        )
-
-        w = Watchdog(10)
-        w.StartWatchdog()
-
-        try:
-            res = veda_deliver_xuetang._submit_prepared_request(
-                prepared_url
-            )
-        except (TypeError):
-            ErrorObject.print_error(
-                message='[ALERT] - Xuetang Send Failure'
-            )
-            return None
-        w.StopWatchdog()
-
-        if res.status_code == 200 and \
-                res.json()['status'] != 'failed':
-            URL.objects.filter(
-                encode_url=self.endpoint_url
-            ).update(
-                xuetang_input=True
-            )
-
-        print str(res.status_code) + " : XUETANG STATUS CODE"
 
     def YOUTUBE_SFTP(self, review=False):
         if self.video_query.inst_class.yt_proc is False:
