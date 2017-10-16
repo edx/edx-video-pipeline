@@ -15,10 +15,14 @@ omit =
     frontend/tests/*
     dependencies/*
     control/tests/*
+    VEDA/settings.py
+    VEDA/wsgi.py
     VEDA/tests/*
     VEDA_OS01/tests/*
     VEDA_OS01/migrations/*
     VEDA_OS01/admin.py
+    VEDA_OS01/pipeline_env.py
+
 
 
 
