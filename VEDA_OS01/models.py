@@ -4,10 +4,12 @@ Models for Video Pipeline
 import json
 import uuid
 from django.db import models
+from fernet_fields import EncryptedTextField
 from model_utils.models import TimeStampedModel
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
+
 
 def _createHex():
     return uuid.uuid1().hex
@@ -216,7 +218,7 @@ class ListField(models.TextField):
         return value
 
 
-class Institution (models.Model):
+class Institution(models.Model):
     institution_code = models.CharField(max_length=4)
     institution_name = models.CharField(max_length=50)
 
@@ -227,7 +229,10 @@ class Institution (models.Model):
         )
 
 
-class Course (models.Model):
+class Course(models.Model):
+    """
+    Model for Course.
+    """
     course_name = models.CharField('Course Name', max_length=100)
 
     # TODO: Change Name (this is reversed)
@@ -407,7 +412,10 @@ class Course (models.Model):
         )
 
 
-class Video (models.Model):
+class Video(models.Model):
+    """
+    Model for Video.
+    """
     # TODO: Change field name
     inst_class = models.ForeignKey(Course)
     video_active = models.BooleanField('Video Active?', default=True)
@@ -513,7 +521,10 @@ class Video (models.Model):
         return u'{edx_id}'.format(edx_id=self.edx_id)
 
 
-class Destination (models.Model):
+class Destination(models.Model):
+    """
+    Model for Destination.
+    """
     destination_name = models.CharField('Destination', max_length=200, null=True, blank=True)
     destination_active = models.BooleanField('Destination Active', default=False)
     destination_nick = models.CharField('Nickname (3 Char.)', max_length=3, null=True, blank=True)
@@ -522,7 +533,10 @@ class Destination (models.Model):
         return u'%s'.format(self.destination_name) or u''
 
 
-class Encode (models.Model):
+class Encode(models.Model):
+    """
+    Model for Encode.
+    """
     encode_destination = models.ForeignKey(Destination)
     encode_name = models.CharField('Encode Name', max_length=100, null=True, blank=True)
     profile_active = models.BooleanField('Encode Profile Active', default=False)
@@ -570,7 +584,10 @@ class Encode (models.Model):
         return u'{encode_profile}'.format(encode_profile=self.encode_name)
 
 
-class URL (models.Model):
+class URL(models.Model):
+    """
+    Model for URL.
+    """
     encode_profile = models.ForeignKey(Encode)
     videoID = models.ForeignKey(Video)
     encode_url = models.CharField('Destination URL', max_length=500, null=True, blank=True)
@@ -597,7 +614,7 @@ class URL (models.Model):
         )
 
 
-class VedaUpload (models.Model):
+class VedaUpload(models.Model):
     """
     Internal Upload Tool
     """
@@ -664,8 +681,8 @@ class TranscriptCredentials(TimeStampedModel):
         help_text='This value must match the value of organization in studio/edx-platform.'
     )
     provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
-    api_key = models.CharField('API key', max_length=255)
-    api_secret = models.CharField('API secret', max_length=255, null=True, blank=True)
+    api_key = EncryptedTextField('API key', max_length=255)
+    api_secret = EncryptedTextField('API secret', max_length=255)
 
     class Meta:
         unique_together = ('org', 'provider')

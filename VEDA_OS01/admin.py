@@ -1,3 +1,6 @@
+"""
+Veda Admin.
+"""
 from django.contrib import admin
 
 from VEDA_OS01.models import (
@@ -7,6 +10,9 @@ from VEDA_OS01.models import (
 
 
 class CourseAdmin(admin.ModelAdmin):
+    """
+    Course Admin.
+    """
     ordering = ['institution']
     list_display = [
         'course_name',
@@ -27,6 +33,9 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 class VideoAdmin(admin.ModelAdmin):
+    """
+    Admin for Video model.
+    """
     model = Video
     list_display = [
         'edx_id',
@@ -49,6 +58,9 @@ class VideoAdmin(admin.ModelAdmin):
 
 
 class EncodeAdmin(admin.ModelAdmin):
+    """
+    Admin for Encode model.
+    """
     model = Encode
     ordering = ['encode_name']
     list_display = [
@@ -69,6 +81,9 @@ class EncodeAdmin(admin.ModelAdmin):
 
 
 class URLAdmin(admin.ModelAdmin):
+    """
+    Admin for URL model.
+    """
     model = URL
     list_display = [
         'video_id_get',
@@ -93,16 +108,25 @@ class URLAdmin(admin.ModelAdmin):
 
 
 class DestinationAdmin(admin.ModelAdmin):
+    """
+    Admin for Destination model.
+    """
     model = Destination
     list_display = ['destination_name', 'destination_active']
 
 
 class InstitutionAdmin(admin.ModelAdmin):
+    """
+    Admin for Institution model.
+    """
     model = Institution
     list_display = ['institution_name', 'institution_code']
 
 
 class VideoUploadAdmin(admin.ModelAdmin):
+    """
+    Admin for VedaUpload model.
+    """
     model = VedaUpload
     list_display = [
         'client_information',
@@ -114,10 +138,17 @@ class VideoUploadAdmin(admin.ModelAdmin):
 
 
 class TranscriptCredentialsAdmin(admin.ModelAdmin):
+    """
+    Admin for TranscriptCredentials model.
+    """
     model = TranscriptCredentials
+    exclude = ('api_key', 'api_secret')
 
 
 class TranscriptProcessMetadataAdmin(admin.ModelAdmin):
+    """
+    Admin for TranscriptProcessMetadata model.
+    """
     model = TranscriptProcessMetadata
 
 

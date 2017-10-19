@@ -53,7 +53,7 @@
 #
 # ------------------------------
 [MASTER]
-ignore = pavelib_test_code 
+ignore = pavelib_test_code, migrations
 persistent = yes
 load-plugins = edx_lint.pylint,pylint_django,pylint_celery
 

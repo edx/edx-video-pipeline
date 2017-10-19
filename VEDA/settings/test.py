@@ -12,4 +12,6 @@ DATABASES = {
     }
 }
 
+FERNET_KEYS = ['test-ferent-key']
+
 LOGGING = get_logger_config(debug=False, dev_env=True, local_loglevel='DEBUG')

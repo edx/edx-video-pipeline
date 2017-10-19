@@ -21,6 +21,9 @@ DATABASES:
 
 SECRET_KEY: ""
 
+# Fernet keys
+FERNET_KEYS: []
+
 # Django DEBUG global
 # (set to false in prod)
 debug: false
