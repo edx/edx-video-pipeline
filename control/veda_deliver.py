@@ -33,7 +33,6 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 
-
 try:
     boto.config.add_section('Boto')
 except:

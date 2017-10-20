@@ -9,3 +9,8 @@ responses==0.6.1
 pytest==3.0.6
 pytest-django==3.1.2
 pytest-django-ordering==1.0.1
+Paver==1.2.4
+pylint==1.7.1
+pylint-celery==0.3
+pylint-django==0.7.2
+edx-lint==0.5.4

@@ -15,6 +15,7 @@ sys.path.append(
 import abvid_reporting
 from frontend.course_validate import VEDACat
 
+
 class TestVariables(TestCase):
 
     def setUp(self):
