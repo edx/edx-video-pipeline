@@ -10,8 +10,8 @@ import requests
 import responses
 
 from control.veda_val import VALAPICall
-from veda_file_ingest import VideoProto
-from VEDA_OS01 import utils
+from control.veda_file_ingest import VideoProto
+from VEDA import utils
 
 
 requests.packages.urllib3.disable_warnings()

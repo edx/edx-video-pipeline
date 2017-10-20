@@ -13,13 +13,13 @@
 DATABASES:
     default:
         ENGINE: 'django.db.backends.mysql'
-        NAME:
-        USER:
-        PASSWORD:
-        HOST:
-        PORT: '3306'
+        NAME: 'pipeline'
+        USER: 'pipeline001'
+        PASSWORD: 'password'
+        HOST: 'localhost'
+        PORT: 3306
 
-django_secret_key: ""
+django_secret_key: "django secret key"
 
 # Django DEBUG global
 # (set to false in prod)

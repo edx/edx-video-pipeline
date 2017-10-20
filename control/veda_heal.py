@@ -23,6 +23,7 @@ import celeryapp
 from control_env import WORK_DIRECTORY
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
+from VEDA.utils import get_config
 
 time_safetygap = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=1)
 
@@ -34,32 +35,12 @@ class VedaHeal(object):
     """
     def __init__(self, **kwargs):
         self.current_time = datetime.datetime.utcnow().replace(tzinfo=utc)
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            ),
-        )
-        self.auth_dict = self._READ_AUTH()
+        self.auth_dict = get_config()
         # for individuals
         self.video_query = kwargs.get('video_query', None)
         self.freezing_bug = kwargs.get('freezing_bug', True)
         self.val_status = None
         self.retry_barrier_hours = 24
-
-    def _READ_AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
 
     def discovery(self):
         self.video_query = Video.objects.filter(

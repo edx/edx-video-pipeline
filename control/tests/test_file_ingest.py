@@ -6,9 +6,8 @@ import unittest
 
 from django.test import TestCase
 import requests
-import yaml
 
-from veda_file_ingest import VedaIngest, VideoProto
+from control.veda_file_ingest import VedaIngest, VideoProto
 
 """
 This is an API connection test

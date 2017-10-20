@@ -3,7 +3,7 @@ import sys
 from email.mime.text import MIMEText
 from datetime import date
 import boto.ses
-import yaml
+from VEDA.utils import get_config
 
 '''
 ABVID REPORTING - email / etc.
@@ -26,16 +26,7 @@ if v1.abvid_serial != None:
 get auth keys from instance yaml
 
 """
-auth_yaml = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'instance_config.yaml'
-)
-
-with open(auth_yaml, 'r') as stream:
-    try:
-        auth_dict = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        print 'AUTH ERROR'
+auth_dict = get_config()
 
 
 def report_status(status, abvid_serial, youtube_id):

@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from control.veda_val import VALAPICall
+from VEDA.utils import get_config, build_url, extract_course_org
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
                               TranscriptProvider, TranscriptStatus, Video)
@@ -37,10 +38,10 @@ TRANSCRIPT_SJSON = 'sjson'
 CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=[
     'job_id', 'iwp_name', 'lang_code', 'org', 'video_id'
 ])
-CONFIG = utils.get_config()
+CONFIG = get_config()
 
 # Cielo24 API URLs
-CIELO24_GET_CAPTION_URL = utils.build_url(
+CIELO24_GET_CAPTION_URL = build_url(
     CONFIG['cielo24_api_base_url'],
     'job/get_caption'
 )
@@ -50,23 +51,23 @@ THREE_PLAY_TRANSCRIPTION_DONE = django.dispatch.Signal(
     providing_args=['org', 'lang_code', 'edx_video_id', 'file_id', 'status', 'error_description']
 )
 # 3PlayMedia API URLs.
-THREE_PLAY_TRANSCRIPT_URL = utils.build_url(
+THREE_PLAY_TRANSCRIPT_URL = build_url(
     CONFIG['three_play_api_transcript_url'],
     'files/{file_id}/transcript.srt'
 )
-THREE_PLAY_TRANSLATION_SERVICES_URL = utils.build_url(
+THREE_PLAY_TRANSLATION_SERVICES_URL = build_url(
     CONFIG['three_play_api_transcript_url'],
     'translation_services'
 )
-THREE_PLAY_ORDER_TRANSLATION_URL = utils.build_url(
+THREE_PLAY_ORDER_TRANSLATION_URL = build_url(
     CONFIG['three_play_api_base_url'],
     'files/{file_id}/translations/order'
 )
-THREE_PLAY_TRANSLATIONS_METADATA_URL = utils.build_url(
+THREE_PLAY_TRANSLATIONS_METADATA_URL = build_url(
     CONFIG['three_play_api_transcript_url'],
     'files/{file_id}/translations'
 )
-THREE_PLAY_TRANSLATION_DOWNLOAD_URL = utils.build_url(
+THREE_PLAY_TRANSLATION_DOWNLOAD_URL = build_url(
     CONFIG['three_play_api_transcript_url'],
     'files/{file_id}/translations/{translation_id}/captions.srt'
 )
@@ -267,7 +268,7 @@ def fetch_srt_data(url, **request_params):
     """
     # return TRANSCRIPT_SRT_DATA
     response = requests.get(
-        utils.build_url(url, **request_params)
+        build_url(url, **request_params)
     )
 
     if not response.ok:
@@ -376,7 +377,7 @@ def get_translation_services(api_key):
     Returns:
         Available 3Play Media Translation services.
     """
-    response = requests.get(utils.build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key))
+    response = requests.get(build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key))
     if not response.ok:
         raise TranscriptTranslationError(
             u'[3PlayMedia Callback] Error while fetching the translation services -- {status}, {response}'.format(
@@ -824,7 +825,7 @@ def get_translations_metadata(api_key, file_id, edx_video_id):
             }
         ]
     """
-    translations_metadata_url = utils.build_url(
+    translations_metadata_url = build_url(
         THREE_PLAY_TRANSLATIONS_METADATA_URL.format(
             file_id=file_id,
         ),

@@ -11,8 +11,8 @@ from django.db.utils import DatabaseError
 from django.utils.timezone import utc
 from django.db import reset_queries
 import uuid
-import yaml
 import hashlib
+from VEDA.utils import get_config
 
 
 """
@@ -89,33 +89,13 @@ class VedaIngest:
     def __init__(self, course_object, video_proto, **kwargs):
         self.course_object = course_object
         self.video_proto = video_proto
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            ),
-        )
-        self.auth_dict = self._READ_AUTH()
+        self.auth_dict = get_config()
 
         # --- #
         self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
         self.full_filename = kwargs.get('full_filename', None)
         self.complete = False
         self.archived = False
-
-    def _READ_AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
 
     def insert(self):
         """

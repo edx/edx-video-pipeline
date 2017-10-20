@@ -12,7 +12,7 @@ A basic unittest for the "Course Addition Tool"
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-from veda_utils import Report
+from control.veda_utils import Report
 
 
 class TestReporting(TestCase):
