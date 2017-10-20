@@ -10,7 +10,7 @@ import requests
 import responses
 
 from control.veda_val import VALAPICall
-from veda_file_ingest import VideoProto
+from control.veda_file_ingest import VideoProto
 from VEDA import utils
 
 

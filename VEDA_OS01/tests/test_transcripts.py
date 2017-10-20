@@ -1166,7 +1166,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         # Assert that the first request was made for getting translations metadata from 3Play Media.
         expected_video_status_update_request = {
-            'url': utils.build_url(
+            'url': build_url(
                 transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id=self.file_id),
                 apikey=self.transcript_prefs.api_key
             )
