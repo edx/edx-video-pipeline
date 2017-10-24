@@ -26,7 +26,6 @@ bools:
     - c24_proc
     - s3_proc
     - xue
-    - xuetang_proc
 
 # dropdown boxes
 dropdowns:
@@ -56,7 +55,6 @@ organizational:
     review_proc: encode
     proc_loc: encode
     xue: encode
-    xuetang_proc: encode
     yt_logon: encode
 
     tp_proc: transcribe

@@ -81,7 +81,6 @@ class VideoProto():
         self.bitrate = None
         self.resolution = None
         self.veda_id = None
-        self.hash_sum = None
 
 
 class VedaIngest:
@@ -182,10 +181,6 @@ class VedaIngest:
         ***
         """
         self.video_proto.filesize = os.stat(self.full_filename).st_size
-
-        self.video_proto.hash_sum = hashlib.md5(
-            open(self.full_filename, 'rb').read()
-        ).hexdigest()
 
         ff_command = ' '.join((
             FFPROBE,
