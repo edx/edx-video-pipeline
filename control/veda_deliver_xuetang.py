@@ -8,7 +8,7 @@ import requests
 import json
 import time
 from time import strftime
-import yaml
+from VEDA.utils import get_config
 
 """
 Authored by Ed Zarecor / edx DevOps
@@ -18,20 +18,13 @@ included by request
 Some adaptations for VEDA:
     -auth yaml
 
-   **VEDA Note: since this isn't a real CDN, and represents the 
-    'least effort' response to getting video into china, 
+   **VEDA Note: since this isn't a real CDN, and represents the
+    'least effort' response to getting video into china,
     we shan't monitor for success**
 
 
 """
-read_yaml = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'instance_config.yaml'
-    )
-
-if os.path.exists(read_yaml):
-    with open(read_yaml, 'r') as stream:
-        auth_dict = yaml.load(stream)
+auth_dict = get_config()
 
 API_SHARED_SECRET = auth_dict['xuetang_api_shared_secret']
 API_ENDPOINT = auth_dict['xuetang_api_url']
@@ -48,7 +41,7 @@ This script provides a functions for accessing the Xuetang CDN API
 It expects that an environment variable name XUETANG_SHARED_SECRET is
 available and refers to a valid secret provided by the Xuetang CDN team.
 
-Running this script will cause a video hosted in cloudfront to be 
+Running this script will cause a video hosted in cloudfront to be
 uploaded to the CDN via the API.
 
 The status of the video will be monitored in a loop, exiting when
@@ -77,10 +70,10 @@ def build_message(verb, uri, query_string, date, payload_hash):
     format is defined in their CDN API specification document.
     """
     return os.linesep.join([verb, uri, query_string, date, payload_hash])
-    
+
 def sign_message(message, secret):
     """
-    Returns a hexdigest of HMAC generated using sha256.  The value is included in 
+    Returns a hexdigest of HMAC generated using sha256.  The value is included in
     the HTTP headers and used for mutual authentication via a shared secret.
     """
     return hmac.new(bytes(secret), bytes(message), digestmod=hashlib.sha256).hexdigest()
@@ -125,7 +118,7 @@ def prepare_check_task_status(edx_url):
 
 def _prepare_api_request(http_verb, api_target, payload):
     """
-    General convenience function for creating prepared HTTP requests that conform the 
+    General convenience function for creating prepared HTTP requests that conform the
     Xuetang API specificiation.
     """
     payload_json = json.dumps(payload)
@@ -188,7 +181,7 @@ if __name__ == '__main__':
 
     #     if res.json()['status'] == 'available':
     #         break
-        
+
     #     time.sleep(5)
 
     # delete file

@@ -17,12 +17,13 @@ from moto import mock_s3_deprecated
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from VEDA.utils import get_config, build_url
 from VEDA_OS01 import transcripts, utils
 from VEDA_OS01.models import (Course, TranscriptCredentials,
                               TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus, Video)
 
-CONFIG_DATA = utils.get_config('test_config.yaml')
+CONFIG_DATA = get_config('test_config.yaml')
 
 VIDEO_DATA = {
     'studio_id': '12345',
@@ -87,7 +88,7 @@ TRANSCRIPT_SJSON_DATA = {
 
 @ddt
 @patch.dict('VEDA_OS01.transcripts.CONFIG', CONFIG_DATA)
-@patch('VEDA_OS01.utils.get_config', Mock(return_value=CONFIG_DATA))
+@patch('VEDA.utils.get_config', Mock(return_value=CONFIG_DATA))
 class Cielo24TranscriptTests(APITestCase):
     """
     Cielo24 Transcript Tests
@@ -401,7 +402,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         response = self.client.post(
             # `build_url` strips `/`, putting it back and add necessary query params.
-            '/{}'.format(utils.build_url(
+            '/{}'.format(build_url(
                 self.url, edx_video_id=self.video.studio_id,
                 org=self.org, lang_code=self.video_source_language
             )),
@@ -483,7 +484,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         Test the callback in case of missing attributes.
         """
         response = self.client.post(
-            '/{}'.format(utils.build_url(self.url, **request_data['query_params'])),
+            '/{}'.format(build_url(self.url, **request_data['query_params'])),
             content_type='application/x-www-form-urlencoded',
             data=urllib.urlencode(request_data['data']),
         )
@@ -519,7 +520,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         """
         Tests the callback for all the non-success statuses.
         """
-        self.url = '/{}'.format(utils.build_url(
+        self.url = '/{}'.format(build_url(
             self.url, edx_video_id='12345', org='MAx', lang_code=self.video_source_language
         ))
         self.client.post(self.url, content_type='application/x-www-form-urlencoded', data=urllib.urlencode({
@@ -579,7 +580,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         expected_requests = [
             # request - 1
             {
-                'url': utils.build_url(
+                'url': build_url(
                     transcripts.THREE_PLAY_TRANSCRIPT_URL.format(file_id=self.file_id),
                     apikey=self.transcript_prefs.api_key
                 )
@@ -742,7 +743,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         expected_requests = [
             # request - 1
             {
-                'url': utils.build_url(
+                'url': build_url(
                     transcripts.THREE_PLAY_TRANSCRIPT_URL.format(file_id=self.file_id),
                     apikey=self.transcript_prefs.api_key
                 )
@@ -779,7 +780,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             },
             # request - 4
             {
-                'url': utils.build_url(
+                'url': build_url(
                     transcripts.THREE_PLAY_TRANSLATION_SERVICES_URL,
                     apikey=self.transcript_prefs.api_key
                 )
@@ -1165,7 +1166,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         # Assert that the first request was made for getting translations metadata from 3Play Media.
         expected_video_status_update_request = {
-            'url': utils.build_url(
+            'url': build_url(
                 transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id=self.file_id),
                 apikey=self.transcript_prefs.api_key
             )
@@ -1180,7 +1181,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             expected_requests = [
                 # request - 1
                 {
-                    'url': utils.build_url(transcripts.THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
+                    'url': build_url(transcripts.THREE_PLAY_TRANSLATION_DOWNLOAD_URL.format(
                         file_id=self.file_id, translation_id=translation_id
                     ), apikey=self.transcript_prefs.api_key)
                 },

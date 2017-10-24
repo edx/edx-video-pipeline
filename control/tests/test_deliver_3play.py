@@ -19,7 +19,7 @@ from VEDA_OS01.models import (
     Video,
     ThreePlayTurnaround,
 )
-from VEDA_OS01.utils import build_url
+from VEDA.utils import build_url
 
 VIDEO_DATA = {
     'studio_id': '12345',

@@ -1,7 +1,6 @@
 
 import os
 import sys
-import yaml
 import datetime
 import boto.ses
 import hashlib
@@ -14,34 +13,14 @@ Let's do some quick and dirty error handling & logging
 """
 from control.control_env import *
 from control.veda_encode import VedaEncode
-
+from VEDA.utils import get_config
 
 class EmailAlert():
 
     def __init__(self, **kwargs):
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            )
-        )
-        self.auth_dict = self._AUTH()
+        self.auth_dict = get_config()
         self.message = kwargs.get('message', None)
         self.subject = kwargs.get('subject', None)
-
-    def _AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
 
     def email(self):
         email_subject = '[ VEDA ALERTING ]'
@@ -132,30 +111,10 @@ class Output(object):
 class Report():
 
     def __init__(self, **kwargs):
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            )
-        )
-        self.auth_dict = self._AUTH()
+        self.auth_dict = get_config()
         self.status = kwargs.get('status', None)
         self.upload_serial = kwargs.get('upload_serial', None)
         self.youtube_id = kwargs.get('youtube_id', None)
-
-    def _AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
 
     def upload_status(self):
         if self.upload_serial is None:

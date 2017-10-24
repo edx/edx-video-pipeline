@@ -11,6 +11,7 @@ from boto.exception import S3ResponseError
 from os.path import expanduser
 
 from veda_utils import ErrorObject
+from VEDA.utils import get_config
 
 try:
     boto.config.add_section('Boto')
@@ -32,28 +33,11 @@ class Hotstore(object):
         # is this a final/encode file?
         self.endpoint = kwargs.get('endpoint', False)
 
-        self.auth_yaml = kwargs.get(
-            'auth_yaml',
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                'instance_config.yaml'
-            ),
-        )
         self.auth_dict = self._READ_AUTH()
         self.endpoint_url = None
 
     def _READ_AUTH(self):
-        if self.auth_yaml is None:
-            return None
-        if not os.path.exists(self.auth_yaml):
-            return None
-
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-                return auth_dict
-            except yaml.YAMLError as exc:
-                return None
+        return get_config()
 
     def upload(self):
         if self.auth_dict is None:

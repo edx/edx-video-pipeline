@@ -2,7 +2,7 @@
 import os
 import sys
 import argparse
-import yaml
+from VEDA.utils import get_config
 
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
@@ -24,7 +24,6 @@ class DeliverCli:
         self.ROOT_DIR = os.path.dirname(os.path.dirname(
             os.path.abspath(__file__)
         ))
-        self.auth_yaml = os.path.join(self.ROOT_DIR, 'instance_config.yaml')
         self.celery_daemon = os.path.join(self.ROOT_DIR, 'control', 'celeryapp.py')
 
     def get_args(self):
@@ -52,11 +51,7 @@ class DeliverCli:
         Launch Celery Delivery Worker
 
         """
-        with open(self.auth_yaml, 'r') as stream:
-            try:
-                auth_dict = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                auth_dict = None
+        auth_dict = get_config()
 
         if auth_dict is not None:
             os.system(

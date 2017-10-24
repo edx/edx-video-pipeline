@@ -3,7 +3,6 @@
 import json
 import datetime
 from datetime import timedelta
-import yaml
 import base64
 import hmac
 import hashlib
@@ -16,11 +15,7 @@ from django.http import HttpResponseRedirect
 from frontend_env import *
 from course_validate import VEDACat
 from abvid_validate import validate_incoming, create_record, send_to_pipeline
-
-auth_yaml = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'instance_config.yaml'
-)
+from VEDA.utils import get_config
 
 """
 Here's the links for the main Page
@@ -169,11 +164,7 @@ def upload_alpha_1(request):
         Generate metadata From Fields
         Auth?
     """
-    with open(auth_yaml, 'r') as stream:
-        try:
-            auth_dict = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print 'AUTH ERROR'
+    auth_dict = get_config()
 
     policy_expiration = datetime.datetime.utcnow() + timedelta(hours=24)
     policy_exp = str(policy_expiration).replace(' ', 'T').split('.')[0] + 'Z'
