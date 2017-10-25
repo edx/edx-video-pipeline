@@ -1,16 +1,12 @@
 """
-Settings
+Base settings
 
 """
-from os.path import join, dirname, abspath
-
-DATABASES = None
-
 import os
-from django_secrets import *
 
-ROOT_DIR = os.path.dirname(os.path.dirname((__file__)))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname((__file__))))
 
+DJANGO_ADMIN = ('', '')
 ADMINS = (
     DJANGO_ADMIN,
 )
@@ -19,22 +15,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Port the war
 
 MANAGERS = ADMINS
 
-if DATABASES is None:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': pipeline_dbname,
-            'USER': DJANGO_DB_USER,
-            'PASSWORD': DJANGO_DB_PASS,
-            'HOST': DBHOST,
-            'PORT': '3306',
-        }
-    }
-
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = DJANGO_SECRET_KEY
+SECRET_KEY = 'insecure-secret-key'
 
-DEBUG = DJANGO_DEBUG
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 TIME_ZONE = 'UTC'
@@ -46,7 +31,7 @@ USE_TZ = True
 
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
-STATIC_ROOT = STATIC_ROOT_PATH
+STATIC_ROOT = os.path.join(ROOT_DIR, 'static')
 STATIC_URL = '/static/'
 
 # Additional locations of static files
@@ -111,6 +96,19 @@ ROOT_URLCONF = 'VEDA.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'VEDA.wsgi.application'
 
+# Database
+# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+# Set this value in the environment-specific files (e.g. local.py, production.py, test.py)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': '',  # Set to empty string for default.
+    }
+}
 
 REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
@@ -179,7 +177,3 @@ LOGGING = {
         },
     }
 }
-
-# See if the developer has any local overrides.
-if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
-    from .private import *  # pylint: disable=import-error, wildcard-import

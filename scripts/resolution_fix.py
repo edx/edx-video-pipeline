@@ -5,8 +5,6 @@ Fix resolution 'progressive)' bug
 """
 import os
 import sys
-import django
-from django.utils.timezone import utc
 import datetime
 from datetime import timedelta
 
@@ -14,8 +12,8 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 # import abvid_reporting
-from pipeline_env import *
 from veda_heal import VedaHeal
+from VEDA_OS01.models import Video
 
 sick_list = [
     'EDXABVID2014-V148900',

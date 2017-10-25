@@ -19,7 +19,7 @@ DATABASES:
         HOST: 'localhost'
         PORT: 3306
 
-django_secret_key: ""
+SECRET_KEY: ""
 
 # Django DEBUG global
 # (set to false in prod)
