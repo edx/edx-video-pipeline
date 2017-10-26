@@ -26,7 +26,6 @@ from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
-logging.basicConfig()
 LOGGER = logging.getLogger(__name__)
 
 # 3PlayMedia possible send-along statuses for a transcription callback.
