@@ -11,6 +11,7 @@ from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 from VEDA_OS01.models import (TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus)
 from VEDA.utils import build_url
+from VEDA_OS01.transcripts import CIELO24_API_VERSION
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
@@ -129,7 +130,7 @@ class Cielo24Transcript(object):
             build_url(
                 self.cielo24_api_base_url,
                 self.cielo24_perform_transcription,
-                v=1,
+                v=CIELO24_API_VERSION,
                 job_id=job_id,
                 target_language=lang_code,
                 callback_url=callback_url,
@@ -171,7 +172,7 @@ class Cielo24Transcript(object):
             build_url(
                 self.cielo24_api_base_url,
                 self.cielo24_add_media,
-                v=1,
+                v=CIELO24_API_VERSION,
                 job_id=job_id,
                 api_token=self.api_key,
                 media_url=self.s3_video_url
@@ -205,7 +206,7 @@ class Cielo24Transcript(object):
         create_job_url = build_url(
             self.cielo24_api_base_url,
             self.cielo24_new_job,
-            v=1,
+            v=CIELO24_API_VERSION,
             language=self.video.source_language,
             api_token=self.api_key,
             job_name=self.video.studio_id

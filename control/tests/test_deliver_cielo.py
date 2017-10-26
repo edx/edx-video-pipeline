@@ -12,6 +12,7 @@ from VEDA_OS01.models import (Cielo24Fidelity, Cielo24Turnaround, Course,
                               TranscriptProcessMetadata, TranscriptStatus,
                               Video)
 from VEDA.utils import build_url
+from VEDA_OS01.transcripts import CIELO24_API_VERSION
 
 VIDEO_DATA = {
     'studio_id': '12345',
@@ -120,7 +121,7 @@ class Cielo24TranscriptTests(TestCase):
             {
                 'url': build_url(
                     'https://sandbox.cielo24.com/api/job/new',
-                    v=1,
+                    v=CIELO24_API_VERSION,
                     job_name='12345',
                     language='en',  # A job's language.
                     api_token='cielo24_api_key',
@@ -131,7 +132,7 @@ class Cielo24TranscriptTests(TestCase):
             {
                 'url': build_url(
                     'https://sandbox.cielo24.com/api/job/add_media',
-                    v=1,
+                    v=CIELO24_API_VERSION,
                     job_id='000-111-222',
                     api_token='cielo24_api_key',
                     media_url='https://s3.amazonaws.com/bkt/video.mp4',
@@ -142,7 +143,7 @@ class Cielo24TranscriptTests(TestCase):
             {
                 'url': build_url(
                     'https://sandbox.cielo24.com/api/job/perform_transcription',
-                    v=1,
+                    v=CIELO24_API_VERSION,
                     job_id='000-111-222',
                     target_language='TARGET_LANG',
                     callback_url=build_url(

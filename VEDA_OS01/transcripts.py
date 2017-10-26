@@ -39,6 +39,9 @@ CIELO24_TRANSCRIPT_COMPLETED = django.dispatch.Signal(providing_args=[
 ])
 CONFIG = get_config()
 
+# Cielo24 API version
+CIELO24_API_VERSION = 1
+
 # Cielo24 API URLs
 CIELO24_GET_CAPTION_URL = build_url(
     CONFIG['cielo24_api_base_url'],
@@ -210,7 +213,7 @@ def cielo24_transcript_callback(sender, **kwargs):
         try:
             srt_data = fetch_srt_data(
                 CIELO24_GET_CAPTION_URL,
-                v=1,
+                v=CIELO24_API_VERSION,
                 job_id=job_id,
                 api_token=api_key,
                 caption_format='SRT'

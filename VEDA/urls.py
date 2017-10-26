@@ -31,6 +31,12 @@ urlpatterns = [
     url(r'^accounts/logout/$', 'django.contrib.auth.views.logout'),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url(r'^api/', include(router.urls)),
+    # Transcript credentials handler view
+    url(
+        regex=r'^api/transcript_credentials/$',
+        view=views.TranscriptCredentialsView.as_view(),
+        name='transcript_credentials'
+    ),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # Cheap auth server
     url(r'^veda_auth/', views.token_auth),
