@@ -1,4 +1,6 @@
 PACKAGES = VEDA VEDA_OS01 control frontend youtube_callback scripts
+PEP8_THRESHOLD=50
+PYLINT_THRESHOLD=855
 
 production-requirements:
 	pip install -r requirements.txt
@@ -12,7 +14,7 @@ migrate:
 static:
 	python manage.py collectstatic --noinput
 
-validate: test ## Run tests and quality checks
+validate: test quality
 
 test: clean
 	coverage run -m pytest --durations=10
@@ -22,6 +24,10 @@ test: clean
 clean:
 	coverage erase
 
-quality:
-	pep8 --config=.pep8 $(PACKAGES) *.py
-	pylint --rcfile=pylintrc $(PACKAGES) *.py
+quality: quality_pep8 quality_pylint
+
+quality_pep8:
+	paver run_pep8 -l ${PEP8_THRESHOLD}
+
+quality_pylint:
+	paver run_pylint -l ${PYLINT_THRESHOLD}

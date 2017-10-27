@@ -64,7 +64,7 @@ class UtilTests(TestCase):
             'expected_url': 'http://api.cielo24/add/job?c=3&d=4'
         },
         {
-            'urls': ('http://api.cielo24','add/job'),
+            'urls': ('http://api.cielo24', 'add/job'),
             'params': {'p': 100},
             'expected_url': 'http://api.cielo24/add/job?p=100'
         },

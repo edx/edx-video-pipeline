@@ -15,6 +15,7 @@ from control.control_env import *
 from control.veda_encode import VedaEncode
 from VEDA.utils import get_config
 
+
 class EmailAlert():
 
     def __init__(self, **kwargs):
