@@ -16,3 +16,5 @@ reports/
 .cache/
 
 VEDA/settings/private.py
+
+youtube_callback/static_files/youtubekey

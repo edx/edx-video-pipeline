@@ -290,6 +290,7 @@ class Metadata():
             return []
 
         if video_object.video_active is False:
+
             return []
 
         """
@@ -301,6 +302,7 @@ class Metadata():
         )
 
         encode_list = E.determine_encodes()
+
         if encode_list is not None:
             if 'mobile_high' in encode_list:
                 encode_list.remove('mobile_high')
@@ -362,17 +364,3 @@ class Metadata():
 
         self.val_status = 'transcode_queue'
         return encode_list
-
-
-def main():
-    """
-    Just to sneak a peek
-    """
-    test_error = "This is a test"
-    ErrorObject.print_error(message=test_error)
-    E2 = EmailAlert(message='Test', subject='Test')
-    E2.email()
-
-
-if __name__ == '__main__':
-    sys.exit(main())

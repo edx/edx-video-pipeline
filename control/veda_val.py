@@ -60,11 +60,10 @@ class VALAPICall():
         self.headers = None
 
         """Credentials"""
-        self.auth_dict = self._AUTH()
+        self.auth_dict = kwargs.get('CONFIG_DATA', self._AUTH())
 
     def call(self):
         if self.auth_dict is None:
-            print 'No AUTH'
             return None
 
         """
@@ -91,7 +90,6 @@ class VALAPICall():
             'username': self.auth_dict['val_username'],
             'password': self.auth_dict['val_password'],
         }
-
         r = requests.post(self.auth_dict['val_token_url'], data=payload, timeout=self.auth_dict['global_timeout'])
 
         if r.status_code != 200:

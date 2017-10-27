@@ -1,9 +1,12 @@
 ---
 veda_s3_hotstore_bucket: s3_hotstore_bucket
+veda_deliverable_bucket: s3_deliverable_bucket
+edx_s3_endpoint_bucket: s3_deliverable_bucket
 multi_upload_barrier: 2000000000
 veda_base_url: https://veda.edx.org
 s3_base_url: https://s3.amazonaws.com
 
+edx_cloudfront_prefix: test_cloudfront_prefix
 
 # transcript bucket config
 aws_video_transcripts_bucket: bucket_name
@@ -49,7 +52,6 @@ encode_dict:
         - mobile_high
         - mobile_low
         - audio_mp3
-        - desktop_webm
         - desktop_mp4
         - hls
 
@@ -61,24 +63,16 @@ encode_dict:
 val_profile_dict:
     mobile_low:
         - mobile_low
-
     desktop_mp4:
         - desktop_mp4
-
     override:
         - desktop_mp4
         - mobile_low
         - mobile_high
-
     mobile_high:
         - mobile_high
-
     audio_mp3:
         - audio_mp3
-
-    desktop_webm:
-        - desktop_webm
-
     youtube:
         - youtube
     review:
