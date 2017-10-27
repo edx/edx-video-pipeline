@@ -3,7 +3,7 @@ Common utils.
 """
 import os
 import urllib
-
+import urlparse
 import yaml
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -69,3 +69,33 @@ def get_config(yaml_config_file=DEFAULT_CONFIG_FILE_NAME):
         config_dict = yaml.load(config)
 
     return config_dict
+
+
+def scrub_query_params(url, params_to_scrub):
+    """
+    Scrub query params present in `params_to_scrub` from `url`
+
+    Arguments:
+        url (str): url
+        params_to_scrub (list): name of query params to be scrubbed from url
+
+    Returns:
+        url with query params scrubbed
+
+    >>> old_url = https://sandbox.veda.com/api/do?api_token=veda_api_key&job_name=12345&language=en&v=1
+    >>> new_url = https://sandbox.veda.com/api/do?v=1&job_name=12345&language=en&api_token=XXXXXXXXXXXX
+    """
+    parsed = urlparse.urlparse(urllib.unquote(url))
+
+    # query_params will be in the form of [('v', '1'), ('job_name', '12345')]
+    query_params = urlparse.parse_qsl(parsed.query)
+
+    new_query_params = {}
+    for key, value in query_params:
+        new_query_params[key] = len(value) * 'X' if key in params_to_scrub else value
+
+    return build_url(
+        '{scheme}://{netloc}'.format(scheme=parsed.scheme, netloc=parsed.netloc),
+        parsed.path,
+        **new_query_params
+    )
