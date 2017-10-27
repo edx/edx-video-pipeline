@@ -1,4 +1,3 @@
-PACKAGES = VEDA VEDA_OS01 control frontend youtube_callback scripts
 PEP8_THRESHOLD=50
 PYLINT_THRESHOLD=855
 
