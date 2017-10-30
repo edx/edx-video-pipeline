@@ -1,11 +1,10 @@
 """
 Check code quality
 """
-import json
 import os
 import re
-from string import join
-from paver.easy import BuildFailure, call_task, cmdopts, needs, sh, task
+
+from paver.easy import BuildFailure, cmdopts, sh, task
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPORTS_DIR = os.path.join(ROOT_DIR, 'reports')
@@ -18,6 +17,7 @@ PACKAGES = [
     'youtube_callback',
     'scripts',
     'bin',
+    'pavelib',
 ]
 
 
@@ -25,7 +25,7 @@ PACKAGES = [
 @cmdopts([
     ("limit=", "l", "limit for number of acceptable violations"),
 ])
-def run_pep8(options):  # pylint: disable=unused-argument
+def run_pep8(options):
     """
     Run pep8 on system code.
     Fail the task if any violations are found.
@@ -38,10 +38,7 @@ def run_pep8(options):  # pylint: disable=unused-argument
         '{report_dir}/pep8.report'.format(report_dir=REPORTS_DIR)
     )
 
-    violations_message = '{violations_base_message}{violations_limit_message}'.format(
-        violations_base_message='Too many pep8 violations. Number of pep8 violations: {}. '.format(num_violations),
-        violations_limit_message='The limit is {violations_limit}. '.format(violations_limit=violations_limit),
-    )
+    violations_message = violation_message('pep8', violations_limit, num_violations)
     print violations_message
 
     # Fail if number of violations is greater than the limit
@@ -93,11 +90,7 @@ def run_pylint(options):
     num_violations = _count_pylint_violations(
         '{report_dir}/pylint.report'.format(report_dir=REPORTS_DIR)
     )
-
-    violations_message = '{violations_base_message}{violations_limit_message}'.format(
-        violations_base_message='Too many pylint violations. Number of pylint violations: {}. '.format(num_violations),
-        violations_limit_message='The limit is {violations_limit}.'.format(violations_limit=violations_limit)
-    )
+    violations_message = violation_message('pylint', violations_limit, num_violations)
     print violations_message
 
     # Fail if number of violations is greater than the limit
@@ -122,3 +115,20 @@ def _count_pylint_violations(report_file):
             num_violations_report += 1
 
     return num_violations_report
+
+
+def violation_message(task_name, violations_limit, num_violations):
+    """
+    Returns violation message for a task.
+
+    Arguments:
+        task_name (str): name of task
+        violations_limit (int): total number of violations allowed
+        num_violations (int): violations occurred
+    """
+    return '{violations_base_message}{violations_limit_message}'.format(
+        violations_base_message='Too many {} violations. Number of {} violations: {}. '.format(
+            task_name, task_name, num_violations
+        ),
+        violations_limit_message='The limit is {violations_limit}.'.format(violations_limit=violations_limit),
+    )
