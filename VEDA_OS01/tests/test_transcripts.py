@@ -17,7 +17,7 @@ from moto import mock_s3_deprecated
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from VEDA.utils import get_config, build_url
+from VEDA.utils import get_config, build_url, scrub_query_params
 from VEDA_OS01 import transcripts, utils
 from VEDA_OS01.models import (Course, TranscriptCredentials,
                               TranscriptProcessMetadata, TranscriptProvider,
@@ -1279,7 +1279,16 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] Translations metadata request failed for video=%s -- process_id=%s -- status=%s',
+                    '[3PlayMedia Task] Translations metadata request failed, url=%s -- video=%s -- process_id=%s -- status=%s',  # pylint: disable=line-too-long
+                    scrub_query_params(
+                        build_url(
+                            transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(
+                                file_id='112233',
+                            ),
+                            apikey='insecure_api_key'
+                        ),
+                        ['apikey']
+                    ),
                     VIDEO_DATA['studio_id'],
                     '112233',
                     400,

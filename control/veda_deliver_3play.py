@@ -8,7 +8,7 @@ import sys
 
 from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 from VEDA_OS01.models import TranscriptProcessMetadata, TranscriptProvider, TranscriptStatus
-from VEDA.utils import build_url
+from VEDA.utils import build_url, scrub_query_params
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 
@@ -94,7 +94,7 @@ class ThreePlayMediaClient(object):
             raise ThreePlayMediaUrlError('The URL "{media_url}" is not Accessible.'.format(media_url=self.media_url))
         elif response.headers['Content-Type'] != self.allowed_content_type:
             raise ThreePlayMediaUrlError(
-                'Media content-type should be "{allowed_type}". URL was "{media_url}", content-type was "{type}"'.format(
+                'Media content-type should be "{allowed_type}". URL was "{media_url}", content-type was "{type}"'.format(  # pylint: disable=line-too-long
                     allowed_type=self.allowed_content_type,
                     media_url=self.media_url,
                     type=response.headers['Content-Type'],
@@ -105,11 +105,16 @@ class ThreePlayMediaClient(object):
         """
         Gets all the 3Play Media supported languages
         """
-        response = requests.get(url=build_url(self.base_url, self.available_languages_url, apikey=self.api_key))
+        available_languages_url = build_url(self.base_url, self.available_languages_url, apikey=self.api_key)
+        response = requests.get(
+            url=available_languages_url
+        )
         if not response.ok:
             raise ThreePlayMediaLanguagesRetrievalError(
-                'Error while retrieving available languages: {response} -- {status}'.format(
-                    response=response.text, status=response.status_code
+                'Error while retrieving available languages: url={url} -- {response} -- {status}'.format(
+                    url=scrub_query_params(available_languages_url, ['apikey']),
+                    response=response.text,
+                    status=response.status_code
                 )
             )
 

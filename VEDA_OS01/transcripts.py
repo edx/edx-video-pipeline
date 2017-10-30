@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from control.veda_val import VALAPICall
-from VEDA.utils import get_config, build_url
+from VEDA.utils import get_config, build_url, scrub_query_params
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
                               TranscriptProvider, TranscriptStatus, Video)
@@ -269,13 +269,13 @@ def fetch_srt_data(url, **request_params):
     Fetch srt data from transcript provider.
     """
     # return TRANSCRIPT_SRT_DATA
-    response = requests.get(
-        build_url(url, **request_params)
-    )
+    fetch_srt_data_url = build_url(url, **request_params)
+    response = requests.get(fetch_srt_data_url)
 
     if not response.ok:
         raise TranscriptFetchError(
-            '[TRANSCRIPT FETCH ERROR] status={} -- text={}'.format(
+            '[TRANSCRIPT FETCH ERROR] url={} -- status={} -- text={}'.format(
+                scrub_query_params(fetch_srt_data_url, ['apikey', 'api_token']),
                 response.status_code,
                 response.text
             )
@@ -379,10 +379,12 @@ def get_translation_services(api_key):
     Returns:
         Available 3Play Media Translation services.
     """
-    response = requests.get(build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key))
+    get_translation_services_url = build_url(THREE_PLAY_TRANSLATION_SERVICES_URL, apikey=api_key)
+    response = requests.get(get_translation_services_url)
     if not response.ok:
         raise TranscriptTranslationError(
-            u'[3PlayMedia Callback] Error while fetching the translation services -- {status}, {response}'.format(
+            u'[3PlayMedia Callback] Error fetching the translation services -- url={url}, {status}, {response}'.format(
+                url=scrub_query_params(get_translation_services_url, ['apikey']),
                 status=response.status_code,
                 response=response.text,
             )
@@ -836,7 +838,8 @@ def get_translations_metadata(api_key, file_id, edx_video_id):
     translations_metadata_response = requests.get(translations_metadata_url)
     if not translations_metadata_response.ok:
         LOGGER.error(
-            u'[3PlayMedia Task] Translations metadata request failed for video=%s -- process_id=%s -- status=%s',
+            u'[3PlayMedia Task] Translations metadata request failed, url=%s -- video=%s -- process_id=%s -- status=%s',
+            scrub_query_params(translations_metadata_url, ['apikey']),
             edx_video_id,
             file_id,
             translations_metadata_response.status_code,

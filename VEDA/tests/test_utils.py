@@ -147,3 +147,30 @@ class UtilTests(TestCase):
         """
         instance_config = utils.get_config()
         self.assertDictEqual(instance_config, TEST_CONFIG)
+
+    @data(
+        {
+            'url': 'http://sandbox.edx.org/do?aaa=11&vvv=234',
+            'params_to_scrub': ['aaa'],
+            'expected_url': 'http://sandbox.edx.org/do?vvv=234&aaa=XX'
+        },
+        {
+            'url': 'http://sandbox.edx.org/do?aaa=1&vvv=234',
+            'params_to_scrub': ['aaa', 'vvv'],
+            'expected_url': 'http://sandbox.edx.org/do?vvv=XXX&aaa=X'
+        },
+        {
+            'url': 'http://sandbox.edx.org/do?aaa=1&vvv=234',
+            'params_to_scrub': ['zzzz'],
+            'expected_url': 'http://sandbox.edx.org/do?vvv=234&aaa=1'
+        },
+    )
+    @unpack
+    def test_scrub_query_params(self, url, params_to_scrub, expected_url):
+        """
+        Tests that utils.scrub_query_params works as expected.
+        """
+        self.assertEqual(
+            utils.scrub_query_params(url, params_to_scrub),
+            expected_url
+        )

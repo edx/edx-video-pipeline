@@ -10,7 +10,7 @@ from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 
 from VEDA_OS01.models import (TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus)
-from VEDA.utils import build_url
+from VEDA.utils import build_url, scrub_query_params
 from VEDA_OS01.transcripts import CIELO24_API_VERSION
 
 requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
@@ -126,24 +126,24 @@ class Cielo24Transcript(object):
             video_id=self.video.studio_id
         )
 
-        response = requests.get(
-            build_url(
-                self.cielo24_api_base_url,
-                self.cielo24_perform_transcription,
-                v=CIELO24_API_VERSION,
-                job_id=job_id,
-                target_language=lang_code,
-                callback_url=callback_url,
-                api_token=self.api_key,
-                priority=self.turnaround,
-                transcription_fidelity=self.fidelity,
-                options=json.dumps({"return_iwp": ["FINAL"]})
-            )
+        perform_transcript_url = build_url(
+            self.cielo24_api_base_url,
+            self.cielo24_perform_transcription,
+            v=CIELO24_API_VERSION,
+            job_id=job_id,
+            target_language=lang_code,
+            callback_url=callback_url,
+            api_token=self.api_key,
+            priority=self.turnaround,
+            transcription_fidelity=self.fidelity,
+            options=json.dumps({"return_iwp": ["FINAL"]})
         )
+        response = requests.get(perform_transcript_url)
 
         if not response.ok:
             raise Cielo24PerformTranscriptError(
-                '[PERFORM TRANSCRIPT ERROR] status={} -- text={}'.format(
+                '[PERFORM TRANSCRIPT ERROR] url={} -- status={} -- text={}'.format(
+                    scrub_query_params(perform_transcript_url, ['api_token']),
                     response.status_code,
                     response.text
                 )
@@ -168,20 +168,20 @@ class Cielo24Transcript(object):
         Returns:
             cielo24 task id
         """
-        response = requests.get(
-            build_url(
-                self.cielo24_api_base_url,
-                self.cielo24_add_media,
-                v=CIELO24_API_VERSION,
-                job_id=job_id,
-                api_token=self.api_key,
-                media_url=self.s3_video_url
-            )
+        media_url = build_url(
+            self.cielo24_api_base_url,
+            self.cielo24_add_media,
+            v=CIELO24_API_VERSION,
+            job_id=job_id,
+            api_token=self.api_key,
+            media_url=self.s3_video_url
         )
+        response = requests.get(media_url)
 
         if not response.ok:
             raise Cielo24AddMediaError(
-                '[ADD MEDIA ERROR] status={} -- text={}'.format(
+                '[ADD MEDIA ERROR] url={} -- status={} -- text={}'.format(
+                    scrub_query_params(media_url, ['api_token']),
                     response.status_code,
                     response.text
                 )
@@ -216,7 +216,7 @@ class Cielo24Transcript(object):
         if not response.ok:
             raise Cielo24CreateJobError(
                 '[CREATE JOB ERROR] url={} -- status={} -- text={}'.format(
-                    create_job_url,
+                    scrub_query_params(create_job_url, ['api_token']),
                     response.status_code,
                     response.text,
                 )
