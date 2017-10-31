@@ -239,8 +239,7 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertTrue(
             responses.calls[0].request.url,
             ('http://api.cielo24.com/job/get_caption'
-             '?api_token=i_am_key&job_id=%28100%2C%29&caption_format=SRT&v={cielo_api_version}'
-            ).format(
+             '?api_token=i_am_key&job_id=%28100%2C%29&caption_format=SRT&v={cielo_api_version}').format(
                 cielo_api_version=transcripts.CIELO24_API_VERSION
             )
         )

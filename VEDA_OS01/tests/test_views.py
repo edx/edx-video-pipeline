@@ -9,8 +9,10 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from VEDA_OS01.enums import TranscriptionProviderErrorType
 from VEDA_OS01.models import TranscriptCredentials, TranscriptProvider
 from VEDA_OS01.views import CIELO24_LOGIN_URL
+
 
 @ddt
 class TranscriptCredentialsTest(APITestCase):
@@ -48,8 +50,6 @@ class TranscriptCredentialsTest(APITestCase):
         )
 
         response_status_code = response.status_code
-        response = json.loads(response.content)
-
         self.assertEqual(response_status_code, status.HTTP_401_UNAUTHORIZED)
 
     @data(
@@ -76,7 +76,10 @@ class TranscriptCredentialsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = json.loads(response.content)
-        self.assertEqual(response['message'], 'Invalid provider {provider}.'.format(provider=provider))
+        self.assertDictEqual(response, {
+            'message': 'Invalid provider {provider}.'.format(provider=provider),
+            'error_type': TranscriptionProviderErrorType.INVALID_PROVIDER
+        })
 
     @data(
         (
@@ -133,7 +136,10 @@ class TranscriptCredentialsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = json.loads(response.content)
-        self.assertEqual(response['message'], error_message)
+        self.assertDictEqual(response, {
+            'message': error_message,
+            'error_type': TranscriptionProviderErrorType.MISSING_REQUIRED_ATTRIBUTES
+        })
 
     @data(
         {
@@ -206,7 +212,10 @@ class TranscriptCredentialsTest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = json.loads(response.content)
-        self.assertEqual(response['message'], error_message)
+        self.assertDictEqual(response, {
+            'message': error_message,
+            'error_type': TranscriptionProviderErrorType.INVALID_CREDENTIALS
+        })
         mock_logger.warning.assert_called_with(
             '[Transcript Credentials] Unable to get api token --  response %s --  status %s.',
             json.dumps({'error': error_message}),

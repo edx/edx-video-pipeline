@@ -16,6 +16,7 @@ from rest_framework.views import APIView
 from api import token_finisher
 
 from VEDA import utils
+from VEDA_OS01.enums import TranscriptionProviderErrorType
 from VEDA_OS01.models import Course, Video, URL, Encode, TranscriptCredentials, TranscriptProvider
 from VEDA_OS01.serializers import CourseSerializer, EncodeSerializer, VideoSerializer, URLSerializer
 from VEDA_OS01.transcripts import CIELO24_API_VERSION
@@ -29,6 +30,7 @@ CIELO24_LOGIN_URL = utils.build_url(
     CONFIG['cielo24_api_base_url'],
     '/account/login'
 )
+
 
 class CourseViewSet(viewsets.ModelViewSet):
 
@@ -144,7 +146,7 @@ class TranscriptCredentialsView(APIView):
             )
         else:
             api_token = json.loads(response.content)['ApiToken']
-        
+
         return api_token
 
     def validate_missing_attributes(self, provider, attributes, credentials):
@@ -159,7 +161,7 @@ class TranscriptCredentialsView(APIView):
                 missing=' and '.join(missing)
             )
 
-        return error_message
+        return TranscriptionProviderErrorType.MISSING_REQUIRED_ATTRIBUTES, error_message
 
     def validate_transcript_credentials(self, provider, **credentials):
         """
@@ -171,11 +173,11 @@ class TranscriptCredentialsView(APIView):
                 3PlayMedia - 'api_key' and 'api_secret_key' are required.
                 Cielo24 - Valid 'api_key' and 'username' are required.
         """
-        error_message, validated_credentials = '', {}
+        error_type, error_message, validated_credentials = None, '', {}
         if provider in [TranscriptProvider.CIELO24, TranscriptProvider.THREE_PLAY]:
             if provider == TranscriptProvider.CIELO24:
                 must_have_props = ('org', 'api_key', 'username')
-                error_message = self.validate_missing_attributes(provider, must_have_props, credentials)
+                error_type, error_message = self.validate_missing_attributes(provider, must_have_props, credentials)
 
                 if not error_message:
                     # Get cielo api token and store it in api_key.
@@ -187,9 +189,10 @@ class TranscriptCredentialsView(APIView):
                         })
                     else:
                         error_message = u'Invalid credentials supplied.'
+                        error_type = TranscriptionProviderErrorType.INVALID_CREDENTIALS
             else:
                 must_have_props = ('org', 'api_key', 'api_secret_key')
-                error_message = self.validate_missing_attributes(provider, must_have_props, credentials)
+                error_type, error_message = self.validate_missing_attributes(provider, must_have_props, credentials)
                 if not error_message:
                     validated_credentials.update({
                         'org': credentials['org'],
@@ -198,8 +201,9 @@ class TranscriptCredentialsView(APIView):
                     })
         else:
             error_message = u'Invalid provider {provider}.'.format(provider=provider)
+            error_type = TranscriptionProviderErrorType.INVALID_PROVIDER
 
-        return error_message, validated_credentials
+        return error_type, error_message, validated_credentials
 
     def post(self, request):
         """
@@ -224,7 +228,7 @@ class TranscriptCredentialsView(APIView):
             * provider: A string representation of provider.
 
             * org: A string representing the organizaton code.
-            
+
             * api_key: A string representing the provider api key.
 
             * api_secret_key: (Required for 3Play only). A string representing the api secret key.
@@ -239,16 +243,19 @@ class TranscriptCredentialsView(APIView):
             In case of error:
                 Return response with error message and 400 status code (HTTP 400 Bad Request).
                 {
+                    "error_type": INVALID_CREDENTIALS
                     "message": "Error message."
                 }
         """
         # Validate credentials
         provider = request.data.pop('provider', None)
-        error_message, validated_credentials = self.validate_transcript_credentials(provider=provider, **request.data)
+        error_type, error_message, validated_credentials = self.validate_transcript_credentials(
+            provider=provider, **request.data
+        )
         if error_message:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data=dict(message=error_message)
+                data=dict(error_type=error_type, message=error_message)
             )
 
         TranscriptCredentials.objects.update_or_create(
