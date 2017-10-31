@@ -1,4 +1,4 @@
-PEP8_THRESHOLD=49
+PEP8_THRESHOLD=46
 PYLINT_THRESHOLD=761
 
 production-requirements:
