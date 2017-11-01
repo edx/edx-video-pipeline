@@ -1,6 +1,7 @@
 django==1.9
 djangorestframework==3.6.4
 django-cors-headers
+django-fernet-fields==0.5
 django-filter==1.0.4
 django-model-utils==3.0.0
 django-oauth-toolkit==0.11.0

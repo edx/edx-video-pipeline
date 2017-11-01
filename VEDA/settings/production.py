@@ -1,5 +1,6 @@
-import yaml
-from os import environ
+"""
+Production environment settings.
+"""
 from VEDA.settings.base import *
 from VEDA.utils import get_config
 from VEDA.settings.utils import get_logger_config

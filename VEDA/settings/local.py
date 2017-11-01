@@ -1,3 +1,6 @@
+"""
+Local environment settings.
+"""
 from VEDA.settings.base import *
 from VEDA.settings.utils import get_logger_config
 

@@ -19,6 +19,9 @@ MANAGERS = ADMINS
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'insecure-secret-key'
 
+# Set this value in the environment-specific files (e.g. local.py, production.py, test.py)
+FERNET_KEYS = ['insecure-ferent-key']
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
