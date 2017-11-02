@@ -15,7 +15,6 @@ class CourseSerializer(serializers.ModelSerializer):
             'review_proc',
             'yt_proc',
             's3_proc',
-            'mobile_override',
             'course_name',
             'institution',
             'edx_classid',
@@ -24,7 +23,9 @@ class CourseSerializer(serializers.ModelSerializer):
             'previous_statechange',
             'studio_hex',
             'proc_loc',
-            'sg_projID'
+            'sg_projID',
+            'created',
+            'modified',
         )
 
     def create(self, validated_data, partial=True):

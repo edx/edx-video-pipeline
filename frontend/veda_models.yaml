@@ -10,22 +10,21 @@ models_nottoget:
     - last_vid_number
     - previous_statechange
     - yt_proc
-    - s3_dir
     - studio_hex 
     - sg_projID
     - c24_hours
+    - created
+    - modified
 
 #boolean (checkbox)
 bools:
     - course_hold
     - proc_loc
     - review_proc
-    - mobile_override
     - yt_proc
     - tp_proc
     - c24_proc
     - s3_proc
-    - xue
 
 # dropdown boxes
 dropdowns:
@@ -47,14 +46,11 @@ organizational:
     institution: main
     institution_name: main
     edx_classid: main
-    parent_ID: main
 
     yt_proc: encode
     s3_proc: encode
-    mobile_override: encode
     review_proc: encode
     proc_loc: encode
-    xue: encode
     yt_logon: encode
 
     tp_proc: transcribe

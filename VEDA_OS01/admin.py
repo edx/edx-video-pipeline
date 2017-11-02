@@ -20,7 +20,9 @@ class CourseAdmin(admin.ModelAdmin):
         'institution',
         'edx_classid',
         'last_vid_number',
-        'previous_statechange'
+        'previous_statechange',
+        'created',
+        'modified',
     ]
     list_filter = ['institution']
     search_fields = [
