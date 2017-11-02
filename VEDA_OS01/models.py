@@ -229,24 +229,31 @@ class Institution(models.Model):
         )
 
 
-class Course(models.Model):
+class Course(TimeStampedModel):
     """
     Model for Course.
     """
-    course_name = models.CharField('Course Name', max_length=100)
+    course_name = models.CharField('Course Name', help_text='Name of this course', max_length=255)
 
     # TODO: Change Name (this is reversed)
-    course_hold = models.BooleanField('Course Active', default=False)
-    institution = models.CharField('Inst. Code', max_length=4)
-    edx_classid = models.CharField('Class ID', max_length=5)
-
-    # TODO: Create Default for 'this year' (e.g. 2017)
-    semesterid = models.CharField('Semester', max_length=4)
-    parent_ID = models.CharField(
-        'Parent Project',
-        max_length=8,
-        null=True, blank=True
+    course_hold = models.BooleanField(
+        'Course Active',
+        help_text='Tells whether this course is active.',
+        default=True
     )
+    institution = models.CharField(
+        'Inst. Code',
+        help_text='Organization of the course.',
+        max_length=50
+    )
+    edx_classid = models.CharField(
+        'Class ID',
+        help_text='Course number to identify the course.',
+        max_length=255
+    )
+
+    # TODO deprecate semesterid.
+    semesterid = models.CharField('Semester', max_length=4)
     previous_statechange = models.DateTimeField(
         'Previous Data Statechange',
         null=True, blank=True
@@ -361,12 +368,6 @@ class Course(models.Model):
     mobile_override = models.BooleanField(
         'Low Bandwidth Override',
         default=False
-    )
-    # TODO: Deprecate
-    s3_dir = models.CharField(
-        'S3 Directory',
-        max_length=50,
-        null=True, blank=True
     )
 
     # TODO: Change field name

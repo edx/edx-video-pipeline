@@ -70,11 +70,6 @@ class VedaEncode(object):
                     self.encode_list.add(e)
                 return None
 
-        if self.course_object.mobile_override is True:
-            for e in self.encode_dict['mobile_override']:
-                self.encode_list.add(e)
-            return None
-
         for key, entry in self.encode_dict.iteritems():
             if getattr(self.course_object, key) is True:
                 if key != 'review_proc':
