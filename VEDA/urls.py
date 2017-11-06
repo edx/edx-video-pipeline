@@ -50,5 +50,10 @@ urlpatterns = [
         regex=r'^3playmedia/transcripts/handle/(?P<token>[\w]+)$',
         view=transcripts.ThreePlayMediaCallbackHandlerView.as_view(),
         name='3play_media_callback'
-    )
+    ),
+    url(
+        r'^heartbeat/$',
+        view=views.heartbeat,
+        name='heartbeat'
+    ),
 ]

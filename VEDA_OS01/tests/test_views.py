@@ -1,10 +1,11 @@
 """ Views tests """
 import json
-import responses
 
+import responses
 from ddt import data, ddt, unpack
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.db.utils import DatabaseError
 from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -221,3 +222,26 @@ class TranscriptCredentialsTest(APITestCase):
             json.dumps({'error': error_message}),
             status.HTTP_400_BAD_REQUEST
         )
+
+
+class HeartbeatTests(APITestCase):
+    """
+    Tests for hearbeat endpoint.
+    """
+    def test_heartbeat(self):
+        """
+        Test that heartbeat endpoint gives expected response upon success.
+        """
+        response = self.client.get(reverse('heartbeat'))
+        assert response.status_code == 200
+        assert json.loads(response.content) == {'OK': True}
+
+    @patch('django.db.backends.utils.CursorWrapper')
+    def test_heartbeat_failure_db(self, mocked_cursor_wrapper):
+        """
+        Test that heartbeat endpoint gives expected response when there is an error.
+        """
+        mocked_cursor_wrapper.side_effect = DatabaseError
+        response = self.client.get(reverse('heartbeat'))
+        assert response.status_code == 500
+        assert json.loads(response.content) == {'OK': False}

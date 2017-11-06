@@ -2,25 +2,27 @@
 
 import json
 import logging
+
 import requests
-
-from django.http import HttpResponse
-from django.http import HttpResponseRedirect
+from django.db import connection
+from django.db.utils import DatabaseError
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
 from rest_framework import filters, renderers, status, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import (api_view, detail_route,
+                                       permission_classes)
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import token_finisher
-
 from VEDA import utils
 from VEDA_OS01.enums import TranscriptionProviderErrorType
-from VEDA_OS01.models import Course, Video, URL, Encode, TranscriptCredentials, TranscriptProvider
-from VEDA_OS01.serializers import CourseSerializer, EncodeSerializer, VideoSerializer, URLSerializer
+from VEDA_OS01.models import (URL, Course, Encode, TranscriptCredentials,
+                              TranscriptProvider, Video)
+from VEDA_OS01.serializers import (CourseSerializer, EncodeSerializer,
+                                   URLSerializer, VideoSerializer)
 from VEDA_OS01.transcripts import CIELO24_API_VERSION
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -284,3 +286,32 @@ def user_login(request):
         return HttpResponseRedirect(request.path)
     else:
         return HttpResponseRedirect('../admin')  # settings.LOGIN_REDIRECT_URL)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def heartbeat(request):  # pylint: disable=unused-argument
+    """
+    View to check if database is reachable and ready to handle requests.
+    """
+    try:
+        db_status()
+    except DatabaseError:
+        return JsonResponse(
+            {'OK': False},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    return JsonResponse(
+        {'OK': True},
+        status=status.HTTP_200_OK
+    )
+
+
+def db_status():
+    """
+    Return database status.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT 1')
+        cursor.fetchone()
