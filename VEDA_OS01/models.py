@@ -405,6 +405,18 @@ class Course(TimeStampedModel):
 
         return org
 
+    @property
+    def course_runs(self):
+        course_runs = []
+        if self.local_storedir:
+            course_runs = [
+                course_id.strip()
+                for course_id in self.local_storedir.split(',')
+                if course_id
+            ]
+
+        return course_runs
+
     def __unicode__(self):
         return u'{institution} {edx_class_id} {course_name}'.format(
             institution=self.institution,
