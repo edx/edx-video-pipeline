@@ -5,6 +5,8 @@ import os.path
 import boto
 import boto.s3
 from boto.exception import S3ResponseError, S3DataError
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
 
 from VEDA_OS01.models import TranscriptCredentials
 from VEDA.utils import extract_course_org, get_config
@@ -159,32 +161,47 @@ class FileDiscovery(object):
         transcript_preferences = meta.get_metadata('transcript_preferences')
         edx_filename = key.name[::-1].split('/')[0][::-1]
 
-        if len(course_hex) == 0:
-            return None
+        if not course_hex:
+            try:
+                course_key = CourseKey.from_string(course_url)
+            except InvalidKeyError:
+                return
 
-        course_query = Course.objects.filter(studio_hex=course_hex)
-        if len(course_query) == 0:
-            V = VideoProto(
-                s3_filename=edx_filename,
-                client_title=client_title,
-                file_extension='',
-                platform_course_url=course_url
-            )
-
-            """
-            Call VAL Api
-            """
-            val_status = 'invalid_token'
-            VAC = VALAPICall(
-                video_proto=V,
-                val_status=val_status
-            )
-            VAC.call()
-
-            new_key = 'prod-edx/rejected/' + key.name[::-1].split('/')[0][::-1]
-            key.copy(self.bucket, new_key)
-            key.delete()
-            return
+            course_set = Course.objects.filter(institution=course_key.org, edx_classid=course_key.course)
+            if course_set.exists():
+                course = course_set.first()
+                course_runs = course.course_runs
+                if course_url not in course_runs:
+                    course_runs.append(course_url)
+                    course.local_storedir = ','.join(course_runs)
+                    course.save()
+            else:
+                course_name = '{org} {number}'.format(org=course_key.org, number=course_key.course)
+                course = Course.objects.create(
+                    course_name=course_name,
+                    institution=course_key.org,
+                    edx_classid=course_key.course,
+                )
+        else:
+            try:
+                course = Course.objects.get(studio_hex=course_hex)
+            except Course.DoesNotExist:
+                video_proto = VideoProto(
+                    s3_filename=edx_filename,
+                    client_title=client_title,
+                    file_extension='',
+                    platform_course_url=course_url
+                )
+                # Update val status to 'invalid_token'
+                VALAPICall(
+                    video_proto=video_proto,
+                    val_status=u'invalid_token',
+                ).call()
+                # Move the video file to 'rejected'.
+                new_key = 'prod-edx/rejected/{filename}'.format(filename=key.name[::-1].split('/')[0][::-1])
+                key.copy(self.bucket, new_key)
+                key.delete()
+                return
 
         file_extension = client_title[::-1].split('.')[0][::-1]
 
@@ -259,7 +276,7 @@ class FileDiscovery(object):
             })
 
         ingest = VedaIngest(
-            course_object=course_query[0],
+            course_object=course,
             video_proto=VideoProto(**video_metadata),
             node_work_directory=self.node_work_directory
         )
