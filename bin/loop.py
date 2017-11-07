@@ -79,7 +79,7 @@ class DaemonCli:
                 node_work_directory=node_work_directory
             )
 
-            FD.studio_s3_ingest()
+            FD.discover_studio_ingested_videos()
             FD.about_video_ingest()
             reset_queries()
             x += 1

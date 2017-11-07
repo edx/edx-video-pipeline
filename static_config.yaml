@@ -1,6 +1,10 @@
 ---
 # This configuration should only have static settings.
 
+# s3 bucket static prefixes
+edx_s3_processed_prefix: prod-edx/processed/
+edx_s3_rejected_prefix: prod-edx/rejected/
+
 # Celery Info
 onsite_worker: False
 celery_threads: 1

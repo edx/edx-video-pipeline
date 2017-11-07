@@ -1,6 +1,8 @@
 ---
 veda_s3_hotstore_bucket: s3_hotstore_bucket
 veda_deliverable_bucket: s3_deliverable_bucket
+edx_s3_ingest_prefix: ingest/
+edx_s3_ingest_bucket: s3_ingest_bucket
 edx_s3_endpoint_bucket: s3_deliverable_bucket
 multi_upload_barrier: 2000000000
 veda_base_url: https://veda.edx.org
