@@ -39,3 +39,21 @@ def update_video_status(val_api_client, video, status):
     # update edx-video-pipeline's video status
     video.transcript_status = status
     video.save()
+
+
+def invalidate_fernet_cached_properties(model, fields):
+    """
+    Invalidates transcript credential fernet field's cached properties.
+
+    Arguments:
+        model (class): Model class containing fernet fields.
+        fields (list):  A list of fernet fields whose cache is to be invalidated.
+    """
+    for field_name in fields:
+        try:
+            field = model._meta.get_field(field_name)
+            del field.keys
+            del field.fernet_keys
+            del field.fernet
+        except AttributeError:
+            pass

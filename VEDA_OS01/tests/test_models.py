@@ -1,9 +1,11 @@
 """ Model tests """
+from cryptography.fernet import InvalidToken
 from django.conf import settings
 from django.test import override_settings
 from django.test.testcases import TransactionTestCase
-from cryptography.fernet import InvalidToken
+
 from VEDA_OS01.models import TranscriptCredentials, TranscriptProvider
+from VEDA_OS01.utils import invalidate_fernet_cached_properties
 
 
 class TranscriptCredentialsModelTest(TransactionTestCase):
@@ -27,29 +29,8 @@ class TranscriptCredentialsModelTest(TransactionTestCase):
         """
         Test teardown.
         """
-        # Invalidate here so that evry new test would have FERNET KEYS from tests.py initially.
-        self.invalidate_fernet_cached_properties()
-
-    def invalidate_fernet_cached_properties(self):
-        """
-        Invalidates transcript credential fernet field's cached properties.
-        """
-
-        def invalidate_fernet_cached_property(field_name):
-            """
-            Invalidates fernet fields cached properties.
-            """
-            field = TranscriptCredentials._meta.get_field(field_name)
-
-            if field.keys:
-                del field.keys
-            if field.fernet_keys:
-                del field.fernet_keys
-            if field.fernet:
-                del field.fernet
-
-        invalidate_fernet_cached_property('api_key')
-        invalidate_fernet_cached_property('api_secret')
+        # Invalidate here so that every new test would have FERNET KEYS from tests.py initially.
+        invalidate_fernet_cached_properties(TranscriptCredentials, ['api_key', 'api_secret'])
 
     def test_decrypt(self):
         """
@@ -72,7 +53,7 @@ class TranscriptCredentialsModelTest(TransactionTestCase):
         new_keys_set = ['new-fernet-key'] + settings.FERNET_KEYS
 
         # Invalidate cached properties so that we get the latest keys
-        self.invalidate_fernet_cached_properties()
+        invalidate_fernet_cached_properties(TranscriptCredentials, ['api_key', 'api_secret'])
 
         with override_settings(FERNET_KEYS=new_keys_set):
             self.assertEqual(settings.FERNET_KEYS, new_keys_set)
@@ -92,7 +73,7 @@ class TranscriptCredentialsModelTest(TransactionTestCase):
         new_keys_set = ['new-fernet-key']
 
         # Invalidate cached properties so that we get the latest keys
-        self.invalidate_fernet_cached_properties()
+        invalidate_fernet_cached_properties(TranscriptCredentials, ['api_key', 'api_secret'])
 
         with override_settings(FERNET_KEYS=new_keys_set):
             self.assertEqual(settings.FERNET_KEYS, new_keys_set)

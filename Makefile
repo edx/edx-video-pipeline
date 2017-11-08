@@ -1,5 +1,5 @@
-PEP8_THRESHOLD=46
-PYLINT_THRESHOLD=761
+PEP8_THRESHOLD=45
+PYLINT_THRESHOLD=760
 
 production-requirements:
 	pip install -r requirements.txt
