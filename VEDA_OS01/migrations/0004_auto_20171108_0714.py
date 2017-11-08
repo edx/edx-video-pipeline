@@ -10,7 +10,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('VEDA_OS01', '0003_auto_20171019_1317'),
+        ('VEDA_OS01', '0003_auto_20171024_2003'),
     ]
 
     operations = [
