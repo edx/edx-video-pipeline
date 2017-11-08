@@ -31,10 +31,10 @@ debug: false
 
 # JWT AUTH settings
 JWT_AUTH:
-    JWT_SECRET_KEY':
-    JWT_ISSUER':
-    JWT_AUDIENCE':
-    JWT_VERIFY_AUDIENCE':
+    JWT_SECRET_KEY:
+    JWT_ISSUER:
+    JWT_AUDIENCE:
+    JWT_VERIFY_AUDIENCE:
 
 # ---
 # AWS Buckets, Prefixes
