@@ -215,6 +215,7 @@ class VideoProto():
         self.resolution = None
         self.veda_id = kwargs.get('veda_id', None)
         self.val_id = kwargs.get('val_id', None)
+        self.hash_sum = None
 
 
 class Metadata():
@@ -243,6 +244,10 @@ class Metadata():
         ***
         """
         self.video_proto.filesize = os.stat(self.full_filename).st_size
+
+        self.video_proto.hash_sum = hashlib.md5(
+            open(self.full_filename, 'rb').read()
+        ).hexdigest()
 
         ff_command = ' '.join((
             FFPROBE,
