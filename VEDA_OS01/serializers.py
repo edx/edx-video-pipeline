@@ -186,7 +186,6 @@ class EncodeSerializer(serializers.ModelSerializer):
             'encode_bitdepth',
             'encode_resolution',
             'product_spec',
-            'xuetang_proc',
         )
 
 
@@ -204,8 +203,6 @@ class URLSerializer(serializers.ModelSerializer):
             'encode_bitdepth',
             'encode_size',
             'val_input',
-            'xuetang_input',
-            'md5_sum',
         )
 
     def create(self, validated_data):

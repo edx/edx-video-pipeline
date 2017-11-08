@@ -136,8 +136,6 @@ sg_script_key:
 # Endpoints
 # ---
 threeplay_ftphost:
-xuetang_api_url:
-xuetang_api_shared_secret:
 
 ## Encoding Config
 ffmpeg_compiled: "ffmpeg"
