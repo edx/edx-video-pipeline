@@ -116,10 +116,13 @@ class VedaDelivery:
         u1.encode_duration = self.video_proto.duration
         u1.encode_bitdepth = self.video_proto.bitrate
         u1.encode_size = self.video_proto.filesize
+        u1.md5_sum = self.video_proto.hash_sum
         u1.save()
 
         self.status = self._DETERMINE_STATUS()
+
         self._UPDATE_DATA()
+
         self._CLEANUP()
 
         # Transcription Process
@@ -608,3 +611,11 @@ class VedaDelivery:
             encode_profile=self.encode_profile
         )
         DY.upload()
+
+
+def main():
+    pass
+
+
+if __name__ == '__main__':
+    sys.exit(main())
