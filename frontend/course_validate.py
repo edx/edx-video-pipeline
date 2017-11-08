@@ -267,7 +267,6 @@ class VEDACat():
                     setattr(c1, 'tp_proc', False)
 
         """Always Set"""
-        setattr(c1, 'xue', True)
         setattr(c1, 'course_hold', True)  # Remember, this is reversed
 
         # Semester

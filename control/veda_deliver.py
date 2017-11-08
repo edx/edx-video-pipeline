@@ -361,8 +361,7 @@ class VedaDelivery:
 
         For now, old style workflow with checks and deletes at end
         """
-        if self.video_query.inst_class.s3_proc is False and \
-                self.video_query.inst_class.mobile_override is False:
+        if not self.video_query.inst_class.s3_proc:
             return False
 
         if self.video_proto.filesize < self.auth_dict['multi_upload_barrier']:
