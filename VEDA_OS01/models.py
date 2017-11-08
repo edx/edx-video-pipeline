@@ -378,7 +378,6 @@ class Course(models.Model):
         max_length=5000,
         null=True, blank=True
     )
-    xuetang_proc = models.BooleanField('Submit to XuetangX', default=True)
     sg_projID = models.IntegerField('Shotgun Project ID', default=0)
     studio_hex = models.CharField(
         'Studio Hex ID',
@@ -578,7 +577,6 @@ class Encode(models.Model):
         'VAL Profile Name',
         max_length=300,
         null=True, blank=True)
-    xuetang_proc = models.BooleanField('Submit to XuetangX', default=False)
 
     def __unicode__(self):
         return u'{encode_profile}'.format(encode_profile=self.encode_name)
@@ -600,8 +598,6 @@ class URL(models.Model):
     )
     encode_size = models.IntegerField('File Size (bytes)', default="0", null=True, blank=True)
     val_input = models.BooleanField('Inputted to EDX-VAL?', default=False)
-    xuetang_input = models.BooleanField('Inputted to XuetangX?', default=False)
-    md5_sum = models.CharField('MD5 Sum', max_length=100, null=True, blank=True)
 
     class Meta:
         get_latest_by = 'url_date'
