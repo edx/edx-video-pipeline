@@ -8,6 +8,7 @@ import datetime
 import logging
 import shutil
 from os.path import expanduser
+import sys
 
 import boto
 import boto.s3
@@ -35,6 +36,9 @@ except ImportError:
     from veda_deliver_3play import ThreePlayMediaClient
 
 LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
 try:
     boto.config.add_section('Boto')
 except:
@@ -66,6 +70,7 @@ class VedaDelivery:
         Check the destination, route via available methods,
         throw error if method is not extant
         """
+        LOGGER.info('[VIDEO_DELIVER] {video_id} : {encode}'.format(video_id=self.veda_id, encode=self.encode_profile))
         if self.encode_profile == 'hls':
             # HLS encodes are a pass through
             self.hls_run()

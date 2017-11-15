@@ -34,7 +34,7 @@ class HealCli:
                       .replace(hour=0, minute=0, second=0, microsecond=0) \
                       .astimezone(pytz.utc) + timedelta(days=1)
 
-        maintainer_healer.apply_async((self.binscript,), queue='transcode_stat', eta=go_time)
+        maintainer_healer.apply_async((self.binscript,), queue=auth_dict['celery_heal_queue'], eta=go_time)
 
 
 def main():
