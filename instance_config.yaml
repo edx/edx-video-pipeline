@@ -24,11 +24,6 @@ SECRET_KEY: ""
 # Fernet keys
 FERNET_KEYS: []
 
-# Django DEBUG global
-# (set to false in prod)
-debug: false
-
-
 # JWT AUTH settings
 JWT_AUTH:
     JWT_SECRET_KEY:
@@ -57,7 +52,6 @@ veda_s3_upload_bucket:
 veda_s3_hotstore_bucket:
 veda_deliverable_bucket:
 # Settings
-multi_upload_barrier: 2000000000
 veda_base_url:
 s3_base_url: https://s3.amazonaws.com
 
@@ -111,15 +105,6 @@ val_username:
 val_transcript_create_url:
 val_video_transcript_status_url:
 
-# ---
-# Celery Info
-# ---
-celery_app_name: veda_production
-# can do multiple queues like so: foo,bar,baz
-celery_worker_queue: encode_worker
-celery_deliver_queue: deliver_worker
-celery_threads: 1
-
 
 rabbitmq_broker:
 rabbitmq_pass:
@@ -136,66 +121,3 @@ sg_script_key:
 # Endpoints
 # ---
 threeplay_ftphost:
-
-## Encoding Config
-ffmpeg_compiled: "ffmpeg"
-ffprobe_compiled: "ffprobe"
-target_aspect_ratio: 1.7777778
-
-# ----------
-##---
-# This is a list of encodes and their respective course
-# boolean matches
-encode_dict:
-    review_proc:
-        - review
-    mobile_override:
-        - override
-    s3_proc:
-        - mobile_high
-        - mobile_low
-        - audio_mp3
-        - desktop_webm
-        - desktop_mp4
-        - hls
-
-    yt_proc:
-        - youtube
-
-##---
-# This is a list of encode profiles and their val profile matches
-# boolean matches
-val_profile_dict:
-    mobile_low:
-        - mobile_low
-
-    desktop_mp4:
-        - desktop_mp4
-
-    override:
-        - desktop_mp4
-        - mobile_low
-        - mobile_high
-
-    mobile_high:
-        - mobile_high
-
-    audio_mp3:
-        - audio_mp3
-
-    desktop_webm:
-        - desktop_webm
-
-    youtube:
-        - youtube
-    review:
-    hls:
-        - hls
-
-#--
-# Heal settings
-heal_start: 1
-heal_end: 144
-global_timeout: 40
-
-...

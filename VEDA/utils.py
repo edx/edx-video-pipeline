@@ -8,8 +8,9 @@ import yaml
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
-DEFAULT_CONFIG_FILE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CONFIG_FILE_NAME = 'instance_config.yaml'
+STATIC_CONFIG_FILE_PATH = os.path.join(CONFIG_ROOT_DIR, 'static_config.yaml')
 
 
 def extract_course_org(course_id):
@@ -61,14 +62,18 @@ def get_config(yaml_config_file=DEFAULT_CONFIG_FILE_NAME):
         yaml_config_file = os.environ['VIDEO_PIPELINE_CFG']
     except KeyError:
         yaml_config_file = os.path.join(
-            DEFAULT_CONFIG_FILE_PATH,
+            CONFIG_ROOT_DIR,
             yaml_config_file
         )
 
     with open(yaml_config_file, 'r') as config:
         config_dict = yaml.load(config)
 
-    return config_dict
+    # read static config file
+    with open(STATIC_CONFIG_FILE_PATH, 'r') as config:
+        static_config_dict = yaml.load(config)
+
+    return dict(config_dict, **static_config_dict)
 
 
 def scrub_query_params(url, params_to_scrub):
