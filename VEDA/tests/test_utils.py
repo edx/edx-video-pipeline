@@ -19,6 +19,13 @@ TEST_CONFIG = {
     }
 }
 
+TEST_STATIC_CONFIG = {
+    'abc': 999,
+    'nested': {
+        'nested_url': 'nested.example.com'
+    }
+}
+
 
 @ddt
 class UtilTests(TestCase):
@@ -30,6 +37,8 @@ class UtilTests(TestCase):
         Tests setup.
         """
         self._orig_environ = dict(os.environ)
+
+        # create a temporary default config file
         _, self.file_path = tempfile.mkstemp(
             suffix='.yml',
             dir=tempfile.tempdir
@@ -39,6 +48,14 @@ class UtilTests(TestCase):
 
         os.environ['VIDEO_PIPELINE_CFG'] = self.file_path
 
+        # create a temporary static config file
+        _, self.static_file_path = tempfile.mkstemp(
+            suffix='.yml',
+            dir=tempfile.tempdir
+        )
+        with open(self.static_file_path, 'w') as outfile:
+            yaml.dump(TEST_STATIC_CONFIG, outfile, default_flow_style=False)
+
     def tearDown(self):
         """
         Reverse the setup
@@ -46,6 +63,10 @@ class UtilTests(TestCase):
         # Reset Environment back to original state
         os.environ.clear()
         os.environ.update(self._orig_environ)
+
+        # remove temporary files
+        os.remove(self.file_path)
+        os.remove(self.static_file_path)
 
     @data(
         {
@@ -132,21 +153,30 @@ class UtilTests(TestCase):
         instance_config = utils.get_config()
         self.assertNotEqual(instance_config, {})
 
-        # read the default config file to verify that correct config is loaded
+        # read the default config file
         default_yaml_config_file = os.path.join(
-            utils.DEFAULT_CONFIG_FILE_PATH,
+            utils.CONFIG_ROOT_DIR,
             utils.DEFAULT_CONFIG_FILE_NAME
         )
         with open(default_yaml_config_file, 'r') as config:
             config_dict = yaml.load(config)
-            self.assertDictEqual(instance_config, config_dict)
+
+        # read the default static config file
+        with open(utils.STATIC_CONFIG_FILE_PATH, 'r') as config:
+            static_config_dict = yaml.load(config)
+
+        self.assertDictEqual(
+            instance_config,
+            dict(config_dict, **static_config_dict)
+        )
 
     def test_get_config_with_path(self):
         """
         Tests that utils.get_config works as expected when reading config from environment path.
         """
-        instance_config = utils.get_config()
-        self.assertDictEqual(instance_config, TEST_CONFIG)
+        with patch('VEDA.utils.STATIC_CONFIG_FILE_PATH', self.static_file_path):
+            instance_config = utils.get_config()
+        self.assertDictEqual(instance_config, dict(TEST_CONFIG, **TEST_STATIC_CONFIG))
 
     @data(
         {
