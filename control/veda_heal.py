@@ -21,7 +21,6 @@ from VEDA_OS01.models import Encode, URL, Video
 from VEDA_OS01.utils import VAL_TRANSCRIPT_STATUS_MAP
 
 import celeryapp
-from control_env import WORK_DIRECTORY
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
 from VEDA.utils import get_config
@@ -218,26 +217,10 @@ class VedaHeal(object):
                     return True
         return False
 
-    def purge(self):
-        """
-        Purge Work Directory
-
-        """
-        for file in os.listdir(WORK_DIRECTORY):
-            full_filepath = os.path.join(WORK_DIRECTORY, file)
-            filetime = datetime.datetime.utcfromtimestamp(
-                os.path.getmtime(
-                    full_filepath
-                )
-            ).replace(tzinfo=utc)
-            if filetime < time_safetygap:
-                print file + " : WORK PURGE"
-                os.remove(full_filepath)
-
 
 def main():
-    VH = VedaHeal()
-    VH.discovery()
+    heal_instance = VedaHeal()
+    heal_instance.discovery()
 
 if __name__ == '__main__':
     sys.exit(main())

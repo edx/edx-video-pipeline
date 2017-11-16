@@ -81,29 +81,27 @@ def main():
     print '%s - %s: %s' % ('Healing', 'Course', course_id)
 
     if veda_id is None and course_id is None and schedule is False:
-        VH = VedaHeal()
-        VH.discovery()
-        VH.purge()
-
+        heal_instance = VedaHeal()
+        heal_instance.discovery()
         # Kicks off a round of retrieving successful
         # translations from 3Play Media
         retrieve_three_play_translations()
 
-        HC = HealCli()
-        HC.schedule()
+        heal_cli = HealCli()
+        heal_cli.schedule()
         return None
 
     if veda_id is not None:
-        VH = VedaHeal(
+        heal_instance = VedaHeal(
             video_query=Video.objects.filter(
                 edx_id=veda_id.strip()
                 )
             )
-        VH.send_encodes()
+        heal_instance.send_encodes()
         return None
 
     if course_id is not None:
-        VH = VedaHeal(
+        heal_instance = VedaHeal(
             video_query=Video.objects.filter(
                 inst_class=Course.objects.filter(
                     institution=course_id[0:3],
@@ -111,15 +109,15 @@ def main():
                     )
                 )
             )
-        VH.send_encodes()
+        heal_instance.send_encodes()
         return None
 
     # TODO: Data backup
     # TODO: API key purge
 
     if schedule is True:
-        HC = HealCli()
-        HC.schedule()
+        heal_cli = HealCli()
+        heal_cli.schedule()
         return None
 
 

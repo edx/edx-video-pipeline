@@ -40,7 +40,7 @@ class FileDiscovery(object):
         self.video_info = {}
         self.auth_dict = get_config()
         self.bucket = None
-        self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
+        self.node_work_directory = kwargs.get('node_work_directory', INGEST_WORK_DIR)
 
     def about_video_ingest(self):
         """

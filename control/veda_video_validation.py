@@ -112,14 +112,3 @@ class Validation(object):
             return True
         else:
             return False
-
-
-def main():
-    pass
-    # V = Validation(videofile='/Users/ernst/VEDA_WORKING/fecf210f-0e94-4627-8ac3-46c2338e5897.mp4')
-    # print V.validate()
-    # # def __init__(self, videofile, **kwargs):
-
-
-if __name__ == '__main__':
-    sys.exit(main())

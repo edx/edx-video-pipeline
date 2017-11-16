@@ -1,20 +1,3 @@
-import logging
-import os
-import sys
-import subprocess
-import datetime
-from datetime import timedelta
-import time
-import fnmatch
-import django
-from django.db.utils import DatabaseError
-from django.utils.timezone import utc
-from django.db import reset_queries
-import uuid
-import hashlib
-from VEDA.utils import get_config
-
-
 """
 Discovered file ingest/insert/job triggering
 
@@ -23,40 +6,47 @@ Local Files, Migrated files are eliminated
 This just takes discovered
     - About Vids
     - Studio Uploads
-    - FTP Uploads
-"""
-from control_env import *
-from veda_hotstore import Hotstore
-from veda_video_validation import Validation
-from veda_utils import ErrorObject, Output, Report
-from veda_val import VALAPICall
-from veda_encode import VedaEncode
-import celeryapp
 
+    V = VideoProto(
+        s3_filename=edx_filename,
+        client_title=client_title,
+        file_extension=file_extension,
+        platform_course_url=platform_course_url
+        )
+
+    I = VedaIngest(
+        course_id=course_query[0],
+        video_proto=V
+        )
+    I.insert()
+
+    if I.complete is False:
+        return None
+
+"""
+
+import datetime
+import logging
+import os
+import subprocess
+import uuid
+
+from django.db.utils import DatabaseError
+
+import celeryapp
+from control_env import *
+from VEDA.utils import get_config
+from veda_encode import VedaEncode
+from veda_hotstore import Hotstore
 from VEDA_OS01.models import TranscriptStatus
+from veda_utils import ErrorObject, Report
+from veda_val import VALAPICall
+from veda_video_validation import Validation
 
 LOGGER = logging.getLogger(__name__)
 
-'''
-V = VideoProto(
-    s3_filename=edx_filename,
-    client_title=client_title,
-    file_extension=file_extension,
-    platform_course_url=platform_course_url
-    )
 
-I = VedaIngest(
-    course_id=course_query[0],
-    video_proto=V
-    )
-I.insert()
-
-if I.complete is False:
-    return None
-'''
-
-
-class VideoProto():
+class VideoProto(object):
 
     def __init__(self, **kwargs):
         self.s3_filename = kwargs.get('s3_filename', None)
@@ -81,9 +71,10 @@ class VideoProto():
         self.bitrate = None
         self.resolution = None
         self.veda_id = None
+        self.encode_list = None
 
 
-class VedaIngest:
+class VedaIngest(object):
 
     def __init__(self, course_object, video_proto, **kwargs):
         self.course_object = course_object
@@ -91,7 +82,7 @@ class VedaIngest:
         self.auth_dict = get_config()
 
         # --- #
-        self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
+        self.node_work_directory = kwargs.get('node_work_directory', INGEST_WORK_DIR)
         self.full_filename = kwargs.get('full_filename', None)
         self.complete = False
         self.archived = False
@@ -174,7 +165,7 @@ class VedaIngest:
             video_trans_status='Queue'
         )
 
-    def _METADATA(self):
+    def _video_metadata(self):
         """
         use st filesize for filesize
         Use "ffprobe" for other metadata
@@ -256,7 +247,7 @@ class VedaIngest:
         self.video_proto.valid = VV.validate()
 
         if self.video_proto.valid is True:
-            self._METADATA()
+            self._video_metadata()
         """
         DB Inserts
         """
@@ -438,21 +429,3 @@ class VedaIngest:
             upload_filepath=self.full_filename
         )
         return H1.upload()
-
-
-def main():
-    """
-    VP = VideoProto()
-    VI = VedaIngest(
-        course_object='Mock',
-        video_proto=VP,
-        full_filename='/Users/gregmartin/Downloads/MIT15662T115-V016800.mov'
-    )
-    VI._METADATA()
-    print VI.video_proto.resolution
-    """
-    pass
-
-
-if __name__ == "__main__":
-    sys.exit(main())

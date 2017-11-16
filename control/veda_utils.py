@@ -227,7 +227,7 @@ class Metadata():
         )
         self.node_work_directory = kwargs.get(
             'node_work_directory',
-            WORK_DIRECTORY
+            DELIVER_WORK_DIR
         )
         self.full_filename = kwargs.get(
             'full_filename',

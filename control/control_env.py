@@ -29,13 +29,20 @@ from VEDA_OS01.models import VedaUpload
 """
 Central Config
 """
-WORK_DIRECTORY = os.path.join(
+DELIVER_WORK_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    'VEDA_WORKING'
+    'veda_temp_deliver_data'
+)
+INGEST_WORK_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    'veda_temp_ingest_data'
 )
 
-if not os.path.exists(WORK_DIRECTORY):
-    os.mkdir(WORK_DIRECTORY)
+if not os.path.exists(DELIVER_WORK_DIR):
+    os.mkdir(DELIVER_WORK_DIR)
+
+if not os.path.exists(INGEST_WORK_DIR):
+    os.mkdir(INGEST_WORK_DIR)
 
 """
 Occasionally this throws an error in the env,
