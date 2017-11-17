@@ -2,11 +2,12 @@
 # This configuration should only have static settings.
 
 # Celery Info
-celery_app_name: veda_production
-# can do multiple queues like so: foo,bar,baz
-celery_worker_queue: encode_worker
-celery_deliver_queue: deliver_worker
+onsite_worker: False
 celery_threads: 1
+celery_app_name: veda_production
+celery_worker_queue: encode_worker,large_encode_worker
+celery_deliver_queue: deliver_worker
+celery_heal_queue: heal_queue
 
 # S3 upload settings
 multi_upload_barrier: 2000000000

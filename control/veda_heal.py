@@ -9,6 +9,7 @@ Roll through videos, check for completion
 """
 import datetime
 from datetime import timedelta
+import logging
 import os
 import sys
 import uuid
@@ -26,6 +27,10 @@ from veda_val import VALAPICall
 from VEDA.utils import get_config
 
 time_safetygap = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=1)
+
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 class VedaHeal(object):
@@ -87,6 +92,7 @@ class VedaHeal(object):
         """
         Determine expected and completed encodes
         """
+        LOGGER.info('[HEAL] : {id}'.format(id=video_object.edx_id))
         if self.freezing_bug is True:
             if video_object.video_trans_status == 'Corrupt File':
                 return []
@@ -116,8 +122,11 @@ class VedaHeal(object):
         except KeyError:
             pass
 
-        # list comparison
-        return self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
+        requeued_encodes = self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
+        LOGGER.info(
+            '[HEAL] : Status: {status}, Encodes: {encodes}'.format(status=self.val_status, encodes=requeued_encodes)
+        )
+        return requeued_encodes
 
     def differentiate_encodes(self, uncompleted_encodes, expected_encodes, video_object):
         """
