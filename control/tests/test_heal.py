@@ -125,7 +125,7 @@ class HealTests(TestCase):
             'video_active': True,
         },
         {
-            'edx_id': '1',
+            'edx_id': '2',
             'video_trans_status': 'Complete',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': False,

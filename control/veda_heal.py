@@ -85,7 +85,7 @@ class VedaHeal(object):
                     jobid = uuid.uuid1().hex[0:10]
                     celeryapp.worker_task_fire.apply_async(
                         (veda_id, encode_profile, jobid),
-                        queue=self.auth_dict['celery_worker_queue']
+                        queue=self.auth_dict['celery_worker_queue'].split(',')[0]
                     )
 
     def determine_fault(self, video_object):
@@ -95,15 +95,15 @@ class VedaHeal(object):
         LOGGER.info('[HEAL] : {id}'.format(id=video_object.edx_id))
         if self.freezing_bug is True:
             if video_object.video_trans_status == 'Corrupt File':
+                self.val_status = 'file_corrupt'
                 return []
 
-        if video_object.video_trans_status == 'Review Reject':
+        if video_object.video_trans_status == 'Review Reject' or video_object.video_trans_status == 'Review Hold' or \
+            video_object.video_trans_status == 'Review Hold':
             return []
 
-        if video_object.video_trans_status == 'Review Hold':
-            return []
-
-        if video_object.video_active is False:
+        if video_object.video_trans_status == 'Youtube Duplicate':
+            self.val_status = 'duplicate'
             return []
 
         """
