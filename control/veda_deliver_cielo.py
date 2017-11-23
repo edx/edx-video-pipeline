@@ -117,13 +117,13 @@ class Cielo24Transcript(object):
         """
         Request cielo24 to generate transcripts for a video.
         """
-        callback_url = build_url(
+        callback_url = '{}?job_id={}&iwp_name={}&lang_code={}&org={}&video_id={}'.format(
             self.callback_base_url,
-            job_id=job_id,
-            iwp_name='{iwp_name}',
-            lang_code=lang_code,
-            org=self.org,
-            video_id=self.video.studio_id
+            job_id,
+            '{iwp_name}',
+            lang_code,
+            self.org,
+            self.video.studio_id
         )
 
         perform_transcript_url = build_url(
@@ -136,7 +136,7 @@ class Cielo24Transcript(object):
             api_token=self.api_key,
             priority=self.turnaround,
             transcription_fidelity=self.fidelity,
-            options=json.dumps({"return_iwp": ["FINAL"]})
+            options=json.dumps({"return_iwp":["FINAL"]})
         )
         response = requests.get(perform_transcript_url)
 
