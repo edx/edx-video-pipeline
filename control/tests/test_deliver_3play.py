@@ -53,7 +53,7 @@ class ThreePlayMediaClientTests(TestCase):
             'media_url': u'https://s3.amazonaws.com/bkt/video.mp4',
             'api_key': u'insecure_api_key',
             'api_secret': u'insecure_api_secret',
-            'turnaround_level': ThreePlayTurnaround.DEFAULT,
+            'turnaround_level': ThreePlayTurnaround.STANDARD,
             'callback_url': build_url(
                 u'https://veda.edx.org/3playmedia/transcripts/handle/123123',
                 org=u'MAx',

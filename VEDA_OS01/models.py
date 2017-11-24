@@ -85,18 +85,20 @@ class ThreePlayTurnaround(object):
     Turnaround Enumeration.
     Its the time taken by 3PlayMedia transcription process.
     """
-    EXTENDED_SERVICE = 'extended_service'
-    DEFAULT = 'default'
-    EXPEDITED_SERVICE = 'expedited_service'
-    RUSH_SERVICE = 'rush_service'
-    SAME_DAY_SERVICE = 'same_day_service'
+    EXTENDED = 'extended'
+    STANDARD = 'standard'
+    EXPEDITED = 'expedited'
+    RUSH = 'rush'
+    SAME_DAY = 'same_day'
+    TWO_HOUR = 'two_hour'
 
     CHOICES = (
-        (EXTENDED_SERVICE, '10-Day/Extended'),
-        (DEFAULT, '4-Day/Default'),
-        (EXPEDITED_SERVICE, '2-Day/Expedited'),
-        (RUSH_SERVICE, '24 hour/Rush'),
-        (SAME_DAY_SERVICE, 'Same Day'),
+        (EXTENDED, '10-Day/Extended'),
+        (STANDARD, '4-Day/Standard'),
+        (EXPEDITED, '2-Day/Expedited'),
+        (RUSH, '24 hour/Rush'),
+        (SAME_DAY, 'Same Day'),
+        (TWO_HOUR, '2 Hour'),
     )
 
 
