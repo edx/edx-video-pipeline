@@ -19,7 +19,7 @@
       "encode_filetype": "mp4",
       "encode_bitdepth": "27",
       "encode_resolution": "720",
-      "product_spec": "desktop_mp4",
+      "product_spec": "desktop_mp4"
     }
   },
   {
@@ -33,7 +33,7 @@
       "encode_filetype": "HLS",
       "encode_bitdepth": "0",
       "encode_resolution": "0",
-      "product_spec": "hls",
+      "product_spec": "hls"
     }
   },
   {
@@ -47,7 +47,7 @@
       "encode_filetype": "mp4",
       "encode_bitdepth": "27",
       "encode_resolution": "360",
-      "product_spec": "mobile_low",
+      "product_spec": "mobile_low"
     }
   },
   {
