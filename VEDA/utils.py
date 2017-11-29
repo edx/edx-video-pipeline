@@ -90,7 +90,7 @@ def scrub_query_params(url, params_to_scrub):
     >>> old_url = https://sandbox.veda.com/api/do?api_token=veda_api_key&job_name=12345&language=en&v=1
     >>> new_url = https://sandbox.veda.com/api/do?v=1&job_name=12345&language=en&api_token=XXXXXXXXXXXX
     """
-    parsed = urlparse.urlparse(urllib.unquote(url))
+    parsed = urlparse.urlparse(url)
 
     # query_params will be in the form of [('v', '1'), ('job_name', '12345')]
     query_params = urlparse.parse_qsl(parsed.query)
