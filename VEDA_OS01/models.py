@@ -398,6 +398,22 @@ class Course(TimeStampedModel):
 
         return org
 
+    @property
+    def course_runs(self):
+        """
+        Returns the studio course runs associated with this course. Ideally, there should be one entry
+        in this Model for all the course runs in Studio.
+        """
+        course_runs = []
+        if self.local_storedir:
+            course_runs = [
+                course_id.strip()
+                for course_id in self.local_storedir.split(',')
+                if course_id
+            ]
+
+        return course_runs
+
     def __unicode__(self):
         return u'{institution} {edx_class_id} {course_name}'.format(
             institution=self.institution,
