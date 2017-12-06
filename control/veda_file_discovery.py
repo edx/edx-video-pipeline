@@ -186,6 +186,7 @@ class FileDiscovery(object):
                     institution=course_key.org,
                     edx_classid=course_key.course,
                     local_storedir=course_id,
+                    yt_proc=False,
                 )
         else:
             try:
