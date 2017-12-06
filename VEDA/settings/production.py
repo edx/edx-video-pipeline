@@ -10,7 +10,7 @@ TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['*']
 
-LOGGING = get_logger_config()
+LOGGING = get_logger_config(debug=True)
 
 # Keep track of the names of settings that represent dicts. Instead of overriding the values in base.py,
 # the values read from disk should UPDATE the pre-configured dicts.

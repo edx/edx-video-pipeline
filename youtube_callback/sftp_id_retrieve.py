@@ -10,6 +10,7 @@ import sys
 import xml.etree.ElementTree as ET
 from datetime import timedelta
 from os.path import expanduser
+from paramiko.ssh_exception import AuthenticationException
 
 import django
 import pysftp
@@ -73,17 +74,19 @@ def xml_downloader(course):
 
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None
-
-    with pysftp.Connection(
-        'partnerupload.google.com',
-        username=course.yt_logon,
-        private_key=private_key,
-        port=19321,
-        cnopts=cnopts
-    ) as s1:
-        s1.timeout = 60.0
-        for d in s1.listdir_attr():
-            crawl_sftp(d=d, s1=s1)
+    try:
+        with pysftp.Connection(
+            'partnerupload.google.com',
+            username=course.yt_logon,
+            private_key=private_key,
+            port=19321,
+            cnopts=cnopts
+        ) as s1:
+            s1.timeout = 60.0
+            for d in s1.listdir_attr():
+                crawl_sftp(d=d, s1=s1)
+    except AuthenticationException:
+        print "{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid)
 
 
 def crawl_sftp(d, s1):

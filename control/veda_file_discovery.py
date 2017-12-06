@@ -186,6 +186,7 @@ class FileDiscovery(object):
                     institution=course_key.org,
                     edx_classid=course_key.course,
                     local_storedir=course_id,
+                    yt_proc=False,
                 )
         else:
             try:
@@ -249,7 +250,8 @@ class FileDiscovery(object):
                 connection = boto.connect_s3()
                 self.bucket = connection.get_bucket(self.auth_dict['edx_s3_ingest_bucket'])
                 for video_s3_key in self.bucket.list(self.auth_dict['edx_s3_ingest_prefix'], '/'):
-                    self.validate_metadata_and_feed_to_ingest(video_s3_key=self.bucket.get_key(video_s3_key.name))
+                    if video_s3_key.name != 'prod-edx/unprocessed/':
+                        self.validate_metadata_and_feed_to_ingest(video_s3_key=self.bucket.get_key(video_s3_key.name))
             except S3ResponseError:
                 ErrorObject.print_error(message='[File Ingest] S3 Ingest Connection Failure')
             except NoAuthHandlerFound:
