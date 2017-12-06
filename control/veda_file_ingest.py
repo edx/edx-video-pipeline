@@ -162,7 +162,7 @@ class VedaIngest:
             jobid = uuid.uuid1().hex[0:10]
             celeryapp.worker_task_fire.apply_async(
                 (veda_id, encode_profile, jobid),
-                queue=self.auth_dict['celery_worker_queue']
+                queue=self.auth_dict['celery_worker_queue'].split(',')[0]
             )
 
         """

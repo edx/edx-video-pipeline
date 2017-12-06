@@ -1,36 +1,35 @@
-
-import json
-import logging
-import boto
-import boto.s3
-from boto.exception import S3ResponseError, S3DataError
-
-from opaque_keys import InvalidKeyError
-from opaque_keys.edx.keys import CourseKey
-
-from VEDA.utils import extract_course_org, get_config
-from VEDA_OS01.models import TranscriptCredentials
-
-try:
-    boto.config.add_section('Boto')
-except:
-    pass
-boto.config.set('Boto', 'http_socket_timeout', '100')
-
 """
 multi-point videofile discovery
 Currently:
-    FTP
     Amazon S3 (studio-ingest as well as about/marketing
         video ingest
         )
     Local (watchfolder w/o edit priv.)
 
 """
+
+import json
+import logging
+import os.path
+
+import boto
+import boto.s3
+from boto.exception import NoAuthHandlerFound, S3DataError, S3ResponseError
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
+
 from control_env import *
+from VEDA.utils import extract_course_org, get_config
+from veda_file_ingest import VedaIngest, VideoProto
+from VEDA_OS01.models import TranscriptCredentials
 from veda_utils import ErrorObject
-from veda_file_ingest import VideoProto, VedaIngest
 from veda_val import VALAPICall
+
+try:
+    boto.config.add_section('Boto')
+except:
+    pass
+boto.config.set('Boto', 'http_socket_timeout', '100')
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,18 +38,8 @@ class FileDiscovery(object):
 
     def __init__(self, **kwargs):
         self.video_info = {}
-
         self.auth_dict = get_config()
-
         self.bucket = None
-        """
-        FTP Server Vars
-        """
-        self.ftp_key = None
-        self.ftp_follow_delay = str(5000)
-        self.ftp_log = "/Users/Shared/edX1/LG/Transfers.log"
-        self.wfm_log = "/Users/Shared/edX1/LG/WFM.log"
-        self.ftp_faillog = "/Users/Shared/edX1/LG/FailedTransfers.log"
         self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
 
     def about_video_ingest(self):
@@ -58,12 +47,13 @@ class FileDiscovery(object):
         Crawl VEDA Upload bucket
         """
         if self.node_work_directory is None:
-            ErrorObject().print_error(
-                message='No Workdir'
-            )
+            print '[Discovery Error] No Workdir'
             return
-        conn = boto.connect_s3()
-
+        try:
+            conn = boto.connect_s3()
+        except NoAuthHandlerFound:
+            print '[Discovery Error] BOTO Auth Handler'
+            return
         try:
             self.bucket = conn.get_bucket(self.auth_dict['veda_s3_upload_bucket'])
         except S3ResponseError:
@@ -217,7 +207,6 @@ class FileDiscovery(object):
         """
         if len(file_extension) == 3:
             file_name = u'{file_name}.{ext}'.format(file_name=file_name, ext=file_extension)
-
         try:
             key.get_contents_to_filename(os.path.join(self.node_work_directory, file_name))
             file_ingested = True
@@ -263,6 +252,8 @@ class FileDiscovery(object):
                     self.validate_metadata_and_feed_to_ingest(video_s3_key=self.bucket.get_key(video_s3_key.name))
             except S3ResponseError:
                 ErrorObject.print_error(message='[File Ingest] S3 Ingest Connection Failure')
+            except NoAuthHandlerFound:
+                ErrorObject.print_error(message='[Discovery Error] BOTO Auth Handler')
         else:
             ErrorObject.print_error(message='[File Ingest] No Working Node directory')
 

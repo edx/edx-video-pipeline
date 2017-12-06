@@ -3,16 +3,23 @@ Check SFTP dropboxes for YT Video ID XML information
 
 """
 import datetime
-from datetime import timedelta
-import django
-from django.utils.timezone import utc
 import fnmatch
 import os
-from os.path import expanduser
-import pysftp
 import shutil
 import sys
 import xml.etree.ElementTree as ET
+from datetime import timedelta
+from os.path import expanduser
+
+import django
+import pysftp
+from django.utils.timezone import utc
+
+from control.veda_utils import ErrorObject, Metadata, VideoProto
+from control.veda_val import VALAPICall
+from frontend.abvid_reporting import report_status
+from VEDA_OS01.models import URL, Encode, Video
+from youtube_callback.daemon import get_course
 
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
@@ -21,11 +28,6 @@ if project_path not in sys.path:
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 django.setup()
 
-from VEDA_OS01.models import Video, Encode, URL
-from frontend.abvid_reporting import report_status
-from control.veda_val import VALAPICall
-from control.veda_utils import ErrorObject, Metadata, VideoProto
-from youtube_callback.daemon import get_course
 
 """
 Defaults:
@@ -72,19 +74,16 @@ def xml_downloader(course):
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None
 
-    try:
-        with pysftp.Connection(
-            'partnerupload.google.com',
-            username=course.yt_logon,
-            private_key=private_key,
-            port=19321,
-            cnopts=cnopts
-        ) as s1:
-            for d in s1.listdir_attr():
-                crawl_sftp(d=d, s1=s1)
-    except:
-        ErrorObject.print_error("Failed Auth: Youtube SFTP")
-        return None
+    with pysftp.Connection(
+        'partnerupload.google.com',
+        username=course.yt_logon,
+        private_key=private_key,
+        port=19321,
+        cnopts=cnopts
+    ) as s1:
+        s1.timeout = 60.0
+        for d in s1.listdir_attr():
+            crawl_sftp(d=d, s1=s1)
 
 
 def crawl_sftp(d, s1):
@@ -284,30 +283,25 @@ def urlpatch(upload_data):
             return None
 
         if len(encode_list) == 0:
-            Video.objects.filter(
-                edx_id=upload_data['edx_id']
-            ).update(
-                video_trans_status='Complete'
-            )
+            Video.objects.filter(edx_id=upload_data['edx_id']).update(video_trans_status='Complete')
             val_status = 'file_complete'
-
         else:
             val_status = 'transcode_active'
 
-        VAC = VALAPICall(
+        ApiConn = VALAPICall(
             video_proto=video_proto,
             val_status=val_status,
             endpoint_url=upload_data['youtube_id'],
             encode_profile='youtube'
         )
-        VAC.call()
+        ApiConn.call()
 
     elif upload_data['status'] == 'Duplicate' and \
             upload_data['file_suffix'] == '100':
 
         url_query = URL.objects.filter(
             videoID=Video.objects.filter(
-                edx_id=test_id.edx_id
+                edx_id=upload_data['edx_id']
             ).latest(),
             encode_profile=Encode.objects.get(
                 encode_suffix=upload_data['file_suffix']
@@ -322,12 +316,7 @@ def urlpatch(upload_data):
                     youtube_id=''
                 )
 
-            Video.objects.filter(
-                edx_id=upload_data['edx_id']
-            ).update(
-                video_trans_status='Youtube Duplicate'
-            )
-
+            Video.objects.filter(edx_id=upload_data['edx_id']).update(video_trans_status='Youtube Duplicate')
             video_proto = VideoProto(
                 veda_id=test_id.edx_id,
                 val_id=test_id.studio_id,
@@ -336,11 +325,10 @@ def urlpatch(upload_data):
                 bitrate='0',
                 s3_filename=test_id.studio_id
             )
-
-            VAC = VALAPICall(
+            ApiConn = VALAPICall(
                 video_proto=video_proto,
                 val_status="duplicate",
                 endpoint_url="DUPLICATE",
                 encode_profile='youtube'
             )
-            VAC.call()
+            ApiConn.call()
