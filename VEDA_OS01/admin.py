@@ -151,6 +151,20 @@ class TranscriptProcessMetadataAdmin(admin.ModelAdmin):
     """
     Admin for TranscriptProcessMetadata model.
     """
+    raw_id_fields = ('video', )
+    list_display = ('get_video', 'provider', 'process_id', 'translation_id', 'lang_code', 'status')
+
+    def get_video(self, obj):
+        return u'"{studio_id}" - "{edx_id}"'.format(
+            studio_id=obj.video.studio_id,
+            edx_id=obj.video.edx_id
+        )
+
+    get_video.admin_order_field = 'video'
+    get_video.short_description = 'Transcript Video'
+
+    search_fields = ['video__edx_id', 'video__studio_id', 'process_id', 'translation_id']
+
     model = TranscriptProcessMetadata
 
 
