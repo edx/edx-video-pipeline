@@ -28,6 +28,8 @@ def get_logger_config(log_dir='/var/tmp',
     if local_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
         local_loglevel = 'INFO'
 
+    console_loglevel = 'DEBUG' if debug else 'INFO'
+
     hostname = platform.node().split(".")[0]
     syslog_format = (
         "[service_variant={service_variant}]"
@@ -39,10 +41,7 @@ def get_logger_config(log_dir='/var/tmp',
         logging_env=logging_env, hostname=hostname
     )
 
-    if debug:
-        handlers = ['console']
-    else:
-        handlers = ['local']
+    handlers = ['console', 'local']
 
     logger_config = {
         'version': 1,
@@ -62,7 +61,7 @@ def get_logger_config(log_dir='/var/tmp',
         },
         'handlers': {
             'console': {
-                'level': 'DEBUG' if debug else 'INFO',
+                'level': console_loglevel,
                 'class': 'logging.StreamHandler',
                 'formatter': 'standard',
                 'stream': sys.stdout,

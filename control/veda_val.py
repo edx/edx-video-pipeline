@@ -9,8 +9,6 @@ import datetime
 import yaml
 from VEDA.utils import get_config
 
-LOGGER = logging.getLogger(__name__)
-
 requests.packages.urllib3.disable_warnings()
 
 
@@ -35,6 +33,8 @@ Send data to VAL, either Video ID data or endpoint URLs
 '''
 from control_env import *
 from control.veda_utils import ErrorObject, Output
+
+LOGGER = logging.getLogger(__name__)
 
 
 class VALAPICall():
