@@ -733,9 +733,8 @@ class TranscriptProcessMetadata(TimeStampedModel):
         self.save()
 
     def __unicode__(self):
-        return u'{video} - {provider} - {lang} - {status}'.format(
+        return u'{video} - {provider} - {lang}'.format(
             video=self.video.edx_id,
             provider=self.provider,
-            lang=self.lang_code,
-            status=self.status,
+            lang=self.lang_code
         )

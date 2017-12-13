@@ -4,12 +4,14 @@ Check SFTP dropboxes for YT Video ID XML information
 """
 import datetime
 import fnmatch
+import logging
 import os
 import shutil
 import sys
 import xml.etree.ElementTree as ET
 from datetime import timedelta
 from os.path import expanduser
+from paramiko.ssh_exception import AuthenticationException
 
 import django
 import pysftp
@@ -28,6 +30,9 @@ if project_path not in sys.path:
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 django.setup()
 
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
 Defaults:
@@ -73,17 +78,19 @@ def xml_downloader(course):
 
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None
-
-    with pysftp.Connection(
-        'partnerupload.google.com',
-        username=course.yt_logon,
-        private_key=private_key,
-        port=19321,
-        cnopts=cnopts
-    ) as s1:
-        s1.timeout = 60.0
-        for d in s1.listdir_attr():
-            crawl_sftp(d=d, s1=s1)
+    try:
+        with pysftp.Connection(
+            'partnerupload.google.com',
+            username=course.yt_logon,
+            private_key=private_key,
+            port=19321,
+            cnopts=cnopts
+        ) as s1:
+            s1.timeout = 60.0
+            for d in s1.listdir_attr():
+                crawl_sftp(d=d, s1=s1)
+    except AuthenticationException:
+        LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
 
 
 def crawl_sftp(d, s1):

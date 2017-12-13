@@ -29,10 +29,8 @@ encode_dict:
     mobile_override:
         - override
     s3_proc:
-        - mobile_high
         - mobile_low
         - audio_mp3
-        - desktop_webm
         - desktop_mp4
         - hls
 
@@ -51,16 +49,9 @@ val_profile_dict:
     override:
         - desktop_mp4
         - mobile_low
-        - mobile_high
-
-    mobile_high:
-        - mobile_high
 
     audio_mp3:
         - audio_mp3
-
-    desktop_webm:
-        - desktop_webm
 
     youtube:
         - youtube
