@@ -7,6 +7,7 @@ import django
 
 from control_env import *
 from dependencies.shotgun_api3 import Shotgun
+from dependencies.shotgun_api3.lib.xmlrpclib import ProtocolError
 from VEDA.utils import get_config
 
 """
@@ -101,26 +102,31 @@ class VedaEncode(object):
                 continue
 
     def check_review_approved(self):
-        if self.sg_script_key is None:
-            return True
-
         """
         ** Mediateam only **
         Check in with SG to see if this video
         is authorized to go to final publishing
+
         """
+        # TODO: Move to independent API Method
+        if self.sg_script_key is None:
+            return True
+
         video_object = Video.objects.filter(
             edx_id=self.veda_id
         ).latest()
 
         if video_object.inst_class.sg_projID is None:
             return False
-
-        sg = Shotgun(
-            self.sg_server_path,
-            self.sg_script_name,
-            self.sg_script_key
-        )
+        try:
+            sg = Shotgun(
+                self.sg_server_path,
+                self.sg_script_name,
+                self.sg_script_key
+            )
+        except ProtocolError:
+            # Periodic API Error
+            return False
 
         fields = ['project', 'entity', 'sg_status_list']
         filters = [
@@ -130,6 +136,8 @@ class VedaEncode(object):
                 "id": video_object.inst_class.sg_projID
             }],
         ]
+
+        # TODO: Improve API query
         tasks = sg.find("Task", filters, fields)
         for t in tasks:
             if t['entity']['name'] == self.veda_id.split('-')[-1]:
@@ -137,11 +145,3 @@ class VedaEncode(object):
                     return True
 
         return False
-
-
-def main():
-    pass
-
-
-if __name__ == '__main__':
-    sys.exit(main())

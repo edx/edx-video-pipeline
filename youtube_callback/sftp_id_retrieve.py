@@ -11,7 +11,7 @@ import sys
 import xml.etree.ElementTree as ET
 from datetime import timedelta
 from os.path import expanduser
-from paramiko.ssh_exception import AuthenticationException
+from paramiko.ssh_exception import AuthenticationException, SSHException
 
 import django
 import pysftp
@@ -91,6 +91,8 @@ def xml_downloader(course):
                 crawl_sftp(d=d, s1=s1)
     except AuthenticationException:
         LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
+    except SSHException:
+        LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
 
 
 def crawl_sftp(d, s1):
@@ -103,43 +105,47 @@ def crawl_sftp(d, s1):
     """
     dirtime = datetime.datetime.fromtimestamp(d.st_mtime)
     if dirtime < datetime.datetime.now() - timedelta(days=YOUTUBE_LOOKBACK_DAYS):
-        return None
+        return
     if d.filename == "files_to_be_removed.txt":
-        return None
+        return
     if d.filename == 'FAILED':
-        return None
+        return
     try:
         s1.cwd(d.filename)
     except:
-        return None
-
-    for f in s1.listdir_attr():
-        filetime = datetime.datetime.fromtimestamp(f.st_mtime)
-        if not filetime > datetime.datetime.now() - timedelta(days=YOUTUBE_LOOKBACK_DAYS):
-            continue
-        if fnmatch.fnmatch(f.filename, '*.xml') or fnmatch.fnmatch(f.filename, '*.csv'):
-            # Determine If there are extant downloaded status files for this same ID,
-            # If yes, increment filename
-            x = 0
-            while True:
-                """
-                Just in case something runs out
-                """
-                if x > 20:
-                    break
-                file_to_find = f.filename.split('.')[0] + \
-                    str(x) + \
-                    '.' + \
-                    f.filename.split('.')[1]
-                if os.path.exists(os.path.join(workdir, file_to_find)):
-                    x += 1
-                else:
-                    break
-            print "%s : %s" % (f.filename, file_to_find)
-            s1.get(
-                f.filename,
-                os.path.join(workdir, file_to_find)
-            )
+        return
+    try:
+        for f in s1.listdir_attr():
+            filetime = datetime.datetime.fromtimestamp(f.st_mtime)
+            if not filetime > datetime.datetime.now() - timedelta(days=YOUTUBE_LOOKBACK_DAYS):
+                continue
+            if fnmatch.fnmatch(f.filename, '*.xml') or fnmatch.fnmatch(f.filename, '*.csv'):
+                # Determine If there are extant downloaded status files for this same ID,
+                # If yes, increment filename
+                x = 0
+                while True:
+                    """
+                    Just in case something runs out
+                    """
+                    if x > 20:
+                        break
+                    file_to_find = f.filename.split('.')[0] + \
+                        str(x) + \
+                        '.' + \
+                        f.filename.split('.')[1]
+                    if os.path.exists(os.path.join(workdir, file_to_find)):
+                        x += 1
+                    else:
+                        break
+                print "%s : %s" % (f.filename, file_to_find)
+                s1.get(
+                    f.filename,
+                    os.path.join(workdir, file_to_find)
+                )
+    except IOError:
+        return
+    except SSHException:
+        return
     s1.cwd('..')
 
 
@@ -218,6 +224,7 @@ def urlpatch(upload_data):
         test_id = Video.objects.filter(edx_id=upload_data['edx_id']).latest()
     except:
         upload_data['status'] = 'Failure'
+        return
 
     if upload_data['status'] == 'Success':
         url_query = URL.objects.filter(

@@ -63,4 +63,4 @@ val_profile_dict:
 heal_start: 1
 heal_end: 144
 
-global_timeout: 40
+global_timeout: 60

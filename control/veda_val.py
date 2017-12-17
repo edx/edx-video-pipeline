@@ -238,6 +238,11 @@ class VALAPICall():
         Determine VAL profile data, from return/encode submix
 
         """
+        # Defend against old/deprecated encodes
+        try:
+            self.auth_dict['val_profile_dict'][self.encode_profile]
+        except KeyError:
+            return
         if self.endpoint_url is not None:
             for p in self.auth_dict['val_profile_dict'][self.encode_profile]:
 
@@ -264,6 +269,10 @@ class VALAPICall():
                 if final.encode_profile.product_spec == 'review':
                     pass
                 else:
+                    try:
+                        self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]
+                    except KeyError:
+                        return
                     for p in self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]:
                         test_list.append(dict(
                             url=str(final.encode_url),
@@ -277,19 +286,19 @@ class VALAPICall():
                 self.encode_data.append(t)
 
         if len(val_api_return) == 0:
-            return None
+            return
 
         """
         All URL Records Deleted (for some reason)
         """
         if len(self.encode_data) == 0:
-            return None
+            return
 
         for i in val_api_return['encoded_videos']:
             if i['profile'] not in [g['profile'] for g in self.encode_data]:
                 self.encode_data.append(i)
 
-        return None
+        return
 
     def send_404(self):
         """
