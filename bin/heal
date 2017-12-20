@@ -51,7 +51,8 @@ def main():
         {cmd} -i veda_id
         {cmd} -c course_id
         {cmd} -s schedule
-        [-i -c -s]
+        {cmd} --process-translations
+        [-i -c -s --process-translations]
         Use --help to see all options.
         '''.format(cmd=sys.argv[0])
 
@@ -71,11 +72,26 @@ def main():
         action='store_true'
         )
 
+    parser.add_argument(
+        '--process-translations',
+        dest='process_translations',
+        help='Retrieves completed 3PlayMedia translations for the videos.',
+        action='store_true'
+    )
+
     args = parser.parse_args()
 
     veda_id = args.veda_id
     course_id = args.course_id
     schedule = args.schedule
+
+    process_translations = args.process_translations
+    if process_translations:
+        # Only kick off a round of retrieving successful
+        # translations from 3Play Media
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'VEDA.settings.production'
+        retrieve_three_play_translations()
+        return
 
     print '%s - %s: %s' % ('Healing', 'VEDA ID', veda_id)
     print '%s - %s: %s' % ('Healing', 'Course', course_id)

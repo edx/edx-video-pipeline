@@ -962,6 +962,11 @@ def handle_video_translations(video, translations, file_id, api_key, log_prefix)
         translation_state = translation_metadata['state']
         target_language = translation_metadata['target_language_iso_639_1_code']
 
+        LOGGER.info(
+            '[3PlayMedia Task] Translation metadata retrieved -- video=%s, translation_id=%s, language=%s, status=%s.',
+            video.studio_id, translation_id, target_language, translation_state
+        )
+
         if translation_state == COMPLETE:
             # Fetch the corresponding tracking process.
             translation_process = get_in_progress_translation_process(
@@ -1014,6 +1019,11 @@ def handle_video_translations(video, translations, file_id, api_key, log_prefix)
                 name=sjson_file,
                 transcript_format=TRANSCRIPT_SJSON,
                 provider=TranscriptProvider.THREE_PLAY,
+            )
+
+            LOGGER.info(
+                '[3PlayMedia Task] Translation retrieval was successful -- video=%s, translation_id=%s, language=%s.',
+                video.studio_id, translation_id, target_language
             )
 
             # 5 - if all the processes for this video are complete, update transcript status
