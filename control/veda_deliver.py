@@ -101,7 +101,9 @@ class VedaDelivery:
         """
         if self.encode_profile == 'youtube':
             self._CLEANUP()
+            self.start_transcription(self._DETERMINE_STATUS())
             return None
+
         if self.encode_profile == 'review':
             return None
 
@@ -127,17 +129,34 @@ class VedaDelivery:
         self._UPDATE_DATA()
         self._CLEANUP()
 
-        # Transcription Process
-        # We only want to generate transcripts for `desktop_mp4` profile.
-        if self.encode_profile == 'desktop_mp4' and self.video_query.process_transcription:
+        self.start_transcription(self.status)
+
+    def start_transcription(self, status):
+        """
+        Kick off the transcription process
+
+        Arguments:
+            status (str): `Complete` or `Progress`
+        """
+        # We only want to generate transcripts when all encodings are completed
+        if status == 'Complete' and self.video_query.process_transcription:
+            encode_query = Encode.objects.get(
+                product_spec='desktop_mp4'
+            )
+
+            encoded_file = '%s_%s.%s' % (
+                self.veda_id,
+                encode_query.encode_suffix,
+                encode_query.encode_filetype
+            )
 
             # 3PlayMedia
             if self.video_query.provider == TranscriptProvider.THREE_PLAY:
-                self.start_3play_transcription_process()
+                self.start_3play_transcription_process(encoded_file)
 
             # Cielo24
             if self.video_query.provider == TranscriptProvider.CIELO24:
-                self.cielo24_transcription_flow()
+                self.cielo24_transcription_flow(encoded_file)
 
     def hls_run(self):
         """
@@ -500,9 +519,12 @@ class VedaDelivery:
         os.chdir(homedir)
         return True
 
-    def cielo24_transcription_flow(self):
+    def cielo24_transcription_flow(self, encoded_file):
         """
         Cielo24 transcription flow.
+
+        Arguments:
+            encoded_file (str): name of encoded file to construct video url
         """
         org = extract_course_org(self.video_proto.platform_course_url[0])
 
@@ -515,7 +537,7 @@ class VedaDelivery:
         s3_video_url = build_url(
             self.auth_dict['s3_base_url'],
             self.auth_dict['edx_s3_endpoint_bucket'],
-            self.encoded_file
+            encoded_file
         )
 
         callback_base_url = build_url(
@@ -547,9 +569,12 @@ class VedaDelivery:
         )
         cielo24.start_transcription_flow()
 
-    def start_3play_transcription_process(self):
+    def start_3play_transcription_process(self, encoded_file):
         """
         3PlayMedia Transcription Flow
+
+        Arguments:
+            encoded_file (str): name of encoded file to construct video url
         """
         try:
             # Picks the first course from the list as there may be multiple
@@ -569,7 +594,7 @@ class VedaDelivery:
             s3_video_url = build_url(
                 self.auth_dict['s3_base_url'],
                 self.auth_dict['edx_s3_endpoint_bucket'],
-                self.encoded_file
+                encoded_file
             )
             callback_url = build_url(
                 self.auth_dict['veda_base_url'],
