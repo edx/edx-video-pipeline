@@ -25,14 +25,18 @@ from VEDA_OS01.models import Destination
 from VEDA_OS01.models import Encode
 from VEDA_OS01.models import URL
 from VEDA_OS01.models import VedaUpload
+from VEDA.utils import get_config
 
 """
 Central Config
 """
-WORK_DIRECTORY = os.path.join(
+CONFIG = get_config()
+
+DEFAULT_WORK_DIRECTORY = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     'VEDA_WORKING'
 )
+WORK_DIRECTORY = CONFIG.get('VEDA_WORKING', DEFAULT_WORK_DIRECTORY)
 
 if not os.path.exists(WORK_DIRECTORY):
     os.mkdir(WORK_DIRECTORY)

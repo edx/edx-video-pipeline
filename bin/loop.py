@@ -7,6 +7,8 @@ from django.db import reset_queries
 import resource
 import time
 
+from control.control_env import WORK_DIRECTORY
+
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
@@ -69,14 +71,8 @@ class DaemonCli:
     def ingest_daemon(self):
         x = 0
         while True:
-            node_work_directory = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(
-                    os.path.abspath(__file__)
-                ))),
-                'VEDA_WORKING'
-            )
             FD = FileDiscovery(
-                node_work_directory=node_work_directory
+                node_work_directory=WORK_DIRECTORY
             )
 
             FD.discover_studio_ingested_videos()
