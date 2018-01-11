@@ -21,11 +21,11 @@ var abvid_serial = "{{abvid_serial}}"
 
 </head>
 
-<body> 
+<body>
   <div id="initial_title"><h1>
       edX About Video Upload
     </h1>
-  </div>  
+  </div>
   <div id="inst_lookup">
         <h3 style="font-size: 2.0em;">File Upload Complete</h3>
         <span class="advisory" style="margin-left: 49px;">Thank you, file has been received. You can close this window<br></span>
@@ -37,7 +37,7 @@ var abvid_serial = "{{abvid_serial}}"
   </div></div>
     <div id="uploadselect">
 
-      <form class="dropzone" id="dmz" action="https://veda-uploads.s3.amazonaws.com/" method="put" enctype="multipart/form-data" >
+      <form class="dropzone" id="dmz" action="https://{{ upload_bucket }}.s3.amazonaws.com/" method="put" enctype="multipart/form-data" >
         <input type="hidden" name="key" value="upload/{{ abvid_serial }}">
         <input type="hidden" name="AWSAccessKeyId" value="{{ access_key }}">
         <input type="hidden" name="acl" value="private">
@@ -48,7 +48,7 @@ var abvid_serial = "{{abvid_serial}}"
       </form>
       <span class="advisory" style="margin-left: 30%;">Do not close or refresh this window while file is transferring<br>
         Max. 1 file at once, file must be smaller than 5GB</span>
-  </div> 
+  </div>
   <div id="new_buttons">
     <form id="reset-form" method="post" >
       <input id="rstb" class="reset_button" type="reset" value="Reset"/>
