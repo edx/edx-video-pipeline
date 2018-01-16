@@ -434,7 +434,7 @@ class Video(models.Model):
         max_length=180,
         null=True, blank=True
     )
-    edx_id = models.CharField('VEDA Video ID', max_length=255)
+    edx_id = models.TextField('VEDA Video ID')
     studio_id = models.CharField(
         'Studio Upload ID',
         max_length=100,
