@@ -69,18 +69,9 @@ class DaemonCli:
     def ingest_daemon(self):
         x = 0
         while True:
-            node_work_directory = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(
-                    os.path.abspath(__file__)
-                ))),
-                'VEDA_WORKING'
-            )
-            FD = FileDiscovery(
-                node_work_directory=node_work_directory
-            )
-
-            FD.discover_studio_ingested_videos()
-            FD.about_video_ingest()
+            discovery_instance = FileDiscovery()
+            discovery_instance.studio_s3_ingest()
+            discovery_instance.about_video_ingest()
             reset_queries()
             x += 1
             if x >= 100:

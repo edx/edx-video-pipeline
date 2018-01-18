@@ -156,7 +156,7 @@ class DeliverYoutube():
         # Data Row
         output += ','.join(([metadata_dict.get(c, '') for c in YOUTUBE_DEFAULT_CSV_COLUMNNAMES]))  # + '\n' <--NO
 
-        with open(os.path.join(WORK_DIRECTORY, self.video.edx_id + '_100.csv'), 'w') as c1:
+        with open(os.path.join(DELIVER_WORK_DIR, self.video.edx_id + '_100.csv'), 'w') as c1:
             c1.write('%s %s' % (output, '\n'))
 
     def batch_uploader(self):
@@ -203,12 +203,12 @@ class DeliverYoutube():
             s1.mkdir(remote_directory, mode=660)
             s1.cwd(remote_directory)
             s1.put(
-                os.path.join(WORK_DIRECTORY, self.file),
+                os.path.join(DELIVER_WORK_DIR, self.file),
                 callback=printTotals
             )
             print
             s1.put(
-                os.path.join(WORK_DIRECTORY, self.video.edx_id + '_100.csv'),
+                os.path.join(DELIVER_WORK_DIR, self.video.edx_id + '_100.csv'),
                 callback=printTotals
             )
             print
@@ -226,7 +226,7 @@ class DeliverYoutube():
             print
 
         os.remove(os.path.join(
-            WORK_DIRECTORY,
+            DELIVER_WORK_DIR,
             self.video.edx_id + '_100.csv'
         ))
 

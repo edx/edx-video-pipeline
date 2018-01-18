@@ -58,7 +58,7 @@ class VedaDelivery:
         self.video_query = None
         self.encode_query = None
         self.encoded_file = None
-        self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
+        self.node_work_directory = kwargs.get('node_work_directory', DELIVER_WORK_DIR)
         self.hotstore_url = None
         self.status = None
         self.endpoint_url = None
@@ -76,9 +76,9 @@ class VedaDelivery:
             self.hls_run()
 
         else:
-            if os.path.exists(WORK_DIRECTORY):
-                shutil.rmtree(WORK_DIRECTORY)
-                os.mkdir(WORK_DIRECTORY)
+            if os.path.exists(self.node_work_directory):
+                shutil.rmtree(self.node_work_directory)
+                os.mkdir(self.node_work_directory)
 
             self._INFORM_INTAKE()
 

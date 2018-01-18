@@ -151,14 +151,13 @@ def crawl_sftp(d, s1):
 
 def domxml_parser(file):
     """
+    Parse XML tree from YT SFTP directory
 
-    :param file:
-    :return:
+    Returned files usually take ~15 minutes to be uploaded by google to server.
+    filenames are similar to 'status-XXXXXXXX-010000_100.xml'
     """
-
     if 'status-' not in file:
         return
-
     upload_data = {
         'datetime': None,
         'status': None,
