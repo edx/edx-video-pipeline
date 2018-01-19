@@ -13,7 +13,6 @@ import logging
 import os
 import sys
 import uuid
-import yaml
 
 from django.utils.timezone import utc
 
@@ -43,7 +42,7 @@ class VedaHeal(object):
         self.auth_dict = get_config()
         # for individuals
         self.video_query = kwargs.get('video_query', None)
-        self.freezing_bug = kwargs.get('freezing_bug', True)
+        self.freezing_bug = kwargs.get('freezing_bug', False)
         self.val_status = None
         self.retry_barrier_hours = 24
 
@@ -85,7 +84,7 @@ class VedaHeal(object):
                     jobid = uuid.uuid1().hex[0:10]
                     celeryapp.worker_task_fire.apply_async(
                         (veda_id, encode_profile, jobid),
-                        queue=self.auth_dict['celery_worker_queue'].split(',')[0]
+                        queue=self.auth_dict['celery_worker_queue']
                     )
 
     def determine_fault(self, video_object):
@@ -98,8 +97,8 @@ class VedaHeal(object):
                 self.val_status = 'file_corrupt'
                 return []
 
-        if video_object.video_trans_status == 'Review Reject' or video_object.video_trans_status == 'Review Hold' or \
-            video_object.video_trans_status == 'Review Hold':
+        if video_object.video_trans_status == 'Review Reject' or \
+                video_object.video_trans_status == 'Review Hold':
             return []
 
         if video_object.video_trans_status == 'Youtube Duplicate':
@@ -123,9 +122,12 @@ class VedaHeal(object):
             pass
 
         requeued_encodes = self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
-        LOGGER.info(
-            '[HEAL] : Status: {status}, Encodes: {encodes}'.format(status=self.val_status, encodes=requeued_encodes)
-        )
+        LOGGER.info('[HEAL] : {id} : {status} : {encodes}'.format(
+            id=video_object.edx_id,
+            status=self.val_status,
+            encodes=requeued_encodes
+        ))
+
         return requeued_encodes
 
     def differentiate_encodes(self, uncompleted_encodes, expected_encodes, video_object):
@@ -231,13 +233,4 @@ class VedaHeal(object):
                 )
             ).replace(tzinfo=utc)
             if filetime < time_safetygap:
-                print file + " : WORK PURGE"
                 os.remove(full_filepath)
-
-
-def main():
-    VH = VedaHeal()
-    VH.discovery()
-
-if __name__ == '__main__':
-    sys.exit(main())

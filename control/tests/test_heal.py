@@ -107,49 +107,43 @@ class HealTests(TestCase):
 
     @data(
         {
-            'edx_id': '1',
             'video_trans_status': 'Corrupt File',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
+            'expected_encodes': set(['hls', 'mobile_low'])
         },
         {
-            'edx_id': '1',
             'video_trans_status': 'Review Reject',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
+            'expected_encodes': []
         },
         {
-            'edx_id': '1',
             'video_trans_status': 'Review Hold',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
+            'expected_encodes': []
         },
         {
-            'edx_id': '2',
             'video_trans_status': 'Complete',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': False,
+            'expected_encodes': set(['hls', 'mobile_low'])
         },
         {
-            'edx_id': '2',
             'video_trans_status': 'Ingest',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
-        },
-        {
-            'edx_id': '1',
-            'video_trans_status': 'Corrupt File',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': True,
+            'expected_encodes': set(['hls', 'mobile_low'])
         },
     )
     @unpack
-    def test_determine_fault(self, edx_id, video_trans_status, video_trans_start, video_active):
+    def test_determine_fault(self, video_trans_status, video_trans_start, video_active, expected_encodes):
         """
         Tests that determine_fault works in various video states.
         """
         video_instance = Video(
-            edx_id=edx_id,
+            edx_id='test_id',
             video_trans_status=video_trans_status,
             video_trans_start=video_trans_start,
             video_active=video_active,
@@ -157,13 +151,69 @@ class HealTests(TestCase):
         )
         video_instance.save()
 
-        encode_list = self.heal_instance.determine_fault(video_instance)
+        encodes = self.heal_instance.determine_fault(video_instance)
+        self.assertEqual(encodes, expected_encodes)
 
-        if video_instance.edx_id == '1':
-            self.assertEqual(encode_list, [])
-        elif video_instance.edx_id == '2':
-            for e in encode_list:
-                self.assertTrue(e in self.encode_list)
+    @data(
+        {
+            'video_trans_status': 'Corrupt File',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': True,
+            'expected_encodes': []
+        },
+        {
+            'video_trans_status': 'Review Reject',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': True,
+            'expected_encodes': []
+
+        },
+        {
+            'video_trans_status': 'Review Hold',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': True,
+            'expected_encodes': []
+
+        },
+        {
+            'video_trans_status': 'Complete',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': False,
+            'expected_encodes': set(['hls', 'mobile_low'])
+
+        },
+        {
+            'video_trans_status': 'Ingest',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': True,
+            'expected_encodes': set(['hls', 'mobile_low'])
+
+        },
+        {
+            'video_trans_status': 'Corrupt File',
+            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
+            'video_active': True,
+            'expected_encodes': []
+
+        },
+    )
+    @unpack
+    def test_determine_fault_freeze_bug(
+            self, video_trans_status, video_trans_start, video_active, expected_encodes
+    ):
+        video_instance = Video(
+            edx_id='test_id',
+            video_trans_status=video_trans_status,
+            video_trans_start=video_trans_start,
+            video_active=video_active,
+            inst_class=self.course_object
+        )
+        video_instance.save()
+
+        heal_instance_two = VedaHeal(freezing_bug=True)
+        encode_list = heal_instance_two.determine_fault(video_instance)
+        self.assertEqual(encode_list, expected_encodes)
+
 
     @data(
         {
@@ -271,8 +321,8 @@ class HealTests(TestCase):
         {
             'uncompleted_encodes': ['test_encode', 'test_encode'],
             'expected_encodes': ['test_encode', 'test_encode'],
+            'expected_long_corrupt': False,
             'video_object': {
-                'edx_id': '1',
                 'video_trans_status': 'Complete',
                 'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
                 'video_active': True,
@@ -281,8 +331,8 @@ class HealTests(TestCase):
         {
             'uncompleted_encodes': ['test_encode', 'test_encode', 'hls'],
             'expected_encodes': ['test_encode', 'test_encode', 'hls'],
+            'expected_long_corrupt': False,
             'video_object': {
-                'edx_id': '2',
                 'video_trans_status': 'Complete',
                 'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
                 'video_active': True,
@@ -291,8 +341,8 @@ class HealTests(TestCase):
         {
             'uncompleted_encodes': ['test_encode', 'test_encode', 'hls'],
             'expected_encodes': ['test_encode', 'test_encode', 'hls'],
+            'expected_long_corrupt': True,
             'video_object': {
-                'edx_id': '3',
                 'video_trans_status': 'Ingest',
                 'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=10),
                 'video_active': True,
@@ -300,9 +350,9 @@ class HealTests(TestCase):
         }
     )
     @unpack
-    def test_determine_longterm_corrupt(self, uncompleted_encodes, expected_encodes, video_object):
+    def test_determine_longterm_corrupt(self, uncompleted_encodes, expected_encodes, video_object, expected_long_corrupt):
         video_instance = Video(
-            edx_id=video_object['edx_id'],
+            edx_id='test_id',
             video_trans_status=video_object['video_trans_status'],
             video_trans_start=video_object['video_trans_start'],
             video_active=video_object['video_active'],
@@ -317,9 +367,4 @@ class HealTests(TestCase):
             video_instance
         )
 
-        if video_instance.edx_id == '1':
-            self.assertEqual(longterm_corrupt, False)
-        elif video_instance.edx_id == '2':
-            self.assertEqual(longterm_corrupt, False)
-        elif video_instance.edx_id == '3':
-            self.assertEqual(longterm_corrupt, True)
+        self.assertEqual(longterm_corrupt, expected_long_corrupt)

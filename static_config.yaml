@@ -9,7 +9,7 @@ edx_s3_rejected_prefix: prod-edx/rejected/
 onsite_worker: False
 celery_threads: 1
 celery_app_name: veda_production
-celery_worker_queue: encode_worker,large_encode_worker
+celery_worker_queue: encode_worker
 celery_deliver_queue: deliver_worker
 celery_heal_queue: heal_queue
 
