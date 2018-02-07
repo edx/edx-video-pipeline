@@ -1,8 +1,8 @@
 """
 Common utils.
 """
-
-from VEDA_OS01.models import TranscriptStatus
+from VEDA.utils import get_config
+from VEDA_OS01.models import Encode, TranscriptStatus, URL, Video
 
 
 class ValTranscriptStatus(object):
@@ -57,3 +57,53 @@ def invalidate_fernet_cached_properties(model, fields):
             del field.fernet
         except AttributeError:
             pass
+
+
+def get_incomplete_encodes(edx_id):
+    """
+    Get incomplete encodes for the given video.
+
+    Arguments:
+        edx_id(unicode): an ID identifying the VEDA video.
+    """
+    encode_list = []
+    try:
+        video = Video.objects.filter(edx_id=edx_id).latest()
+    except Video.DoesNotExist:
+        return encode_list
+
+    course = video.inst_class
+    # Pick the encodes map from the settings.
+    encodes_map = get_config().get('encode_dict', {})
+    # Active encodes according to course instance.
+    for attr, encodes in encodes_map.iteritems():
+        if getattr(course, attr, False):
+            encode_list += [encode.strip() for encode in encodes]
+
+    # Filter active encodes further according to their corresponding encode profiles activation.
+    for encode in list(encode_list):
+        encode_profile = Encode.objects.filter(product_spec=encode).first()
+        if not encode_profile or (encode_profile and not encode_profile.profile_active):
+            encode_list.remove(encode)
+
+    # Filter encodes based on their successful encoding for the specified video.
+    for encode in list(encode_list):
+        completed_encode_profile = URL.objects.filter(
+            videoID=video,
+            encode_profile__product_spec=encode
+        )
+        if completed_encode_profile.exists():
+            encode_list.remove(encode)
+
+    return encode_list
+
+
+def is_video_ready(edx_id, ignore_encodes=list()):
+    """
+    Check whether a video should be considered ready.
+
+    Arguments:
+        edx_id(unicode): An ID identifying the VEDA video.
+        ignore_encodes(list): A list containing the profiles that should not be considered.
+    """
+    return set(get_incomplete_encodes(edx_id)).issubset(set(ignore_encodes))

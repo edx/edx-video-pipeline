@@ -23,7 +23,6 @@ class VedaDeliverRunTest(TestCase):
     def setUp(self):
         self.veda_id = 'XXXXXXXX2014-V00TES1'
         self.encode_profile = 'hls'
-        self.encode_profile_mp4 = 'desktop_mp4'
         self.course = Course.objects.create(
             institution='XXX',
             edx_classid='XXXXX',
@@ -46,13 +45,6 @@ class VedaDeliverRunTest(TestCase):
             encode_suffix='HLS',
             product_spec=self.encode_profile,
             encode_filetype='HLS'
-        )
-        self.encode_mp4 = Encode.objects.create(
-            encode_destination=self.destination,
-            profile_active=True,
-            encode_suffix='DTH',
-            product_spec=self.encode_profile_mp4,
-            encode_filetype='mpeg-4'
         )
         self.deliver_instance = VedaDelivery(
             veda_id=self.veda_id,
@@ -146,11 +138,6 @@ class VedaDeliverRunTest(TestCase):
         self.assertEqual(self.deliver_instance._DETERMINE_STATUS(), 'Progress')
         self.url = URL.objects.create(
             encode_profile=self.encode,
-            videoID=self.video,
-            encode_url='Test_URL'
-        )
-        URL.objects.create(
-            encode_profile=self.encode_mp4,
             videoID=self.video,
             encode_url='Test_URL'
         )

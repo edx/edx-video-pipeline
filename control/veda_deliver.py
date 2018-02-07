@@ -101,10 +101,14 @@ class VedaDelivery:
         """
         if self.encode_profile == 'youtube':
             self._CLEANUP()
-            self.start_transcription(self._DETERMINE_STATUS())
+            # We only want to generate transcripts when all the encodings(except for YT and Review) are done.
+            if utils.is_video_ready(self.video_query.edx_id, ignore_encodes=['review', 'youtube']):
+                self.start_transcription()
             return None
 
         if self.encode_profile == 'review':
+            # No need to start transcription here separately as the `self.encode_profile == 'youtube'`
+            # will take care for this encode profile as well.
             return None
 
         if self.auth_dict['edx_cloudfront_prefix'] is not None:
@@ -129,25 +133,25 @@ class VedaDelivery:
         self._UPDATE_DATA()
         self._CLEANUP()
 
-        self.start_transcription(self.status)
+        # We only want to generate transcripts when all the encodings(except for YT and Review) are done.
+        if utils.is_video_ready(self.video_query.edx_id, ignore_encodes=['review', 'youtube']):
+            self.start_transcription()
 
-    def start_transcription(self, status):
+    def start_transcription(self):
         """
-        Kick off the transcription process
+        Kick off the transcription process.
 
-        Arguments:
-            status (str): `Complete` or `Progress`
+        NOTE: Transcription should be started without waiting for YT/Review encodings.
         """
-        # We only want to generate transcripts when all encodings are completed
-        if status == 'Complete' and self.video_query.process_transcription:
+        if self.video_query.process_transcription:
             encode_query = Encode.objects.get(
                 product_spec='desktop_mp4'
             )
 
-            encoded_file = '%s_%s.%s' % (
-                self.veda_id,
-                encode_query.encode_suffix,
-                encode_query.encode_filetype
+            encoded_file = u'{video_id}_{suffix}.{ext}'.format(
+                video_id=self.veda_id,
+                suffix=encode_query.encode_suffix,
+                ext=encode_query.encode_filetype
             )
 
             # 3PlayMedia
