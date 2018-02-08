@@ -141,6 +141,7 @@ class VedaDeliverRunTest(TestCase):
             videoID=self.video,
             encode_url='Test_URL'
         )
+
         self.assertEqual(self.deliver_instance._DETERMINE_STATUS(), 'Complete')
 
     def test_validate_url(self):
