@@ -98,8 +98,8 @@ val_api_url:
 val_token_url:
 val_video_images_url:
 # Credentials
-val_client_id:
-val_secret_key:
+val_client_id: 'clientkey'
+val_secret_key: 'secretkey'
 val_password:
 val_username:
 val_transcript_create_url:
@@ -121,3 +121,6 @@ sg_script_key:
 # Endpoints
 # ---
 threeplay_ftphost:
+
+lms_base_url: ''
+instance_prefix: ''

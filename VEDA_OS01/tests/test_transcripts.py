@@ -255,13 +255,6 @@ class Cielo24TranscriptTests(APITestCase):
         video = Video.objects.get(studio_id=self.video.studio_id)
         self.assertEqual(video.transcript_status, TranscriptStatus.READY)
 
-        # verify sjson data uploaded to s3
-        bucket = conn.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket'])
-        key = Key(bucket)
-        key.key = transcript_create_request_data['name']
-        sjson = json.loads(key.get_contents_as_string())
-        self.assertEqual(sjson, TRANSCRIPT_SJSON_DATA)
-
     @patch('VEDA_OS01.transcripts.LOGGER')
     @responses.activate
     def test_fetch_exception_log(self, mock_logger):
@@ -463,8 +456,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         Verify sjson data uploaded to s3
         """
         key = Key(connection.get_bucket(CONFIG_DATA['aws_video_transcripts_bucket']))
-        key.key = '{directory}{uuid}.sjson'.format(
-            directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
+        key.key = '{transcript_name}.sjson'.format(
+            transcript_name=transcripts.construct_transcript_names(CONFIG_DATA)[1]
         )
         sjson_transcript = json.loads(key.get_contents_as_string())
         self.assertEqual(sjson_transcript, TRANSCRIPT_SJSON_DATA)
@@ -1564,4 +1557,27 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             None,
             self.edx_video_id,
             self.file_id,
+        )
+
+
+class TranscriptNameConstructionTests(APITestCase):
+    """
+    Tests for `construct_transcript_names` util function
+    """
+    def setUp(self):
+        """
+        Tests setup.
+        """
+        super(TranscriptNameConstructionTests, self).setUp()
+
+    def test_upload_sjson_to_s3(self):
+        """
+        Verify that `construct_transcript_names` works as expected.
+        """
+        edxval_name, s3_name = transcripts.construct_transcript_names(CONFIG_DATA)
+        self.assertTrue(
+            s3_name.startswith(CONFIG_DATA['instance_prefix'])
+        )
+        self.assertTrue(
+            s3_name.endswith(edxval_name)
         )
