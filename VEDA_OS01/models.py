@@ -540,7 +540,7 @@ class Destination(models.Model):
     destination_nick = models.CharField('Nickname (3 Char.)', max_length=3, null=True, blank=True)
 
     def __unicode__(self):
-        return u'{}'.format(self.destination_name)
+        return u'%s'.format(self.destination_name) or u''
 
 
 class Encode(models.Model):

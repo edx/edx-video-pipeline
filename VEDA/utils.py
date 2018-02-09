@@ -1,9 +1,7 @@
 """
 Common utils.
 """
-import glob
 import os
-import shutil
 import urllib
 import urlparse
 import yaml
@@ -41,7 +39,7 @@ def build_url(*urls, **query_params):
     Returns:
         absolute url
     """
-    url = '/'.join(item.strip('/') for item in urls if item)
+    url = '/'.join(item.strip('/') for item in urls)
     if query_params:
         url = '{}?{}'.format(url, urllib.urlencode(query_params))
 
@@ -106,21 +104,3 @@ def scrub_query_params(url, params_to_scrub):
         parsed.path,
         **new_query_params
     )
-
-
-def delete_directory_contents(path):
-    """
-    Deletes everything inside a directory. Do nothing if path is not a directory.
-
-    Arguments:
-        path (str): path to a directory.
-    """
-    if not os.path.isdir(path):
-        return
-
-    for file_path in glob.glob('{path}/*'.format(path=path.rstrip('/'))):
-        if os.path.isdir(file_path):
-            shutil.rmtree(file_path)
-
-        if os.path.isfile(file_path):
-            os.remove(file_path)
