@@ -1,39 +1,22 @@
-import logging
-import os
-import sys
-import subprocess
-import datetime
-from datetime import timedelta
-import time
-import fnmatch
-import django
-from django.db.utils import DatabaseError
-from django.utils.timezone import utc
-from django.db import reset_queries
-import uuid
-import hashlib
-from VEDA.utils import get_config
-
-
 """
 Discovered file ingest/insert/job triggering
 
-**NOTE**
-Local Files, Migrated files are eliminated
-This just takes discovered
-    - About Vids
-    - Studio Uploads
-    - FTP Uploads
 """
-from control_env import *
-from veda_hotstore import Hotstore
-from veda_video_validation import Validation
-from veda_utils import ErrorObject, Output, Report
-from veda_val import VALAPICall
-from veda_encode import VedaEncode
-import celeryapp
 
+import datetime
+import logging
+import subprocess
+
+from django.db.utils import DatabaseError
+
+from control_env import *
+from VEDA.utils import get_config
+from veda_heal import VedaHeal
+from veda_hotstore import Hotstore
 from VEDA_OS01.models import TranscriptStatus
+from veda_utils import Report
+from veda_val import VALAPICall
+from veda_video_validation import Validation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +39,7 @@ if I.complete is False:
 '''
 
 
-class VideoProto():
+class VideoProto(object):
 
     def __init__(self, **kwargs):
         self.s3_filename = kwargs.get('s3_filename', None)
@@ -74,7 +57,7 @@ class VideoProto():
         self.preferred_languages = kwargs.get('preferred_languages', [])
         self.source_language = kwargs.get('source_language', None)
 
-        # Determined Attributes
+        # Determined Videofile Attributes
         self.valid = False
         self.filesize = 0
         self.duration = 0
@@ -83,27 +66,20 @@ class VideoProto():
         self.veda_id = None
 
 
-class VedaIngest:
+class VedaIngest(object):
 
     def __init__(self, course_object, video_proto, **kwargs):
         self.course_object = course_object
         self.video_proto = video_proto
         self.auth_dict = get_config()
-
-        # --- #
         self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
         self.full_filename = kwargs.get('full_filename', None)
         self.complete = False
         self.archived = False
 
     def insert(self):
-        """
-        NOTE:
-        eliminate Ingest Field
-        """
         self.database_record()
         self.val_insert()
-        # --- #
         self.rename()
         self.archived = self.store()
 
@@ -114,12 +90,12 @@ class VedaIngest:
                 os.remove(self.full_filename)
             return None
 
-        self.queue_job()
-        print '%s : [ %s ] : %s' % (
-            str(datetime.datetime.utcnow()),
-            self.video_proto.veda_id,
-            'File Active'
+        LOGGER.info('[VIDEO_INGEST : Ingested] {video_id} : {datetime}'.format(
+            video_id=self.video_proto.veda_id,
+            datetime=str(datetime.datetime.utcnow()))
         )
+
+        self.queue_job()
         Course.objects.filter(
             pk=self.course_object.pk
         ).update(
@@ -130,55 +106,18 @@ class VedaIngest:
         self.complete = True
 
     def queue_job(self):
-        print '%s : [ %s ] : %s' % (
-            str(datetime.datetime.utcnow()),
-            self.video_proto.veda_id,
-            'Remote Assimilate'
-        )
-
-        '''
-        nouvelle:
-        '''
-        if self.auth_dict is None:
-            ErrorObject().print_error(
-                message='No Auth YAML Found'
+        # TODO: Break heal method listed here out into helper util
+        encode_instance = VedaHeal(
+            video_query=Video.objects.filter(
+                edx_id=self.video_proto.veda_id
             )
-            return None
-
-        # WRITE JOB QUEUEING
-        En = VedaEncode(
-            course_object=self.course_object,
-            veda_id=self.video_proto.veda_id
         )
-        self.encode_list = En.determine_encodes()
+        encode_instance.send_encodes()
 
-        if len(self.encode_list) == 0:
-            return None
-
-        # Enqueue
-        for e in self.encode_list:
-            veda_id = self.video_proto.veda_id
-            encode_profile = e
-            jobid = uuid.uuid1().hex[0:10]
-            celeryapp.worker_task_fire.apply_async(
-                (veda_id, encode_profile, jobid),
-                queue=self.auth_dict['celery_worker_queue'].split(',')[0]
-            )
-
-        """
-        Update Video Status
-        """
-        Video.objects.filter(
-            edx_id=self.video_proto.veda_id
-        ).update(
-            video_trans_status='Queue'
-        )
-
-    def _METADATA(self):
+    def _gather_metadata(self):
         """
         use st filesize for filesize
         Use "ffprobe" for other metadata
-        ***
         """
         self.video_proto.filesize = os.stat(self.full_filename).st_size
 
@@ -189,7 +128,6 @@ class VedaIngest:
         p = subprocess.Popen(ff_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
         for line in iter(p.stdout.readline, b''):
-            # print line
             if "Duration: " in line:
 
                 self.video_proto.duration = line.split(',')[0].split(' ')[-1]
@@ -205,7 +143,6 @@ class VedaIngest:
                     vid_reso_break = vid_breakout[2].strip().split(' ')
                     for v in vid_reso_break:
                         if "x" in v:
-                            print v
                             self.video_proto.resolution = v.strip()
                     if self.video_proto.resolution is None:
                         self.video_proto.resolution = vid_breakout[3].strip()
@@ -243,10 +180,8 @@ class VedaIngest:
             self.full_filename += "." + self.video_proto.file_extension
 
         if not os.path.exists(self.full_filename):
-            ErrorObject().print_error(
-                message='Ingest: File Not Found'
-            )
-            return None
+            LOGGER.exception('[VIDEO_INGEST] File Not Found %s', self.video_proto.veda_id)
+            return
 
         """
         Validate File
@@ -256,7 +191,7 @@ class VedaIngest:
         self.video_proto.valid = VV.validate()
 
         if self.video_proto.valid is True:
-            self._METADATA()
+            self._gather_metadata()
         """
         DB Inserts
         """
@@ -362,7 +297,7 @@ class VedaIngest:
 
         except Exception:
             # Log the exception and raise.
-            LOGGER.exception('[VIDEO-PIPELINE] File Ingest - Cataloging of video=%s failed.', self.video_proto.veda_id)
+            LOGGER.exception('[VIDEO_INGEST] - Cataloging of video=%s failed.', self.video_proto.veda_id)
             raise
 
     def val_insert(self):
@@ -385,12 +320,12 @@ class VedaIngest:
         if self.video_proto.abvid_serial is None:
             return None
 
-        R = Report(
+        email_report = Report(
             status="File Corrupt on Ingest",
             upload_serial=self.video_proto.abvid_serial,
             youtube_id=''
         )
-        R.upload_status()
+        email_report.upload_status()
         self.complete = True
 
     def rename(self):
@@ -438,21 +373,3 @@ class VedaIngest:
             upload_filepath=self.full_filename
         )
         return H1.upload()
-
-
-def main():
-    """
-    VP = VideoProto()
-    VI = VedaIngest(
-        course_object='Mock',
-        video_proto=VP,
-        full_filename='/Users/gregmartin/Downloads/MIT15662T115-V016800.mov'
-    )
-    VI._METADATA()
-    print VI.video_proto.resolution
-    """
-    pass
-
-
-if __name__ == "__main__":
-    sys.exit(main())

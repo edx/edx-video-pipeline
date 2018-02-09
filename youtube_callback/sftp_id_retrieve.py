@@ -93,6 +93,8 @@ def xml_downloader(course):
         LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
     except SSHException:
         LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
+    except IOError:
+        LOGGER.info("{inst}{clss} : List Dir Failed".format(inst=course.institution, clss=course.edx_classid))
 
 
 def crawl_sftp(d, s1):
