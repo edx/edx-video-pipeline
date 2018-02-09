@@ -196,8 +196,7 @@ def upload_alpha_1(request):
             'policy': policy,
             'signature': signature,
             'abvid_serial': abvid_serial,
-            'access_key': auth_dict['veda_access_key_id'],
-            'upload_bucket': auth_dict['veda_upload_bucket'],
+            'access_key': auth_dict['veda_access_key_id']
         })
     )
     return HttpResponse(template.render(context))

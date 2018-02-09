@@ -314,53 +314,21 @@ def convert_srt_to_sjson(srt_data):
     return subs
 
 
-def construct_transcript_names(config):
-    """
-    Constructs transcript names for 'edxval' and 's3'
-
-    Arguments:
-        config (dict): instance configuration
-
-    Returns:
-        transcript names for 'edxval' and 's3'
-    """
-    transcript_name_without_instance_prefix = build_url(
-        config['aws_video_transcripts_prefix'],
-        uuid.uuid4().hex
-    )
-
-    transcript_name_with_instance_prefix = build_url(
-        config['instance_prefix'],
-        transcript_name_without_instance_prefix
-    )
-
-    return transcript_name_without_instance_prefix, transcript_name_with_instance_prefix
-
-
 def upload_sjson_to_s3(config, sjson_data):
     """
     Upload sjson data to s3.
-
-    Arguments:
-        config (dict): instance configuration
-        sjson_data (list): transcript data to be uploaded to `s3`
-
-    Returns:
-        transcript name for 'edxval'
     """
     s3_conn = boto.connect_s3()
     bucket = s3_conn.get_bucket(config['aws_video_transcripts_bucket'])
     k = Key(bucket)
     k.content_type = 'application/json'
-
-    transcript_name_without_instance_prefix, transcript_name_with_instance_prefix = construct_transcript_names(config)
-
-    k.key = '{}.sjson'.format(transcript_name_with_instance_prefix)
+    k.key = '{directory}{uuid}.sjson'.format(
+        directory=config['aws_video_transcripts_prefix'],
+        uuid=uuid.uuid4().hex
+    )
     k.set_contents_from_string(json.dumps(sjson_data))
     k.set_acl('public-read')
-
-    # transcript path is stored in edxval without `instance_prefix`
-    return '{}.sjson'.format(transcript_name_without_instance_prefix)
+    return k.key
 
 
 class ThreePlayMediaCallbackHandlerView(APIView):
