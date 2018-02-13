@@ -247,7 +247,7 @@ class Course(TimeStampedModel):
     institution = models.CharField(
         'Inst. Code',
         help_text='Organization of the course.',
-        max_length=50
+        max_length=255
     )
     edx_classid = models.CharField(
         'Class ID',
