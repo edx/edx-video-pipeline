@@ -1,6 +1,7 @@
 """
 Production environment settings.
 """
+from os import environ
 from VEDA.settings.base import *
 from VEDA.utils import get_config
 from VEDA.settings.utils import get_logger_config
@@ -35,3 +36,15 @@ JWT_AUTH = {
     'JWT_AUDIENCE': CONFIG_DATA['val_client_id'],
     'JWT_VERIFY_AUDIENCE': True,
 }
+
+DB_OVERRIDES = dict(
+    PASSWORD=environ.get('DB_MIGRATION_PASS', DATABASES['default']['PASSWORD']),
+    ENGINE=environ.get('DB_MIGRATION_ENGINE', DATABASES['default']['ENGINE']),
+    USER=environ.get('DB_MIGRATION_USER', DATABASES['default']['USER']),
+    NAME=environ.get('DB_MIGRATION_NAME', DATABASES['default']['NAME']),
+    HOST=environ.get('DB_MIGRATION_HOST', DATABASES['default']['HOST']),
+    PORT=environ.get('DB_MIGRATION_PORT', DATABASES['default']['PORT']),
+)
+
+for override, value in DB_OVERRIDES.items():
+    DATABASES['default'][override] = value
