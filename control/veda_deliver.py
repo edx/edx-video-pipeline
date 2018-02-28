@@ -5,10 +5,10 @@ endpoint via the custom methods
 
 """
 import datetime
+import ftplib
 import logging
 import shutil
 from os.path import expanduser
-import sys
 
 import boto
 import boto.s3
@@ -19,6 +19,7 @@ from boto.exception import S3ResponseError, NoAuthHandlerFound
 from boto.s3.key import Key
 from django.core.urlresolvers import reverse
 
+from control.old_veda_deliver_cielo import Cielo24TranscriptOld
 from control_env import *
 from veda_deliver_cielo import Cielo24Transcript
 from veda_deliver_youtube import DeliverYoutube
@@ -127,6 +128,11 @@ class VedaDelivery:
         u1.encode_bitdepth = self.video_proto.bitrate
         u1.encode_size = self.video_proto.filesize
         u1.save()
+
+        # TODO: Warning! this shall be removed once 3rd party credentials
+        # for existing courses are migrated according to new flow.
+        self._THREEPLAY_UPLOAD()
+        self._CIELO24_UPLOAD()
 
         self.status = self._DETERMINE_STATUS()
         self._UPDATE_DATA()
@@ -628,6 +634,72 @@ class VedaDelivery:
                 self.video_query.provider,
                 self.video_query.studio_id,
             )
+
+    def _CIELO24_UPLOAD(self):
+        """
+        Note: This is part of the old flow which was deprecated when transcript phase 1 was reased.
+        """
+        # TODO: this must be removed once existing 3rd party credentials are migrated according
+        # to the new workflow.
+        if self.video_query.inst_class.c24_proc is False:
+            return None
+
+        if self.encode_profile != 'desktop_mp4':
+            return None
+
+        C24 = Cielo24TranscriptOld(
+            veda_id=self.video_query.edx_id
+        )
+        output = C24.perform_transcription()
+        print '[ %s ] : %s' % (
+            'Cielo24 JOB', self.video_query.edx_id
+        )
+
+    def _THREEPLAY_UPLOAD(self):
+        """
+        Note: This is part of the old flow which was deprecated when transcript phase 1 was reased.
+        """
+        # TODO: this must be removed once existing 3rd party credentials are migrated according
+        # to the new workflow.
+        if self.video_query.inst_class.tp_proc is False:
+            return None
+
+        if self.encode_profile != 'desktop_mp4':
+            return None
+
+        ftp1 = ftplib.FTP(
+            self.auth_dict['threeplay_ftphost']
+        )
+        user = self.video_query.inst_class.tp_username.strip()
+        passwd = self.video_query.inst_class.tp_password.strip()
+        try:
+            ftp1.login(user, passwd)
+        except:
+            ErrorObject.print_error(
+                message='3Play Authentication Failure'
+            )
+        try:
+            ftp1.cwd(
+                self.video_query.inst_class.tp_speed
+            )
+        except:
+            ftp1.mkd(
+                self.video_query.inst_class.tp_speed
+            )
+            ftp1.cwd(
+                self.video_query.inst_class.tp_speed
+            )
+            os.chdir(self.node_work_directory)
+
+        ftp1.storbinary(
+            'STOR ' + self.encoded_file,
+            open(os.path.join(
+                self.node_work_directory,
+                self.encoded_file
+            ), 'rb')
+        )
+
+        os.chdir(homedir)
 
     def YOUTUBE_SFTP(self, review=False):
         if self.video_query.inst_class.yt_proc is False:
