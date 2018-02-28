@@ -1,7 +1,9 @@
 """
 Tests common utils
 """
+import glob
 import os
+import shutil
 import tempfile
 from unittest import TestCase
 
@@ -203,4 +205,53 @@ class UtilTests(TestCase):
         self.assertEqual(
             utils.scrub_query_params(url, params_to_scrub),
             expected_url
+        )
+
+
+class DeleteDirectoryContentsTests(TestCase):
+    """
+    Tests for `delete_directory_contents` util function.
+    """
+    def setUp(self):
+        """
+        Tests setup.
+        """
+        # create a temp directory with temp directories and files in it
+        self.temp_dir = tempfile.mkdtemp()
+        dir_paths = map(lambda index: '{}/dir{}'.format(self.temp_dir, index), range(5))
+        for dir_path in dir_paths:
+            os.makedirs(dir_path)
+            __, file_path = tempfile.mkstemp(
+                suffix='.txt',
+                dir=dir_path
+            )
+            with open(file_path, 'w') as outfile:
+                outfile.write(str(TEST_CONFIG))
+
+        # create a temp file in root temp directory
+        with open('{}/{}'.format(self.temp_dir, 'temp_file.text'), 'w') as outfile:
+            outfile.write(str(TEST_CONFIG))
+
+    def tearDown(self):
+        """
+        Reverse the setup
+        """
+        shutil.rmtree(self.temp_dir)
+
+    def test_delete_directory_contents(self):
+        """
+        Tests that utils.scrub_query_params works as expected.
+        """
+        # Verify that directory is not empty
+        self.assertEqual(
+            len(glob.glob('{path}/*'.format(path=self.temp_dir))),
+            6
+        )
+
+        utils.delete_directory_contents(self.temp_dir)
+
+        # Verify that directory is empty
+        self.assertEqual(
+            glob.glob('{path}/*'.format(path=self.temp_dir)),
+            []
         )

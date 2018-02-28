@@ -87,3 +87,4 @@ heal_end: 50
 
 global_timeout: 40
 
+instance_prefix: '127.0.0.1'

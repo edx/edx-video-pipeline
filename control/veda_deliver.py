@@ -25,7 +25,7 @@ from veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
                               TranscriptStatus)
-from VEDA.utils import build_url, extract_course_org, get_config
+from VEDA.utils import build_url, extract_course_org, get_config, delete_directory_contents
 from veda_utils import ErrorObject, Metadata, Output, VideoProto
 from veda_val import VALAPICall
 from veda_video_validation import Validation
@@ -77,8 +77,7 @@ class VedaDelivery:
 
         else:
             if os.path.exists(WORK_DIRECTORY):
-                shutil.rmtree(WORK_DIRECTORY)
-                os.mkdir(WORK_DIRECTORY)
+                delete_directory_contents(WORK_DIRECTORY)
 
             self._INFORM_INTAKE()
 
