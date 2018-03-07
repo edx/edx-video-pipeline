@@ -1,4 +1,4 @@
-django==1.9
+django>=1.11,<2.0
 djangorestframework==3.6.4
 django-cors-headers
 django-fernet-fields==0.5

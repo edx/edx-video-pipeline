@@ -9,7 +9,7 @@ import hashlib
 import uuid
 
 from django.http import HttpResponse
-from django.template import RequestContext, loader
+from django.template import loader
 from django.http import HttpResponseRedirect
 
 from frontend_env import *
@@ -36,10 +36,10 @@ def index(request):
         linkers = links
     template = loader.get_template('index.html')
 
-    context = RequestContext(request, ({
+    context = {
         'links': linkers,
         'auth': auth
-    }))
+    }
 
     return HttpResponse(template.render(context))
 
@@ -57,10 +57,14 @@ def input_form(request):
     inst_list = json.dumps(VC1.inst_list)
 
     template = loader.get_template('course_form.html')
-    context = RequestContext(request, ({
-        'institution_list': inst_list
-    }))
-    return HttpResponse(template.render(context))
+
+    return HttpResponse(
+        template.render(
+            {
+                'institution_list': inst_list
+            }
+        )
+    )
 
 
 def institution_name(request):
@@ -191,24 +195,19 @@ def upload_alpha_1(request):
     ).digest())
     template = loader.get_template('upload_video.html')
 
-    context = RequestContext(
-        request, ({
-            'policy': policy,
-            'signature': signature,
-            'abvid_serial': abvid_serial,
-            'access_key': auth_dict['veda_access_key_id'],
-            'upload_bucket': auth_dict['veda_upload_bucket'],
-        })
-    )
+    context = {
+        'policy': policy,
+        'signature': signature,
+        'abvid_serial': abvid_serial,
+        'access_key': auth_dict['veda_access_key_id'],
+        'upload_bucket': auth_dict['veda_upload_bucket'],
+    }
     return HttpResponse(template.render(context))
 
 
 def upload_success(request):
     template = loader.get_template('upload_success.html')
-    context = RequestContext(
-        request, ({})
-    )
-    return HttpResponse(template.render(context))
+    return HttpResponse(template.render({}))
 
 
 def about_input(request):
