@@ -12,6 +12,7 @@ import responses
 from django.utils.timezone import utc
 from mock import PropertyMock, patch
 
+from control_env import HEAL_START
 from control.veda_heal import VedaHeal
 from VEDA_OS01.models import URL, Course, Destination, Encode, Video, TranscriptStatus
 from VEDA_OS01.utils import ValTranscriptStatus
@@ -50,7 +51,7 @@ class HealTests(TestCase):
             studio_id=self.video_id,
             edx_id='XXXXXXXX2014-V00TES1',
             video_trans_start=datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(
-                hours=CONFIG_DATA['heal_start']
+                hours=HEAL_START
             ),
             video_trans_end=datetime.datetime.utcnow().replace(tzinfo=utc),
         )

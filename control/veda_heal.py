@@ -20,7 +20,7 @@ from VEDA_OS01.models import Encode, URL, Video
 from VEDA_OS01.utils import VAL_TRANSCRIPT_STATUS_MAP
 
 import celeryapp
-from control_env import WORK_DIRECTORY
+from control_env import WORK_DIRECTORY, HEAL_START, HEAL_END
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
 from VEDA.utils import get_config
@@ -49,10 +49,10 @@ class VedaHeal(object):
     def discovery(self):
         self.video_query = Video.objects.filter(
             video_trans_start__lt=self.current_time - timedelta(
-                hours=self.auth_dict['heal_start']
+                hours=HEAL_START
             ),
             video_trans_start__gt=self.current_time - timedelta(
-                hours=self.auth_dict['heal_end']
+                hours=HEAL_END
             )
         )
 
@@ -62,36 +62,49 @@ class VedaHeal(object):
         for v in self.video_query:
             encode_list = self.determine_fault(video_object=v)
             # Using the 'Video Proto' Model
-            if self.val_status is not None:
-                # Update to VAL is also happening for those videos which are already marked complete,
-                # All these retries are for the data-parity between VAL and VEDA, as calls to VAL api are
-                # unreliable and times out. For a completed Video, VEDA heal will keep doing this unless
-                # the Video is old enough and escapes from the time-span that HEAL is picking up on.
-                # cc Greg Martin
-                VAC = VALAPICall(
-                    video_proto=None,
-                    video_object=v,
-                    val_status=self.val_status,
-                )
-                VAC.call()
-            self.val_status = None
+            # Update to VAL is also happening for those videos which are already marked complete,
+            # All these retries are for the data-parity between VAL and VEDA, as calls to VAL api are
+            # unreliable and times out. For a completed Video, VEDA heal will keep doing this unless
+            # the Video is old enough and escapes from the time-span that HEAL is picking up on.
+            # cc Greg Martin
+            if len(encode_list) > 0:
+                self.val_status = 'transcode_queue'
+
+            api_call = VALAPICall(
+                video_proto=None,
+                video_object=v,
+                val_status=self.val_status,
+            )
+            api_call.call()
 
             # Enqueue
-            if self.auth_dict['rabbitmq_broker'] is not None:
-                for e in encode_list:
-                    veda_id = v.edx_id
-                    encode_profile = e
-                    jobid = uuid.uuid1().hex[0:10]
-                    celeryapp.worker_task_fire.apply_async(
-                        (veda_id, encode_profile, jobid),
-                        queue=self.auth_dict['celery_worker_queue']
-                    )
+            if not self.auth_dict['rabbitmq_broker']:
+                return
+            for encode in encode_list:
+                veda_id = v.edx_id
+                encode_profile = encode
+                job_id = uuid.uuid1().hex[0:10]
+                task_result = celeryapp.worker_task_fire.apply_async(
+                    (veda_id, encode_profile, job_id),
+                    queue=self.auth_dict['celery_worker_queue'].strip(),
+                    connect_timeout=3
+                )
+                # Misqueued Task
+                if task_result == 1:
+                    LOGGER.error('[ENQUEUE ERROR] : {id}'.format(id=v.edx_id))
+                    continue
+
+            # Update Status
+            LOGGER.info('[ENQUEUE] : {id}'.format(id=v.edx_id))
+            Video.objects.filter(edx_id=v.edx_id).update(
+                video_trans_status='Queue'
+            )
 
     def determine_fault(self, video_object):
         """
         Determine expected and completed encodes
         """
-        LOGGER.info('[HEAL] : {id}'.format(id=video_object.edx_id))
+        LOGGER.info('[ENQUEUE] : {id}'.format(id=video_object.edx_id))
         if self.freezing_bug is True:
             if video_object.video_trans_status == 'Corrupt File':
                 self.val_status = 'file_corrupt'
@@ -122,7 +135,7 @@ class VedaHeal(object):
             pass
 
         requeued_encodes = self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
-        LOGGER.info('[HEAL] : {id} : {status} : {encodes}'.format(
+        LOGGER.info('[ENQUEUE] : {id} : {status} : {encodes}'.format(
             id=video_object.edx_id,
             status=self.val_status,
             encodes=requeued_encodes
@@ -223,7 +236,6 @@ class VedaHeal(object):
     def purge(self):
         """
         Purge Work Directory
-
         """
         for file in os.listdir(WORK_DIRECTORY):
             full_filepath = os.path.join(WORK_DIRECTORY, file)

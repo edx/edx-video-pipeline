@@ -22,26 +22,28 @@ CEL_BROKER = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.f
     rabbitmq_broker=auth_dict['rabbitmq_broker']
 )
 
-CEL_BACKEND = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.format(
-    rabbitmq_user=auth_dict['rabbitmq_user'],
-    rabbitmq_pass=auth_dict['rabbitmq_pass'],
-    rabbitmq_broker=auth_dict['rabbitmq_broker']
-)
-
-app = Celery(auth_dict['celery_app_name'], broker=CEL_BROKER, backend=CEL_BACKEND, include=[])
+app = Celery(auth_dict['celery_app_name'], broker=CEL_BROKER, include=['celeryapp'])
 
 app.conf.update(
     BROKER_CONNECTION_TIMEOUT=60,
     CELERY_IGNORE_RESULT=True,
     CELERY_TASK_RESULT_EXPIRES=10,
     CELERYD_PREFETCH_MULTIPLIER=1,
-    CELERY_ACCEPT_CONTENT=['pickle', 'json', 'msgpack', 'yaml']
+    CELERY_ACCEPT_CONTENT=['json'],
+    CELERY_TASK_PUBLISH_RETRY=True,
+    CELERY_TASK_PUBLISH_RETRY_POLICY={
+        "max_retries": 3,
+        "interval_start": 0,
+        "interval_step": 1,
+        "interval_max": 5
+    }
 )
 
 
 @app.task(name='worker_encode')
 def worker_task_fire(veda_id, encode_profile, jobid):
-    pass
+    print '[ENCODE] Misfire : {id} : {encode}'.format(id=veda_id, encode=encode_profile)
+    return 1
 
 
 @app.task(name='supervisor_deliver')

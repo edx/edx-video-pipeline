@@ -174,7 +174,10 @@ class VALAPICall():
             self.video_object.video_orig_duration = 0
             self.video_object.duration = 0.0
 
-        if not isinstance(self.video_proto.duration, float):
+        except AttributeError:
+            pass
+
+        if not isinstance(self.video_proto.duration, float) and self.val_status != 'invalid_token':
             self.video_proto.duration = Output._seconds_from_string(
                 duration=self.video_object.video_orig_duration
             )
@@ -369,15 +372,13 @@ class VALAPICall():
             headers=self.headers,
             timeout=self.auth_dict['global_timeout']
         )
-
+        LOGGER.info('[VAL] : {id} : {status} : {code}'.format(
+            id=self.video_proto.val_id,
+            status=self.val_status,
+            code=r4.status_code)
+        )
         if r4.status_code > 299:
-            ErrorObject.print_error(
-                message='%s\n %s\n %s\n' % (
-                    'R4 : VAL POST/PUT Fail: VAL',
-                    'Check VAL Config',
-                    r4.status_code
-                )
-            )
+            LOGGER.error('[VAL] : POST/PUT Fail : Check Config : {status}'.format(status=r4.status_code))
 
     def update_val_transcript(self, video_id, lang_code, name, transcript_format, provider):
         """

@@ -61,3 +61,9 @@ NODE_COLORS_BLUE = '\033[94m'
 NODE_COLORS_GREEN = '\033[92m'
 NODE_COLORS_RED = '\033[91m'
 NODE_COLORS_END = '\033[0m'
+
+"""
+Heal process start and end query times for 'video_trans_start' in hours
+"""
+HEAL_START = 6
+HEAL_END = 144

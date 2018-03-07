@@ -62,8 +62,4 @@ val_profile_dict:
     hls:
         - hls
 
-# Heal settings
-heal_start: 1
-heal_end: 144
-
 global_timeout: 60
