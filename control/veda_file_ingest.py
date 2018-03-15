@@ -109,8 +109,9 @@ class VedaIngest(object):
         # TODO: Break heal method listed here out into helper util
         encode_instance = VedaHeal(
             video_query=Video.objects.filter(
-                edx_id=self.video_proto.veda_id
-            )
+                edx_id=self.video_proto.veda_id.strip()
+            ),
+            val_status='transcode_queue'
         )
         encode_instance.send_encodes()
 
@@ -156,28 +157,26 @@ class VedaIngest(object):
 
     def database_record(self):
         """
-        Start DB Inserts, Get Information
+        Start DB Inserts, Get Basic File name information
         """
-        if self.video_proto.s3_filename is not None:
+        if self.video_proto.s3_filename:
             self.full_filename = '/'.join((
                 self.node_work_directory,
                 self.video_proto.s3_filename
             ))
-
-        if self.video_proto.abvid_serial is not None:
+        if self.video_proto.abvid_serial:
             self.full_filename = '/'.join((
                 self.node_work_directory,
                 self.video_proto.client_title
             ))
+            if len(self.video_proto.file_extension) > 2:
+                self.full_filename += "." + self.video_proto.file_extension
 
-        if self.full_filename is None:
+        if not self.full_filename:
             self.full_filename = '/'.join((
                 self.node_work_directory,
                 self.video_proto.client_title
             ))
-
-        if len(self.video_proto.file_extension) == 3:
-            self.full_filename += "." + self.video_proto.file_extension
 
         if not os.path.exists(self.full_filename):
             LOGGER.exception('[VIDEO_INGEST] File Not Found %s', self.video_proto.veda_id)
@@ -192,9 +191,17 @@ class VedaIngest(object):
 
         if self.video_proto.valid is True:
             self._gather_metadata()
-        """
-        DB Inserts
-        """
+
+        # DB Inserts
+        if self.video_proto.s3_filename:
+            video = Video.objects.filter(studio_id=self.video_proto.s3_filename).first()
+            if video:
+                # Protect against crash/duplicate inserts, won't insert object
+                self.video_proto.veda_id = video[0].edx_id
+                self.video_proto.video_orig_duration = video[0].video_orig_duration
+                self.complete = True
+                return
+
         v1 = Video(inst_class=self.course_object)
         """
         Generate veda_id / update course record
@@ -301,7 +308,7 @@ class VedaIngest(object):
             raise
 
     def val_insert(self):
-        if self.video_proto.abvid_serial is not None:
+        if self.video_proto.abvid_serial:
             return None
 
         if self.video_proto.valid is False:
@@ -331,38 +338,24 @@ class VedaIngest(object):
     def rename(self):
         """
         Rename to VEDA ID,
-        Backup in Hotstore
+
         """
         if self.video_proto.veda_id is None:
             self.video_proto.valid = False
-            return None
+            return
 
-        if self.video_proto.file_extension is None:
-            os.rename(
-                self.full_filename, os.path.join(
-                    self.node_work_directory,
-                    self.video_proto.veda_id
-                )
-            )
-            self.full_filename = os.path.join(
+        veda_filename = self.video_proto.veda_id
+        if self.video_proto.file_extension:
+            veda_filename += '.{ext}'.format(ext=self.video_proto.file_extension)
+        os.rename(
+            self.full_filename, os.path.join(
                 self.node_work_directory,
-                self.video_proto.veda_id
+                veda_filename
             )
-
-        else:
-            os.rename(
-                self.full_filename,
-                os.path.join(
-                    self.node_work_directory,
-                    self.video_proto.veda_id + '.' + self.video_proto.file_extension
-                )
-            )
-            self.full_filename = os.path.join(
-                self.node_work_directory,
-                self.video_proto.veda_id + '.' + self.video_proto.file_extension
-            )
-
+        )
+        self.full_filename = os.path.join(self.node_work_directory, veda_filename)
         os.system('chmod ugo+rwx ' + self.full_filename)
+        return
 
     def store(self):
         """

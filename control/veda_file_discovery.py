@@ -143,7 +143,8 @@ class FileDiscovery(object):
             s3_filename=s3_filename,
             client_title=client_title,
             file_extension='',
-            platform_course_url=course_id
+            platform_course_url=course_id,
+            video_orig_duration=0.0
         )
         # Update val status to 'invalid_token'
         VALAPICall(video_proto=video_proto, val_status=u'invalid_token').call()
@@ -196,7 +197,7 @@ class FileDiscovery(object):
 
         return course
 
-    def download_video_to_working_directory(self, key, file_name, file_extension):
+    def download_video_to_working_directory(self, key, file_name):
         """
         Downloads the video to working directory from S3 and
         returns whether its successfully downloaded or not.
@@ -204,17 +205,13 @@ class FileDiscovery(object):
         Arguments:
             key: An S3 key whose content is going to be downloaded
             file_name: Name of the file when its in working directory
-            file_extension: extension of this file.
         """
-        if len(file_extension) == 3:
-            file_name = u'{file_name}.{ext}'.format(file_name=file_name, ext=file_extension)
+        file_ingested = False
         try:
             key.get_contents_to_filename(os.path.join(self.node_work_directory, file_name))
             file_ingested = True
         except S3DataError:
-            file_ingested = False
             LOGGER.exception('[File Ingest] Error downloading the file into node working directory.')
-
         return file_ingested
 
     def parse_transcript_preferences(self, course_id, transcript_preferences):
@@ -287,7 +284,7 @@ class FileDiscovery(object):
         if course:
             # Download video file from S3 into node working directory.
             file_extension = os.path.splitext(client_title)[1][1:]
-            file_downloaded = self.download_video_to_working_directory(video_s3_key, filename, file_extension)
+            file_downloaded = self.download_video_to_working_directory(video_s3_key, filename)
             if not file_downloaded:
                 # S3 Bucket ingest failed, move the file rejected directory.
                 self.move_video(video_s3_key, destination_dir=self.auth_dict['edx_s3_rejected_prefix'])

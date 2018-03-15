@@ -107,7 +107,7 @@ def main():
 
         HC = HealCli()
         HC.schedule()
-        return None
+        return
 
     if veda_id is not None:
         VH = VedaHeal(
@@ -116,7 +116,7 @@ def main():
                 )
             )
         VH.send_encodes()
-        return None
+        return
 
     if course_id is not None:
         VH = VedaHeal(
@@ -128,11 +128,10 @@ def main():
                 )
             )
         VH.send_encodes()
-        return None
+        return
 
     # TODO: Data backup
     # TODO: API key purge
-
     if schedule is True:
         HC = HealCli()
         HC.schedule()
