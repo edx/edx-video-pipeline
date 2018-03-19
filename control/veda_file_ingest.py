@@ -197,8 +197,8 @@ class VedaIngest(object):
             video = Video.objects.filter(studio_id=self.video_proto.s3_filename).first()
             if video:
                 # Protect against crash/duplicate inserts, won't insert object
-                self.video_proto.veda_id = video[0].edx_id
-                self.video_proto.video_orig_duration = video[0].video_orig_duration
+                self.video_proto.veda_id = video.edx_id
+                self.video_proto.video_orig_duration = video.video_orig_duration
                 self.complete = True
                 return
 
