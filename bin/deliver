@@ -9,7 +9,7 @@ if project_path not in sys.path:
     sys.path.append(project_path)
 
 
-class DeliverCli:
+class DeliverCli(object):
     """
     Deliver
 

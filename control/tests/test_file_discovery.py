@@ -170,22 +170,6 @@ class TestFileDiscovery(TestCase):
             self.assertTrue(mock_validate_and_feed_to_ingest.called)
 
     @ddt.data(
-        ('veda/working', '[File Ingest] S3 Ingest Connection Failure'),
-        (None, '[File Ingest] No Working Node directory')
-    )
-    @ddt.unpack
-    @patch('control.veda_file_discovery.ErrorObject.print_error')
-    @patch('boto.s3.connection.S3Connection')
-    def test_discover_studio_ingested_video_exceptions(self, work_dir, error_message, mocked_s3_conn, mock_error):
-        """
-        Tests 'FileDiscovery.discover_studio_ingested_videos' exception cases.
-        """
-        mocked_s3_conn.side_effect = S3ResponseError('Error', 'Timeout')
-        file_discovery_instance = FileDiscovery(node_work_directory=work_dir)
-        file_discovery_instance.discover_studio_ingested_videos()
-        mock_error.assert_called_with(message=error_message)
-
-    @ddt.data(
         (None, 'invalid_course_key'),
         ('non-existent-hex', None)
     )

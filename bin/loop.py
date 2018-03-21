@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+"""
+This is a cheapo way to get a pager (using SES)
+
+"""
 
 import os
 import sys
 import argparse
+import logging
 from django.db import reset_queries
 import resource
 import time
@@ -13,11 +18,6 @@ project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
 
-"""
-This is a cheapo way to get a pager (using SES)
-
-"""
-
 import django
 django.setup()
 
@@ -25,8 +25,12 @@ from control.veda_file_discovery import FileDiscovery
 from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction
 
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-class DaemonCli:
+
+class DaemonCli(object):
 
     def __init__(self):
         self.args = None
@@ -80,7 +84,7 @@ class DaemonCli:
             reset_queries()
             x += 1
             if x >= 100:
-                print 'Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                LOGGER.info('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
                 x = 0
 
     def youtube_daemon(self):
@@ -88,12 +92,12 @@ class DaemonCli:
         while True:
             self.course_list = generate_course_list()
             for course in self.course_list:
-                print "%s%s: Callback" % (course.institution, course.edx_classid)
+                LOGGER.info('%s%s: Callback' % (course.institution, course.edx_classid))
                 callfunction(course)
 
             x += 1
             if x >= 100:
-                print 'Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                LOGGER.info('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
                 x = 0
 
             reset_queries()

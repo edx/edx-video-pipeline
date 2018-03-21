@@ -2,88 +2,74 @@
 # ---
 # Database information
 # ---
-
-# SANDBOX
-#DATABASES:
-#    default:
-#        ENGINE: django.db.backends.sqlite3
-#        NAME: sandbox.db
-
-## PRODUCTION
 DATABASES:
     default:
-        ENGINE: 'django.db.backends.mysql'
-        NAME: 'pipeline'
-        USER: 'pipeline001'
-        PASSWORD: 'password'
-        HOST: 'localhost'
-        PORT: 3306
+        ENGINE: django.db.backends.sqlite3
+        NAME: sandbox.db
 
-SECRET_KEY: ""
+SECRET_KEY: "a_random_string"
 
-# Fernet keys
-FERNET_KEYS: []
+FERNET_KEYS: ["a_random_string"]
+
+debug: True
+
+# Frontend S3 Auth
+veda_secret_access_key: A_RANDOM_STRING
+veda_access_key_id: A_RANDOM_STRING
 
 # JWT AUTH settings
 JWT_AUTH:
-    JWT_SECRET_KEY:
-    JWT_ISSUER:
-    JWT_AUDIENCE:
-    JWT_VERIFY_AUDIENCE:
+  JWT_SECRET_KEY: A_RANDOM_STRING
+  JWT_ISSUER:
+  JWT_AUDIENCE: A_RANDOM_STRING
+  JWT_VERIFY_AUDIENCE: true
 
 # ---
-# AWS Buckets, Prefixes
+# AWS
 # ---
-# Studio/Platform
-edx_s3_ingest_prefix:
-edx_s3_ingest_bucket:
-edx_s3_endpoint_bucket:
+#veda_s3_upload_bucket:
+#veda_s3_hotstore_bucket:
+#veda_deliverable_bucket:
+#veda_upload_bucket:
+#edx_s3_ingest_prefix:
+#edx_s3_ingest_bucket:
+#edx_s3_endpoint_bucket:
+#edx_cloudfront_prefix:
+#aws_video_images_bucket:
+#aws_video_images_prefix:
 
-# CF
-edx_cloudfront_prefix:
-
-# Images
-aws_video_images_bucket:
-aws_video_images_prefix: "video-images/"
-
-
-# VEDA Internal
-veda_s3_upload_bucket:
-veda_s3_hotstore_bucket:
-veda_deliverable_bucket:
-# Settings
+s3_base_url:
 veda_base_url:
-s3_base_url: https://s3.amazonaws.com
 
-
-# Transcripts
 aws_video_transcripts_bucket:
 aws_video_transcripts_prefix: video-transcripts/
 
-# cielo24 api urls
-cielo24_api_base_url: https://sandbox.cielo24.com/api
-
-# 3playmedia api urls
-three_play_api_base_url: https://api.3playmedia.com/
-three_play_api_transcript_url: https://static.3playmedia.com/
 
 # a token identifying a valid request from transcript provider
-transcript_provider_request_token: testtoken
-
-# Ingest Secret
-# TODO: Elminate access key after AWS Support ticket 08/20/17 regarding cross-account IAM role access.
-veda_secret_access_key:
-veda_access_key_id:
+transcript_provider_request_token:
 
 # ---
 # email vars
 # ---
-veda_noreply_email:
-admin_email:
+veda_noreply_email: admin@example.com
+admin_email: admin@example.com
+
+lms_base_url:
+instance_prefix: ''
 
 # ---
-# VEDA API
+# VAL user creds
 # ---
+val_token_url:
+val_api_url:
+val_video_images_url:
+val_transcript_create_url:
+val_video_transcript_status_url:
+val_client_id:
+val_secret_key:
+val_username: admin@example.com
+val_password:
+
 ## VEDA API Auth
 veda_api_url:
 veda_auth_url:
@@ -92,23 +78,20 @@ veda_secret_key:
 veda_token_url:
 
 # ---
-# VAL
+# Celery Info
 # ---
-val_api_url:
-val_token_url:
-val_video_images_url:
-# Credentials
-val_client_id: 'clientkey'
-val_secret_key: 'secretkey'
-val_password:
-val_username:
-val_transcript_create_url:
-val_video_transcript_status_url:
+celery_app_name:
+# can do multiple queues like so: foo,bar,baz
+celery_worker_queue:
+celery_deliver_queue:
+celery_heal_queue:
+celery_threads: 1
 
-# Celery Worker Config Information
 rabbitmq_broker:
 rabbitmq_pass:
 rabbitmq_user:
+
+onsite_worker: False
 
 # ---
 # Shotgun Variables (internal mediateam)
@@ -117,10 +100,4 @@ sg_server_path:
 sg_script_name:
 sg_script_key:
 
-# ---
-# Endpoints
-# ---
-threeplay_ftphost:
-
-lms_base_url: ''
-instance_prefix: ''
+...

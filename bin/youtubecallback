@@ -18,7 +18,7 @@ Command Line Interface
 """
 
 
-class YoutubeCallbackCli():
+class YoutubeCallbackCli(object):
 
     def __init__(self, **kwargs):
         self.args = None
@@ -54,14 +54,10 @@ class YoutubeCallbackCli():
 
     def _parse_args(self):
         self.course_id = self.args.courseid
-        self.list = self.args.list
 
     def run(self):
 
-        if self.list is True:
-            self.listcourses()
-        else:
-            self.loop()
+        self.loop()
 
     def loop(self):
         """
@@ -81,16 +77,6 @@ class YoutubeCallbackCli():
         os.system(runcommand)
         E1 = EmailAlert(message='Youtube Callback Daemon Crash', subject='Youtube Callback Daemon')
         E1.email()
-
-    def listcourses(self):
-        """
-        list and exit
-        :return:
-        """
-        self.course_list = generate_course_list()
-        for course in self.course_list:
-            print course.institution
-            print course.edx_classid
 
 
 def main():

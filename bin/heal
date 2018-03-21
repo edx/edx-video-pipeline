@@ -4,11 +4,12 @@ Deliver
 
 Command Line Interface
 """
-import os
-import sys
 import argparse
 import datetime
 from datetime import timedelta
+import logging
+import os
+import sys
 import pytz
 
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,8 +22,12 @@ from VEDA_OS01.models import Course, Video
 from VEDA_OS01.transcripts import retrieve_three_play_translations
 from VEDA.utils import get_config
 
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-class HealCli:
+
+class HealCli(object):
 
     def __init__(self, **kwargs):
         self.logging = kwargs.get('logging', True)
@@ -93,8 +98,8 @@ def main():
         retrieve_three_play_translations()
         return
 
-    print '%s - %s: %s' % ('Healing', 'VEDA ID', veda_id)
-    print '%s - %s: %s' % ('Healing', 'Course', course_id)
+    LOGGER.info('%s - %s: %s' % ('Healing', 'VEDA ID', veda_id))
+    LOGGER.info('%s - %s: %s' % ('Healing', 'Course', course_id))
 
     if veda_id is None and course_id is None and schedule is False:
         VH = VedaHeal()

@@ -1,23 +1,21 @@
+"""
+Quick and dirty output handling
 
-import os
-import sys
-import datetime
+"""
 import boto.ses
-import hashlib
+import datetime
 import subprocess
 
-
-"""
-Let's do some quick and dirty error handling & logging
-
-"""
 from control.control_env import *
 from control.veda_encode import VedaEncode
 from VEDA.utils import get_config
 
 
-class EmailAlert():
+class EmailAlert(object):
+    """
+    Send alert emails VIA AWS SES for Course About Video Statuses
 
+    """
     def __init__(self, **kwargs):
         self.auth_dict = get_config()
         self.message = kwargs.get('message', None)
@@ -42,24 +40,9 @@ class EmailAlert():
         )
 
 
-class ErrorObject(object):
-    """
-    Unspecified errors with a message
-    """
-    @staticmethod
-    def print_error(message):
-        decorator = "***************E*R*R*O*R*******************"
-        outgoing = '\n%s \n\n%s \n\n%s\n' % (
-            NODE_COLORS_BLUE + decorator + NODE_COLORS_END,
-            message,
-            NODE_COLORS_BLUE + decorator + NODE_COLORS_END,
-        )
-        print outgoing
-
-
 class Output(object):
     """
-    Various reporting methods
+    Display/Reporting methods
     """
     @staticmethod
     def _seconds_from_string(duration):
@@ -109,7 +92,7 @@ class Output(object):
         sys.stdout.flush()
 
 
-class Report():
+class Report(object):
 
     def __init__(self, **kwargs):
         self.auth_dict = get_config()
@@ -197,8 +180,12 @@ class Report():
         )
 
 
-class VideoProto():
+class VideoProto(object):
+    """
+    Video object abstraction,
+    intended as a record before object is recorded in DB
 
+    """
     def __init__(self, **kwargs):
         self.s3_filename = kwargs.get('s3_filename', None)
         self.client_title = kwargs.get('client_title', None)
@@ -217,8 +204,11 @@ class VideoProto():
         self.val_id = kwargs.get('val_id', None)
 
 
-class Metadata():
+class Metadata(object):
+    """
+    Centralized video metadata probe
 
+    """
     def __init__(self, **kwargs):
         self.video_proto = kwargs.get('video_proto', None)
         self.video_object = kwargs.get(
@@ -270,11 +260,12 @@ class Metadata():
                         self.video_proto.resolution = vid_breakout[3].strip()
 
     def _FAULT(self, video_object):
+        """
+        Find missing encodes
+        """
         if self.video_object is None:
             return []
-        """
-        Is there anything to do with this?
-        """
+        # Check for object viability against prior findings
         if video_object.video_trans_status == 'Corrupt File':
             return []
 
@@ -288,15 +279,13 @@ class Metadata():
 
             return []
 
-        """
-        Finally, determine encodes
-        """
-        E = VedaEncode(
+        # Determine encodes
+        encode = VedaEncode(
             course_object=video_object.inst_class,
             veda_id=video_object.edx_id
         )
 
-        encode_list = E.determine_encodes()
+        encode_list = encode.determine_encodes()
 
         if encode_list is not None:
             if 'mobile_high' in encode_list:
@@ -321,26 +310,20 @@ class Metadata():
                 )
             return []
 
-        """
-        get baseline // if there are == encodes and baseline,
-        mark file corrupt -- just run the query again with
-        no veda_id
-        """
-        """
-        This overrides
-        """
+        # get baseline // if there are == encodes and baseline,
+        # mark file corrupt -- just run the query again with no veda_id.
+
+        # kwarg override:
         if self.freezing_bug is False and self.val_status != 'file_complete':
             self.val_status = 'transcode_queue'
             return encode_list
 
-        E2 = VedaEncode(
+        encode_two = VedaEncode(
             course_object=video_object.inst_class,
         )
-        E2.determine_encodes()
-        if len(E2.encode_list) == len(encode_list) and len(encode_list) > 1:
-            """
-            Mark File Corrupt, accounting for migrated URLs
-            """
+        encode_two.determine_encodes()
+        if len(encode_two.encode_list) == len(encode_list) and len(encode_list) > 1:
+            # Mark File Corrupt, accounting for migrated legacy URLs
             url_test = URL.objects.filter(
                 videoID=Video.objects.filter(
                     edx_id=video_object.edx_id

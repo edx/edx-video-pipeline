@@ -1,13 +1,16 @@
-'''
+"""
 About Video Input and Validation
-'''
 
-import os
-import sys
+"""
+
 import datetime
-
+import logging
 
 from frontend_env import *
+
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 def create_record(upload_data):
@@ -22,7 +25,6 @@ def create_record(upload_data):
         file_valid=False,
         file_complete=False,
     )
-
     try:
         ul1.save()
         return True
@@ -32,7 +34,7 @@ def create_record(upload_data):
 
 def validate_incoming(upload_data):
 
-    ul2 = VedaUpload.objects.filter(
+    VedaUpload.objects.filter(
         video_serial=upload_data['abvid_serial']
     ).update(
         upload_date=datetime.datetime.utcnow().replace(tzinfo=utc),
@@ -42,26 +44,24 @@ def validate_incoming(upload_data):
 
 
 def send_to_pipeline(upload_data):
-
-    ul3 = VedaUpload.objects.filter(
+    VedaUpload.objects.filter(
         video_serial=upload_data['abvid_serial']
     ).update(
         file_valid=upload_data['success'],
     )
-
     if upload_data['success'] == 'true':
-        print 'Sending File to Pipeline'
+        LOGGER.info('[ABOUT_VIDEO] {ul_id} : Sending File to Pipeline'.format(
+            ul_id=upload_data['abvid_serial']
+        ))
+        return True
 
-    else:
-        ul3 = VedaUpload.objects.filter(
-            video_serial=upload_data['abvid_serial']
-        ).update(
-            comment='Failed Upload',
-        )
-        return False
-
-if __name__ == '__main__':
-    upload_data = {}
-    upload_data['abvid_serial'] = '19e1e1c78e'
-    upload_data['success'] = 'true'
-    send_to_pipeline(upload_data)
+    # Failed upload
+    VedaUpload.objects.filter(
+        video_serial=upload_data['abvid_serial']
+    ).update(
+        comment='Failed Upload',
+    )
+    LOGGER.info('[ABOUT_VIDEO] {ul_id} : Failed upload'.format(
+        ul_id=upload_data['abvid_serial']
+    ))
+    return False

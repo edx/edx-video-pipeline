@@ -1,5 +1,6 @@
 
 import boto
+import logging
 import os
 import shutil
 import sys
@@ -10,7 +11,6 @@ from boto.s3.key import Key
 from boto.exception import S3ResponseError
 from os.path import expanduser
 
-from veda_utils import ErrorObject
 from VEDA.utils import get_config
 
 try:
@@ -20,6 +20,10 @@ except:
 boto.config.set('Boto', 'http_socket_timeout', '100')
 
 homedir = expanduser("~")
+
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 class Hotstore(object):
@@ -44,9 +48,7 @@ class Hotstore(object):
             return False
 
         if not os.path.exists(self.upload_filepath):
-            ErrorObject().print_error(
-                message='Hotstore: File Not Found'
-            )
+            LOGGER.error('[HOTSTORE] Local file not found')
             return False
 
         self.upload_filesize = os.stat(self.upload_filepath).st_size
@@ -68,9 +70,7 @@ class Hotstore(object):
                     self.auth_dict['veda_s3_hotstore_bucket']
                 )
             except S3ResponseError:
-                ErrorObject().print_error(
-                    message='Hotstore: Bucket Connectivity'
-                )
+                LOGGER.error('[HOTSTORE] No hotstore bucket connection')
                 return False
         else:
             try:
@@ -79,9 +79,7 @@ class Hotstore(object):
                     self.auth_dict['edx_s3_endpoint_bucket']
                 )
             except S3ResponseError:
-                ErrorObject().print_error(
-                    message='Endpoint: Bucket Connectivity'
-                )
+                LOGGER.error('[HOTSTORE] No endpoint bucket connection')
                 return False
 
         upload_key = Key(delv_bucket)
@@ -128,24 +126,18 @@ class Hotstore(object):
                 c = boto.connect_s3()
                 b = c.lookup(self.auth_dict['veda_s3_hotstore_bucket'])
             except S3ResponseError:
-                ErrorObject().print_error(
-                    message='Hotstore: Bucket Connectivity'
-                )
+                LOGGER.error('[HOTSTORE] : No hotstore bucket connection')
                 return False
         else:
             try:
                 c = boto.connect_s3()
                 b = c.lookup(self.auth_dict['edx_s3_endpoint_bucket'])
             except S3ResponseError:
-                ErrorObject().print_error(
-                    message='Endpoint: Bucket Connectivity'
-                )
+                LOGGER.error('[HOTSTORE] : No endpoint bucket connection')
                 return False
 
         if b is None:
-            ErrorObject().print_error(
-                message='Deliverable Fail: s3 Bucket Error'
-            )
+            LOGGER.error('[HOTSTORE] : s3 Bucket Error - no object')
             return False
 
         """
@@ -180,11 +172,3 @@ class Hotstore(object):
         os.chdir(homedir)
         shutil.rmtree(os.path.join(path_to_multipart, filename.split('.')[0]))
         return True
-
-
-def main():
-    pass
-
-
-if __name__ == '__main__':
-    sys.exit(main())

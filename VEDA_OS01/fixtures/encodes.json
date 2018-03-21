@@ -160,5 +160,18 @@
             "encode_resolution": "720",
             "product_spec": "desktop_webm"
         }
+    },
+    {
+        "model": "VEDA_OS01.course",
+        "pk": 1,
+        "fields": {
+            "course_name": "Demo Course",
+            "institution": "EDX",
+            "edx_classid": "DEMOX",
+            "semesterid": 2018,
+            "yt_proc": false,
+            "local_storedir": "this/is/an/exemplar",
+            "studio_hex": "shared_course_token"
+        }
     }
 ]

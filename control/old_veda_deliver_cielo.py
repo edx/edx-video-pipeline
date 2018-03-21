@@ -1,7 +1,3 @@
-import requests
-import ast
-import urllib
-
 """
 Cielo24 API Job Start and Download
 Options (reflected in Course.models):
@@ -14,10 +10,17 @@ priority =
   priority (48h)
 turnaround_hours = number, overrides 'priority' call, will change a standard to a priority silently
 """
+import logging
+import requests
+import ast
+import urllib
+
 from control_env import *
-from veda_utils import ErrorObject
 
 requests.packages.urllib3.disable_warnings()
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 class Cielo24TranscriptOld(object):
@@ -77,11 +80,9 @@ class Cielo24TranscriptOld(object):
             videoID=video_query,
             encode_url__icontains='_DTH.mp4',
         ).latest()
-        
+
         if video_query.inst_class.c24_username is None:
-            ErrorObject.print_error(
-                message='Cielo24 Record Incomplete',
-            )
+            LOGGER.error('[VIDEO_PIPELINE] {id} : Cielo API : Course record incomplete'.format(id=self.veda_id))
             return None
 
         c24_defaults = {
@@ -102,10 +103,8 @@ class Cielo24TranscriptOld(object):
         # Generate Token
         r1 = requests.get(token_url)
         if r1.status_code > 299:
-            ErrorObject.print_error(
-                message='Cielo24 API Access Error',
-            )
-            return None
+            LOGGER.error('[VIDEO_PIPELINE] {id} : Cielo API access'.format(id=self.veda_id))
+            return
         api_token = ast.literal_eval(r1.text)["ApiToken"]
         return api_token
 
@@ -161,7 +160,6 @@ class Cielo24TranscriptOld(object):
                 urllib.quote_plus(self.c24_defaults['url'])
             ))
         )
-        print str(r4.status_code) + ' : Cielo24 Status Code'
         return ast.literal_eval(r4.text)['TaskId']
 
 

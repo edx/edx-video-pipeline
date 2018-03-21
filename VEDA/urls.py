@@ -4,9 +4,9 @@ import os
 sys.path.append(os.path.abspath(__file__))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 
+# pep8: disable=E402
 from django.conf import settings
 from rest_framework import routers
-# from rest_framework.routers import DefaultRouter
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
