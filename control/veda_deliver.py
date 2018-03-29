@@ -179,7 +179,8 @@ class VedaDelivery(object):
             client_title=self.video_query.client_title,
             duration=self.video_query.video_orig_duration,
             bitrate='0',
-            s3_filename=self.video_query.studio_id
+            s3_filename=self.video_query.studio_id,
+            platform_course_url=self.video_query.inst_class.course_runs
         )
         self.encode_query = Encode.objects.get(
             product_spec=self.encode_profile
@@ -256,8 +257,7 @@ class VedaDelivery(object):
         Further information for VAL
         """
         self.video_proto.veda_id = self.video_query.edx_id
-        self.video_proto.platform_course_url = \
-            [i for i in self.video_query.inst_class.local_storedir.split(',')]
+        self.video_proto.platform_course_url = self.video_query.inst_class.course_runs
         self.video_proto.client_title = self.video_query.client_title
 
     def _VALIDATE(self):
