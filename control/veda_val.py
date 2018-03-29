@@ -1,21 +1,18 @@
-
-import logging
-import os
-import sys
-import requests
-import ast
-import json
-import datetime
-import yaml
-from VEDA.utils import get_config
-
-requests.packages.urllib3.disable_warnings()
-
-
 """
 Send data to VAL, either Video ID data or endpoint URLs
 
 """
+
+import logging
+import requests
+import ast
+import json
+
+from control_env import *
+from control.veda_utils import Output, VideoProto
+
+LOGGER = logging.getLogger(__name__)
+requests.packages.urllib3.disable_warnings()
 
 '''
 "upload": _UPLOADING,
@@ -31,13 +28,9 @@ Send data to VAL, either Video ID data or endpoint URLs
 "imported": _IMPORTED,
 
 '''
-from control_env import *
-from control.veda_utils import ErrorObject, Output
-
-LOGGER = logging.getLogger(__name__)
 
 
-class VALAPICall():
+class VALAPICall(object):
 
     def __init__(self, video_proto, val_status, **kwargs):
         """VAL Data"""
@@ -63,16 +56,17 @@ class VALAPICall():
         self.auth_dict = kwargs.get('CONFIG_DATA', self._AUTH())
 
     def call(self):
-        if self.auth_dict is None:
+        if not self.auth_dict:
             return None
 
         """
         Errors covered in other methods
         """
-        if self.val_token is None:
+        if not self.val_token:
             self.val_tokengen()
-        if self.video_object is not None:
+        if self.video_object:
             self.send_object_data()
+            return
         if self.video_proto is not None:
             self.send_val_data()
 
@@ -93,10 +87,8 @@ class VALAPICall():
         r = requests.post(self.auth_dict['val_token_url'], data=payload, timeout=self.auth_dict['global_timeout'])
 
         if r.status_code != 200:
-            ErrorObject.print_error(
-                message='Token Gen Fail: VAL\nCheck VAL Config'
-            )
-            return None
+            LOGGER.error('[API] : VAL Token generation')
+            return
 
         self.val_token = ast.literal_eval(r.text)['access_token']
         self.headers = {
@@ -109,10 +101,8 @@ class VALAPICall():
         Rather than rewrite the protocol to fit the veda models,
         we'll shoehorn the model into the VideoProto model
         """
-        class VideoProto():
-            platform_course_url = []
-
         self.video_proto = VideoProto()
+
         self.video_proto.s3_filename = self.video_object.studio_id
         self.video_proto.veda_id = self.video_object.edx_id
         self.video_proto.client_title = self.video_object.client_title
@@ -144,7 +134,7 @@ class VALAPICall():
         ## "PUT" for extant objects to video/id --
             cannot send duplicate course records
         '''
-        if self.val_token is None:
+        if not self.val_token:
             return False
 
         if self.video_proto.s3_filename is None or \
@@ -188,13 +178,12 @@ class VALAPICall():
         val_courses = []
         if self.val_status != 'invalid_token':
             for f in self.video_object.inst_class.local_storedir.split(','):
-                if f.strip() not in val_courses:
+                if f.strip() not in val_courses and len(f.strip()) > 0:
                     val_courses.append({f.strip(): None})
 
-        if len(val_courses) == 0:
-            for g in self.video_proto.platform_course_url:
-                if g.strip() not in val_courses:
-                    val_courses.append({g.strip(): None})
+        for g in self.video_proto.platform_course_url:
+            if g.strip() not in val_courses:
+                val_courses.append({g.strip(): None})
 
         self.val_data = {
             'client_video_id': self.video_proto.client_title,
@@ -213,10 +202,8 @@ class VALAPICall():
         )
 
         if r1.status_code != 200 and r1.status_code != 404:
-            ErrorObject.print_error(
-                message='R1 : VAL Communication Fail: VAL\nCheck VAL Config'
-            )
-            return None
+            LOGGER.error('[API] : VAL Communication')
+            return
 
         if r1.status_code == 404:
             self.send_404()
@@ -246,7 +233,7 @@ class VALAPICall():
             self.auth_dict['val_profile_dict'][self.encode_profile]
         except KeyError:
             return
-        if self.endpoint_url is not None:
+        if self.endpoint_url:
             for p in self.auth_dict['val_profile_dict'][self.encode_profile]:
 
                 self.encode_data.append(dict(
@@ -257,7 +244,7 @@ class VALAPICall():
                 ))
 
         test_list = []
-        if self.video_proto.veda_id is not None:
+        if self.video_proto.veda_id:
             url_query = URL.objects.filter(
                 videoID=Video.objects.filter(
                     edx_id=self.video_proto.veda_id
@@ -327,13 +314,7 @@ class VALAPICall():
         )
 
         if r2.status_code > 299:
-            ErrorObject.print_error(
-                message='%s\n %s\n %s\n' % (
-                    'R2 : VAL POST/PUT Fail: VAL',
-                    'Check VAL Config',
-                    r2.status_code
-                )
-            )
+            LOGGER.error('[API] : VAL POST/PUT {code}'.format(code=r2.status_code))
 
     def send_200(self, val_api_return):
         """
@@ -372,13 +353,13 @@ class VALAPICall():
             headers=self.headers,
             timeout=self.auth_dict['global_timeout']
         )
-        LOGGER.info('[VAL] : {id} : {status} : {code}'.format(
+        LOGGER.info('[API] {id} : {status} sent to VAL {code}'.format(
             id=self.video_proto.val_id,
             status=self.val_status,
             code=r4.status_code)
         )
         if r4.status_code > 299:
-            LOGGER.error('[VAL] : POST/PUT Fail : Check Config : {status}'.format(status=r4.status_code))
+            LOGGER.error('[API] : VAL POST/PUT : {status}'.format(status=r4.status_code))
 
     def update_val_transcript(self, video_id, lang_code, name, transcript_format, provider):
         """
@@ -404,7 +385,7 @@ class VALAPICall():
 
         if not response.ok:
             LOGGER.error(
-                'update_val_transcript failed -- video_id=%s -- provider=% -- status=%s -- content=%s',
+                '[API] : VAL update_val_transcript failed -- video_id=%s -- provider=% -- status=%s -- content=%s',
                 video_id,
                 provider,
                 response.status_code,
@@ -432,16 +413,8 @@ class VALAPICall():
 
         if not response.ok:
             LOGGER.error(
-                'update_video_status failed -- video_id=%s -- status=%s -- text=%s',
+                '[API] : VAL Update_video_status failed -- video_id=%s -- status=%s -- text=%s',
                 video_id,
                 response.status_code,
                 response.text
             )
-
-
-def main():
-    pass
-
-
-if __name__ == '__main__':
-    sys.exit(main())

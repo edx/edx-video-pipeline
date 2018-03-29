@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+Ingest
+
+Command Line Interface
+"""
+
 import os
 import sys
 import argparse
@@ -9,13 +15,8 @@ if project_path not in sys.path:
 
 from control.veda_utils import EmailAlert
 
-"""
-Ingest
 
-Command Line Interface
-"""
-
-class IngestCli():
+class IngestCli(object):
 
     def __init__(self, **kwargs):
         self.args = None

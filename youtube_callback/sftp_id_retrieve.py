@@ -17,11 +17,10 @@ import django
 import pysftp
 from django.utils.timezone import utc
 
-from control.veda_utils import ErrorObject, Metadata, VideoProto
+from control.veda_utils import Metadata, VideoProto
 from control.veda_val import VALAPICall
 from frontend.abvid_reporting import report_status
 from VEDA_OS01.models import URL, Encode, Video
-from youtube_callback.daemon import get_course
 
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
@@ -30,23 +29,20 @@ if project_path not in sys.path:
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 django.setup()
 
+homedir = expanduser("~")
+workdir = os.path.join(homedir, 'download_data_holding')
+
+YOUTUBE_LOOKBACK_DAYS = 4
+
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-"""
-Defaults:
-"""
-homedir = expanduser("~")
-workdir = os.path.join(homedir, 'download_data_holding')
-YOUTUBE_LOOKBACK_DAYS = 4
-
 
 def callfunction(course):
     """
-
     :param course:
-    :return:
+
     """
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
@@ -55,11 +51,14 @@ def callfunction(course):
     xml_downloader(course)
 
     for file in os.listdir(workdir):
-        print file
         upload_data = domxml_parser(file)
 
         if upload_data is not None:
-            print upload_data
+            LOGGER.info('[YOUTUBE_CALLBACK] : {inst}{clss} {upload_data}'.format(
+                inst=course.institution,
+                clss=course.edx_classid,
+                upload_data=upload_data
+            ))
             urlpatch(upload_data)
 
 
@@ -90,11 +89,20 @@ def xml_downloader(course):
             for d in s1.listdir_attr():
                 crawl_sftp(d=d, s1=s1)
     except AuthenticationException:
-        LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
+        LOGGER.error("[YOUTUBE_CALLBACK] : {inst}{clss} : Authentication Failed".format(
+            inst=course.institution,
+            clss=course.edx_classid
+        ))
     except SSHException:
-        LOGGER.info("{inst}{clss} : Authentication Failed".format(inst=course.institution, clss=course.edx_classid))
+        LOGGER.error("[YOUTUBE_CALLBACK] : {inst}{clss} : Authentication Failed".format(
+            inst=course.institution,
+            clss=course.edx_classid
+        ))
     except IOError:
-        LOGGER.info("{inst}{clss} : List Dir Failed".format(inst=course.institution, clss=course.edx_classid))
+        LOGGER.error("[YOUTUBE_CALLBACK] : {inst}{clss} : List Dir Failed".format(
+            inst=course.institution,
+            clss=course.edx_classid
+        ))
 
 
 def crawl_sftp(d, s1):
@@ -139,7 +147,6 @@ def crawl_sftp(d, s1):
                         x += 1
                     else:
                         break
-                print "%s : %s" % (f.filename, file_to_find)
                 s1.get(
                     f.filename,
                     os.path.join(workdir, file_to_find)
@@ -283,7 +290,6 @@ def urlpatch(upload_data):
             bitrate='0',
             s3_filename=test_id.studio_id
         )
-        print test_id.video_orig_duration
         VF = Metadata(
             video_object=test_id
         )

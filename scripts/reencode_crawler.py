@@ -11,9 +11,7 @@ if project_path not in sys.path:
 from control.veda_heal import VedaHeal
 from VEDA_OS01.models import URL, Encode, Video
 
-"""
-Set your globals here
-"""
+# Set globals
 CRAWL_SUFFIX = 'HLS'
 CRAWL_START = datetime.datetime.strptime('Feb 1 2017 00:01', '%b %d %Y %H:%M')
 CRAWL_EPOCH = datetime.datetime.strptime('Apr 12 2017 00:01', '%b %d %Y %H:%M')
@@ -22,9 +20,7 @@ BATCH_SIZE = 10
 SLEEP_TIME = 1200
 
 
-# NOTE: MSXSBVCP2017-V002600_100
-
-class ReEncodeCrawler:
+class ReEncodeCrawler(object):
 
     def __init__(self):
         self.crawl_start = CRAWL_START
@@ -78,13 +74,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
-
-'''
-Manual HEAL IDs
-
-GEOB3DAE2017-V006300
-
-
-
-'''

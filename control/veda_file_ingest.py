@@ -2,7 +2,6 @@
 Discovered file ingest/insert/job triggering
 
 """
-
 import datetime
 import logging
 import subprocess
@@ -82,7 +81,10 @@ class VedaIngest(object):
         self.val_insert()
         self.rename()
         self.archived = self.store()
-
+        LOGGER.info('[INGEST] {studio_id} | {video_id} : Video in hot store'.format(
+            studio_id=self.video_proto.s3_filename,
+            video_id=self.video_proto.veda_id
+        ))
         if self.video_proto.valid is False:
             self.abvid_report()
             self.complete = True
@@ -90,7 +92,8 @@ class VedaIngest(object):
                 os.remove(self.full_filename)
             return None
 
-        LOGGER.info('[VIDEO_INGEST : Ingested] {video_id} : {datetime}'.format(
+        LOGGER.info('[INGEST] {studio_id} | {video_id} : Ingested {datetime}'.format(
+            studio_id=self.video_proto.s3_filename,
             video_id=self.video_proto.veda_id,
             datetime=str(datetime.datetime.utcnow()))
         )
@@ -179,7 +182,12 @@ class VedaIngest(object):
             ))
 
         if not os.path.exists(self.full_filename):
-            LOGGER.exception('[VIDEO_INGEST] File Not Found %s', self.video_proto.veda_id)
+            LOGGER.exception(
+                '[INGEST] {studio_id} | {video_id} : Local file not found'.format(
+                    studio_id=self.video_proto.s3_filename,
+                    video_id=self.video_proto.veda_id
+                )
+            )
             return
 
         """
@@ -253,7 +261,12 @@ class VedaIngest(object):
                 v1.client_title = final_string
                 v1.save()
             self.complete = True
-            return None
+            LOGGER.info('[INGEST] {studio_id} | {video_id} : Database record complete'.format(
+                    studio_id=self.video_proto.studio_id,
+                    video_id=self.video_proto.veda_id
+                )
+            )
+            return
 
         # Update transcription preferences for the Video
         if self.video_proto.process_transcription:
@@ -301,11 +314,17 @@ class VedaIngest(object):
                 s1 += 1
             v1.client_title = final_string
             v1.save()
-
         except Exception:
             # Log the exception and raise.
-            LOGGER.exception('[VIDEO_INGEST] - Cataloging of video=%s failed.', self.video_proto.veda_id)
+            LOGGER.exception('[INGEST] {studio_id} | {video_id} : Video catalog failed.'.format(
+                studio_id=self.video_proto.s3_filename,
+                video_id=self.video_proto.veda_id
+            ))
             raise
+        LOGGER.info('[INGEST] {studio_id} | {video_id} : Video record cataloged'.format(
+            studio_id=self.video_proto.s3_filename,
+            video_id=self.video_proto.veda_id
+        ))
 
     def val_insert(self):
         if self.video_proto.abvid_serial:
@@ -316,12 +335,12 @@ class VedaIngest(object):
         else:
             val_status = 'ingest'
 
-        VAC = VALAPICall(
+        val_call = VALAPICall(
             video_proto=self.video_proto,
             val_status=val_status,
             platform_course_url=""  # Empty record for initial status update
         )
-        VAC.call()
+        val_call.call()
 
     def abvid_report(self):
         if self.video_proto.abvid_serial is None:
@@ -333,6 +352,9 @@ class VedaIngest(object):
             youtube_id=''
         )
         email_report.upload_status()
+        LOGGER.info('[INGEST] {video_id} : About video reported'.format(
+            video_id=self.video_proto.veda_id
+        ))
         self.complete = True
 
     def rename(self):

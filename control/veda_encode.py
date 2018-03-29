@@ -1,21 +1,14 @@
-
-import os
-import sys
-import uuid
-
-import django
-
-from control_env import *
-from dependencies.shotgun_api3 import Shotgun
-from dependencies.shotgun_api3.lib.xmlrpclib import ProtocolError
-from VEDA.utils import get_config
-
 """
 Get a list of needed encodes from VEDA
 
 * Protected against extant URLs *
 
 """
+
+from control_env import *
+from dependencies.shotgun_api3 import Shotgun
+from dependencies.shotgun_api3.lib.xmlrpclib import ProtocolError
+from VEDA.utils import get_config
 
 
 class VedaEncode(object):

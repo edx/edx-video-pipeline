@@ -1,32 +1,41 @@
-
-import os
-import os.path
-import sys
-import time
-import pysftp
-
 """
 Youtube Dynamic Upload
 
-Note: This represents early VEDA work, but is functional
+Note: This is early VEDA work, but is functional. Ideally deprecated in favor of a no-youtube workflow, this code
+is only maintained, and not prioritized for refactoring
 
 """
+
+import logging
+import os.path
+import pysftp
+import paramiko
+import time
+
 from control_env import *
+
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 def printTotals(transferred, toBeTransferred):
     """
+    Optional upload logging method
+
+    """
+    '''
     try:
         sys.stdout.write('\r')
         sys.stdout.write("Transferred: {0}\tOut of: {1}\r".format(transferred, toBeTransferred))
         sys.stdout.flush()
     except:
-        print 'Callback Failing'
-    """
-    return None
+        LOGGER.error('Callback Failing')
+    '''
+    return
 
 
-class DeliverYoutube():
+class DeliverYoutube(object):
 
     def __init__(self, veda_id, encode_profile):
         self.veda_id = veda_id
@@ -120,7 +129,7 @@ class DeliverYoutube():
             'playlist_id',
             'require_paid_subscription'
         ]
-        print "%s : %s" % ("Generate CSV", str(self.video.edx_id))
+        LOGGER.info('[YOUTUBE] {id} : Generating sidecar metadata CSV'.format(id=str(self.video.edx_id)))
         '''
         # TODO: Refactor this into centrally located util for escaping bad chars
         if self.video.client_title is not None:
@@ -142,7 +151,6 @@ class DeliverYoutube():
         This is where we can add or subtract file attributes as needed
 
         """
-        print self.file
         metadata_dict = {
             'filename': self.file,
             'channel': self.course.yt_channel,
@@ -154,7 +162,7 @@ class DeliverYoutube():
         # Header Row
         output = ','.join(([c for c in YOUTUBE_DEFAULT_CSV_COLUMNNAMES])) + '\n'
         # Data Row
-        output += ','.join(([metadata_dict.get(c, '') for c in YOUTUBE_DEFAULT_CSV_COLUMNNAMES]))  # + '\n' <--NO
+        output += ','.join(([metadata_dict.get(c, '') for c in YOUTUBE_DEFAULT_CSV_COLUMNNAMES]))
 
         with open(os.path.join(WORK_DIRECTORY, self.video.edx_id + '_100.csv'), 'w') as c1:
             c1.write('%s %s' % (output, '\n'))
@@ -190,50 +198,42 @@ class DeliverYoutube():
                 d1.write('')
         cnopts = pysftp.CnOpts()
         cnopts.hostkeys = None
-
-        with pysftp.Connection(
-            'partnerupload.google.com',
-            username=self.course.yt_logon,
-            private_key=self.youtubekey,
-            port=19321,
-            cnopts=cnopts
-        ) as s1:
-            print "Go for YT : " + str(self.video.edx_id)
-
-            s1.mkdir(remote_directory, mode=660)
-            s1.cwd(remote_directory)
-            s1.put(
-                os.path.join(WORK_DIRECTORY, self.file),
-                callback=printTotals
-            )
-            print
-            s1.put(
-                os.path.join(WORK_DIRECTORY, self.video.edx_id + '_100.csv'),
-                callback=printTotals
-            )
-            print
-            s1.put(
-                os.path.join(
-                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                    'youtube_callback',
-                    'static_files',
-                    'delivery.complete'
-                ),
-                callback=printTotals,
-                confirm=False,
-                preserve_mtime=False
-            )
-            print
+        try:
+            with pysftp.Connection(
+                'partnerupload.google.com',
+                username=self.course.yt_logon,
+                private_key=self.youtubekey,
+                port=19321,
+                cnopts=cnopts
+            ) as s1:
+                LOGGER.info('[YOUTUBE] {id} : Ready for youtube SFTP upload'.format(id=str(self.video.edx_id)))
+                # Upload file, sidecar metadata,
+                # and (google required) empty delivery.complete file
+                s1.mkdir(remote_directory, mode=660)
+                s1.cwd(remote_directory)
+                s1.put(
+                    os.path.join(WORK_DIRECTORY, self.file),
+                    callback=printTotals
+                )
+                s1.put(
+                    os.path.join(WORK_DIRECTORY, self.video.edx_id + '_100.csv'),
+                    callback=printTotals
+                )
+                s1.put(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'youtube_callback',
+                        'static_files',
+                        'delivery.complete'
+                    ),
+                    callback=printTotals,
+                    confirm=False,
+                    preserve_mtime=False
+                )
+        except paramiko.ssh_exception.AuthenticationException:
+            LOGGER.info('[YOUTUBE] {file} : Paramiko Authentication Exception'.format(file=str(self.file)))
 
         os.remove(os.path.join(
             WORK_DIRECTORY,
             self.video.edx_id + '_100.csv'
         ))
-
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    sys.exit(main())

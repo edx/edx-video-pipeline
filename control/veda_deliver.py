@@ -27,7 +27,7 @@ from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
                               TranscriptStatus)
 from VEDA.utils import build_url, extract_course_org, get_config, delete_directory_contents
-from veda_utils import ErrorObject, Metadata, Output, VideoProto
+from veda_utils import Metadata, Output, VideoProto
 from veda_val import VALAPICall
 from veda_video_validation import Validation
 
@@ -49,7 +49,7 @@ boto.config.set('Boto', 'http_socket_timeout', '100')
 homedir = expanduser("~")
 
 
-class VedaDelivery:
+class VedaDelivery(object):
 
     def __init__(self, veda_id, encode_profile, **kwargs):
         self.veda_id = veda_id
@@ -71,7 +71,7 @@ class VedaDelivery:
         Check the destination, route via available methods,
         throw error if method is not extant
         """
-        LOGGER.info('[VIDEO_DELIVER] {video_id} : {encode}'.format(video_id=self.veda_id, encode=self.encode_profile))
+        LOGGER.info('[DELIVERY] {video_id} : {encode}'.format(video_id=self.veda_id, encode=self.encode_profile))
         if self.encode_profile == 'hls':
             # HLS encodes are a pass through
             self.hls_run()
@@ -137,7 +137,7 @@ class VedaDelivery:
         self.status = self._DETERMINE_STATUS()
         self._UPDATE_DATA()
         self._CLEANUP()
-
+        LOGGER.info('[DELIVERY] {video_id} : complete'.format(video_id=self.veda_id))
         # We only want to generate transcripts when all the encodings(except for YT and Review) are done.
         if utils.is_video_ready(self.video_query.edx_id, ignore_encodes=['review', 'youtube']):
             self.start_transcription()
@@ -217,14 +217,14 @@ class VedaDelivery:
             conn = S3Connection()
             bucket = conn.get_bucket(self.auth_dict['veda_deliverable_bucket'])
         except NoAuthHandlerFound:
-            LOGGER.error('[VIDEO_DELIVER] BOTO/S3 Communication error')
+            LOGGER.error('[DELIVERY] {url} : BOTO/S3 Communication error'.format(url=self.hotstore_url))
             return
         except S3ResponseError:
-            LOGGER.error('[VIDEO_DELIVER] Invalid Storage Bucket')
+            LOGGER.error('[DELIVERY] {url} : Invalid Storage Bucket'.format(url=self.hotstore_url))
             return
         source_key = bucket.get_key(self.encoded_file)
         if source_key is None:
-            LOGGER.error('[VIDEO_DELIVER] S3 Intake Object NOT FOUND')
+            LOGGER.error('[DELIVERY] {url} : S3 Intake Object not found'.format(url=self.hotstore_url))
             return
 
         source_key.get_contents_to_filename(
@@ -245,7 +245,7 @@ class VedaDelivery:
         VM._METADATA()
 
         if not isinstance(self.video_proto.duration, int) and ':' not in self.video_proto.duration:
-            print 'Duration Failure'
+            LOGGER.error('[DELIVERY] {id} : Duration Failure'.format(id=self.video_proto.veda_id))
             return
 
         self.video_proto.duration = Output._seconds_from_string(
@@ -358,8 +358,8 @@ class VedaDelivery:
                 self.encoded_file
             )
         ):
-            print 'WARNING -- NO FILE'
-            return None
+            LOGGER.error('[DELIVERY] {file} : No file for routing'.format(file=self.encoded_file))
+            return
         '''
         Destination Nicks:
             S31
@@ -382,10 +382,8 @@ class VedaDelivery:
             """
             Throw error
             """
-            ErrorObject.print_error(
-                message='Deliverable - No Method',
-            )
-            return None
+            LOGGER.error('[DELIVERY] No method')
+            return
 
     def AWS_UPLOAD(self):
         """
@@ -426,10 +424,7 @@ class VedaDelivery:
         try:
             conn = boto.connect_s3()
         except S3ResponseError:
-            ErrorObject.print_error(
-                message='Deliverable Fail: s3 Connection Error\n \
-                Check node_config DELIVERY_ENDPOINT'
-            )
+            LOGGER.error('[DELIVERY] s3 Connection Error')
             return False
         delv_bucket = conn.get_bucket(
             self.auth_dict['edx_s3_endpoint_bucket']
@@ -481,17 +476,11 @@ class VedaDelivery:
         try:
             c = boto.connect_s3()
         except S3ResponseError:
-            ErrorObject.print_error(
-                message='Deliverable Fail: s3 Connection Error\n \
-                Check node_config DELIVERY_ENDPOINT'
-            )
+            LOGGER.error('[DELIVERY] s3 Connection Error')
             return False
         b = c.lookup(self.auth_dict['edx_s3_endpoint_bucket'])
         if b is None:
-            ErrorObject.print_error(
-                message='Deliverable Fail: s3 Connection Error\n \
-                Check node_config DELIVERY_ENDPOINT'
-            )
+            LOGGER.error('[DELIVERY] s3 Connection Error')
             return False
 
         """
@@ -540,7 +529,7 @@ class VedaDelivery:
         try:
             api_key = TranscriptCredentials.objects.get(org=org, provider=self.video_query.provider).api_key
         except TranscriptCredentials.DoesNotExist:
-            LOGGER.warn('[cielo24] Unable to find api_key for org=%s', org)
+            LOGGER.warn('[DELIVERY] Unable to find cielo24 api_key for org=%s', org)
             return None
 
         s3_video_url = build_url(
@@ -630,7 +619,7 @@ class VedaDelivery:
 
         except TranscriptCredentials.DoesNotExist:
             LOGGER.warning(
-                'Transcript preference is not found for provider=%s, video=%s',
+                '[DELIVERY] : Transcript preference is not found for provider=%s, video=%s',
                 self.video_query.provider,
                 self.video_query.studio_id,
             )
@@ -647,13 +636,11 @@ class VedaDelivery:
         if self.encode_profile != 'desktop_mp4':
             return None
 
-        C24 = Cielo24TranscriptOld(
+        cielojob = Cielo24TranscriptOld(
             veda_id=self.video_query.edx_id
         )
-        output = C24.perform_transcription()
-        print '[ %s ] : %s' % (
-            'Cielo24 JOB', self.video_query.edx_id
-        )
+        cielojob.perform_transcription()
+        LOGGER.info('[DELIVERY] {id} : Cielo24 job sent '.format(id=self.video_query.edx_id))
 
     def _THREEPLAY_UPLOAD(self):
         """
@@ -675,9 +662,7 @@ class VedaDelivery:
         try:
             ftp1.login(user, passwd)
         except:
-            ErrorObject.print_error(
-                message='3Play Authentication Failure'
-            )
+            LOGGER.error('[DELIVERY] {file} : 3Play Authentication Failure'.format(file=self.encoded_file))
         try:
             ftp1.cwd(
                 self.video_query.inst_class.tp_speed
@@ -704,8 +689,10 @@ class VedaDelivery:
     def YOUTUBE_SFTP(self, review=False):
         if self.video_query.inst_class.yt_proc is False:
             if self.video_query.inst_class.review_proc is False:
-                print 'NO YOUTUBE'
-                return None
+                LOGGER.error(
+                    '[DELIVERY] {id} : Youtube called, youtube processing off'.format(id=self.video_proto.veda_id)
+                )
+                return
 
         DY = DeliverYoutube(
             veda_id=self.video_query.edx_id,

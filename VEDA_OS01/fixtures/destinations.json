@@ -56,15 +56,15 @@
     "fields": {
       "course_name": "Veda Sandbox Test Course",
       "course_hold": true,
-      "institution": "XXX",
-      "edx_classid": "XXXXX",
+      "institution": "EDX",
+      "edx_classid": "DEMOX",
       "semesterid": "2017",
       "yt_proc": false,
       "tp_proc": false,
       "c24_proc": false,
       "s3_proc": true,
       "local_storedir": "course-v1:VEDA+VEDA201+2015_T1",
-      "studio_hex": "xxxx"
+      "studio_hex": "shared_course_token"
     }
   }
 ]

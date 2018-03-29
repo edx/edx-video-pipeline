@@ -4,15 +4,20 @@ Start Celery Worker
 
 from __future__ import absolute_import
 
-import os
 from celery import Celery
-from VEDA.utils import get_config
+import logging
+import os
+import sys
 
+from VEDA.utils import get_config
 try:
     from control.veda_deliver import VedaDelivery
 except ImportError:
     from veda_deliver import VedaDelivery
 
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 auth_dict = get_config()
 
@@ -42,7 +47,7 @@ app.conf.update(
 
 @app.task(name='worker_encode')
 def worker_task_fire(veda_id, encode_profile, jobid):
-    print '[ENCODE] Misfire : {id} : {encode}'.format(id=veda_id, encode=encode_profile)
+    LOGGER.info('[ENCODE] Misfire : {id} : {encode}'.format(id=veda_id, encode=encode_profile))
     return 1
 
 

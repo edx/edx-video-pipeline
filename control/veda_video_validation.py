@@ -1,13 +1,3 @@
-
-import os
-import sys
-import subprocess
-import fnmatch
-import django
-
-from control.control_env import FFPROBE
-from VEDA_OS01.models import Video
-
 """
 VEDA Intake/Product Final Testing Suite
 
@@ -18,6 +8,18 @@ image files (which read as 0:00 duration or N/A)
 Mismatched Durations (within 5 sec)
 
 """
+
+import logging
+import os
+import subprocess
+import sys
+
+from control.control_env import FFPROBE
+from VEDA_OS01.models import Video
+
+LOGGER = logging.getLogger(__name__)
+# TODO: Remove this temporary logging to stdout
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 class Validation(object):
@@ -39,60 +41,70 @@ class Validation(object):
 
     def validate(self):
         """
-        Test #1 - assumes file is in 'work' directory of node
+        Video validation probe
         """
+
+        # Test #1
+        # Assumes file is in 'work' directory of node.
+        # Probe for metadata, ditch on common/found errors
         ff_command = ' '.join((
             FFPROBE,
             "\"" + self.videofile + "\""
         ))
-        """
-        Test if size is zero
-        """
-        if int(os.path.getsize(self.videofile)) == 0:
 
-            print 'Corrupt: Invalid'
+        video_duration = None
+
+        if int(os.path.getsize(self.videofile)) == 0:
+            LOGGER.info('[VALIDATION] {id} : CORRUPT/File size is zero'.format(id=self.videofile))
             return False
 
         p = subprocess.Popen(ff_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         for line in iter(p.stdout.readline, b''):
             if "Invalid data found when processing input" in line:
-                print 'Corrupt: Invalid'
+                LOGGER.info('[VALIDATION] {id} : CORRUPT/Invalid data on input'.format(id=self.videofile))
                 return False
 
             if "multiple edit list entries, a/v desync might occur, patch welcome" in line:
+                LOGGER.info('[VALIDATION] {id} : CORRUPT/Desync error'.format(id=self.videofile))
                 return False
 
             if "command not found" in line:
-                print line
+                LOGGER.info('[VALIDATION] {id} : CORRUPT/Atypical file error'.format(id=self.videofile))
                 return False
 
             if "Duration: " in line:
                 if "Duration: 00:00:00.0" in line:
+                    LOGGER.info('[VALIDATION] {id} : CORRUPT/Duration is zero'.format(id=self.videofile))
                     return False
 
                 elif "Duration: N/A, " in line:
+                    LOGGER.info('[VALIDATION] {id} : CORRUPT/Duration N/A'.format(id=self.videofile))
                     return False
                 video_duration = line.split(',')[0][::-1].split(' ')[0][::-1]
 
-        try:
-            str(video_duration)
-        except:
+        if not video_duration:
+            LOGGER.info('[VALIDATION] {id} : CORRUPT/No Duration'.format(id=self.videofile))
+            p.kill()
             return False
         p.kill()
 
-        """
-        Compare Product to DB averages - pass within 5 sec
-
-        """
+        # Test #2
+        # Compare Product to DB averages
+        # pass is durations within 5 sec or each other
         if self.mezzanine is True:
+            # Return if original/source rawfile
+            LOGGER.info('[VALIDATION] {id} : VALID/Mezzanine file'.format(id=self.videofile))
             return True
 
         if self.veda_id is None:
-            print 'Error: Validation, encoded file no comparison ID'
+            LOGGER.info('[VALIDATION] {id} : CORRUPT/Validation, No VEDA ID'.format(id=self.videofile))
             return False
         try:
             video_query = Video.objects.filter(edx_id=self.veda_id).latest()
         except:
+            LOGGER.info(
+                '[VALIDATION] {id} : CORRUPT/Validation, No recorded ID for comparison'.format(id=self.videofile)
+            )
             return False
 
         product_duration = float(
@@ -105,21 +117,10 @@ class Validation(object):
                 duration=video_query.video_orig_duration
             )
         )
-        """
-        Final Test
-        """
+
         if (data_duration - 5) <= product_duration <= (data_duration + 5):
+            LOGGER.info('[VALIDATION] {id} : VALID'.format(id=self.videofile))
             return True
         else:
+            LOGGER.info('[VALIDATION] {id} : CORRUPT/Duration mismatch'.format(id=self.videofile))
             return False
-
-
-def main():
-    pass
-    # V = Validation(videofile='/Users/ernst/VEDA_WORKING/fecf210f-0e94-4627-8ac3-46c2338e5897.mp4')
-    # print V.validate()
-    # # def __init__(self, videofile, **kwargs):
-
-
-if __name__ == '__main__':
-    sys.exit(main())

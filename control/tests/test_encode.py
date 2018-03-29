@@ -81,30 +81,3 @@ class TestEncode(TestCase):
         ).delete()
         encode_list = self.E.determine_encodes()
         self.assertTrue(len(encode_list) == baseline)
-
-
-def main():
-    unittest.main()
-
-
-if __name__ == '__main__':
-    sys.exit(main())
-
-    '''
-    Save for poss future test
-
-    # import celeryapp
-
-    # co = Course.objects.get(institution='XXX', edx_classid='C93BC')
-    # vid = 'XXXC93BC2016-V003500'
-    # v = VedaEncode(course_object=co, veda_id=vid)
-    # encode_list = v.determine_encodes()
-    # for e in encode_list:
-    #     veda_id = vid
-    #     encode_profile = e
-    #     jobid = uuid.uuid1().hex[0:10]
-    #     # celeryapp.worker_task_fire.apply_async(
-    #     #     (veda_id, encode_profile, jobid),
-    #     #     queue='encode_worker'
-    #     #     )
-    '''

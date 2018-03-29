@@ -91,11 +91,17 @@ class VedaHeal(object):
                 )
                 # Misqueued Task
                 if task_result == 1:
-                    LOGGER.error('[ENQUEUE ERROR] : {id}'.format(id=v.edx_id))
+                    LOGGER.error('[ENQUEUE] {studio_id} | {video_id} : queueing call'.format(
+                        studio_id=v.studio_id,
+                        video_id=v.edx_id
+                    ))
                     continue
 
             # Update Status
-            LOGGER.info('[ENQUEUE] : {id}'.format(id=v.edx_id))
+            LOGGER.info('[ENQUEUE] {studio_id} | {video_id}: file enqueued for encoding'.format(
+                studio_id=v.studio_id,
+                video_id=v.edx_id
+            ))
             Video.objects.filter(edx_id=v.edx_id).update(
                 video_trans_status='Queue'
             )
@@ -104,7 +110,7 @@ class VedaHeal(object):
         """
         Determine expected and completed encodes
         """
-        LOGGER.info('[ENQUEUE] : {id}'.format(id=video_object.edx_id))
+        LOGGER.info('[ENQUEUE] : {id}'.format(id=video_object.studio_id))
         if self.freezing_bug is True:
             if video_object.video_trans_status == 'Corrupt File':
                 self.val_status = 'file_corrupt'
@@ -135,9 +141,9 @@ class VedaHeal(object):
             pass
 
         requeued_encodes = self.differentiate_encodes(uncompleted_encodes, expected_encodes, video_object)
-        LOGGER.info('[ENQUEUE] : {id} : {status} : {encodes}'.format(
-            id=video_object.edx_id,
-            status=self.val_status,
+        LOGGER.info('[ENQUEUE] {studio_id} | {video_id}: encoding {encodes}'.format(
+            studio_id=video_object.studio_id,
+            video_id=video_object.edx_id,
             encodes=requeued_encodes
         ))
 
@@ -197,7 +203,7 @@ class VedaHeal(object):
         mark file corrupt -- just run the query again with
         no veda_id
         """
-
+        # TODO: Adapt to alert for >24h dead videos
         try:
             expected_encodes.remove('hls')
         except ValueError:

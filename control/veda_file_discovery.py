@@ -22,7 +22,6 @@ from control_env import *
 from VEDA.utils import extract_course_org, get_config
 from veda_file_ingest import VedaIngest, VideoProto
 from VEDA_OS01.models import TranscriptCredentials
-from veda_utils import ErrorObject
 from veda_val import VALAPICall
 
 try:
@@ -31,6 +30,8 @@ except:
     pass
 boto.config.set('Boto', 'http_socket_timeout', '100')
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("requests").setLevel(logging.WARNING)
 LOGGER = logging.getLogger(__name__)
 
 
@@ -47,12 +48,12 @@ class FileDiscovery(object):
         Crawl VEDA Upload bucket
         """
         if self.node_work_directory is None:
-            print '[Discovery Error] No Workdir'
+            LOGGER.error('[DISCOVERY] No Workdir')
             return
         try:
             conn = boto.connect_s3()
         except NoAuthHandlerFound:
-            print '[Discovery Error] BOTO Auth Handler'
+            LOGGER.error('[DISCOVERY] BOTO Auth Handler')
             return
         try:
             self.bucket = conn.get_bucket(self.auth_dict['veda_s3_upload_bucket'])
@@ -211,7 +212,7 @@ class FileDiscovery(object):
             key.get_contents_to_filename(os.path.join(self.node_work_directory, file_name))
             file_ingested = True
         except S3DataError:
-            LOGGER.exception('[File Ingest] Error downloading the file into node working directory.')
+            LOGGER.error('[DISCOVERY] Error downloading the file into node working directory.')
         return file_ingested
 
     def parse_transcript_preferences(self, course_id, transcript_preferences):
@@ -233,7 +234,7 @@ class FileDiscovery(object):
             # have associated 3rd party transcription provider API keys.
             transcript_preferences = None
         except ValueError:
-            LOGGER.exception('[File Discovery] Invalid transcripts preferences=%s', transcript_preferences)
+            LOGGER.error('[DISCOVERY] Invalid transcripts preferences=%s', transcript_preferences)
             transcript_preferences = None
 
         return transcript_preferences
@@ -250,11 +251,12 @@ class FileDiscovery(object):
                     if video_s3_key.name != self.auth_dict['edx_s3_ingest_prefix']:
                         self.validate_metadata_and_feed_to_ingest(video_s3_key=self.bucket.get_key(video_s3_key.name))
             except S3ResponseError:
-                ErrorObject.print_error(message='[File Ingest] S3 Ingest Connection Failure')
+                LOGGER.error('[DISCOVERY] S3 Ingest Connection Failure')
+
             except NoAuthHandlerFound:
-                ErrorObject.print_error(message='[Discovery Error] BOTO Auth Handler')
+                LOGGER.error('[DISCOVERY] BOTO Auth Handler')
         else:
-            ErrorObject.print_error(message='[File Ingest] No Working Node directory')
+            LOGGER.error('[DISCOVERY] No Working Node directory')
 
     def validate_metadata_and_feed_to_ingest(self, video_s3_key):
         """

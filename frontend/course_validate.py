@@ -1,22 +1,15 @@
-'''
+"""
 Validate Course / Predict Inputs for advanced fields
-'''
-import os
+"""
 import uuid
 import json
 import yaml
 import datetime
 
-from django.utils.timezone import utc
-
 from frontend_env import *
 
-"""
-Import Django Shit
-"""
 
-
-class VEDACat():
+class VEDACat(object):
 
     def __init__(self, **kwargs):
 
@@ -290,12 +283,10 @@ class VEDACat():
         return return_dict
 
     def simple_majority(self, attribute_list):
-        '''
+        """
         Simple Majority Finder
-        Dumbly just figures out the field attribute for 'most' of them
-
-        '''
-
+        Field attribute for 'most' of them (>50.0%) per attrib
+        """
         comparitor = {'None': 0}
         for a in attribute_list:
             in_it = False
@@ -321,13 +312,3 @@ class VEDACat():
             data['majority'] = False
 
         return data
-
-
-###############
-def main():
-    V = VEDACat()
-    print V.veda_model
-
-
-if __name__ == '__main__':
-    sys.exit(main())
