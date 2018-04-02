@@ -67,9 +67,20 @@ class VedaHeal(object):
             # unreliable and times out. For a completed Video, VEDA heal will keep doing this unless
             # the Video is old enough and escapes from the time-span that HEAL is picking up on.
             # cc Greg Martin
-            if len(encode_list) > 0:
-                self.val_status = 'transcode_queue'
+            if len(encode_list) == 0:
+                LOGGER.info('[ENQUEUE] {studio_id} | {video_id}: Nothing to queue'.format(
+                    studio_id=v.studio_id,
+                    video_id=v.edx_id,
+                ))
+                api_call = VALAPICall(
+                    video_proto=None,
+                    video_object=v,
+                    val_status=self.val_status,
+                )
+                api_call.call()
+                continue
 
+            self.val_status = 'transcode_queue'
             api_call = VALAPICall(
                 video_proto=None,
                 video_object=v,
