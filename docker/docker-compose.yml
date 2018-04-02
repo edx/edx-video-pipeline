@@ -1,0 +1,41 @@
+version: "0.1"
+
+services:
+  rabbitmq:
+    image: "veda-rabbitmq"
+    container_name: "veda.rabbitmq"
+    volumes:
+      - ${VEDA_WORKSPACE}/rabbitmq:/rabbitmq
+    tty: true
+
+  pipeline:
+    image: "veda-pipeline"
+    container_name: "veda.pipeline"
+    volumes:
+      - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
+    tty: true
+
+  http:
+    image: "veda-http"
+    command: bash -c 'cd /edx-video-pipeline/; python manage.py runserver 0.0.0.0:8000 --settings=VEDA.settings.local'
+    container_name: "veda.http"
+    volumes:
+       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
+    ports:
+       - "8000:8000"
+    tty: true
+    stdin_open: true
+
+  encode:
+    image: "veda-encode"
+    container_name: "veda.encode"
+    volumes:
+      - ${VEDA_WORKSPACE}/edx-video-worker:/edx-video-worker
+    tty: true
+
+  deliver:
+    image: "veda-deliver"
+    container_name: "veda.deliver"
+    volumes:
+      - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-worker
+    tty: true
