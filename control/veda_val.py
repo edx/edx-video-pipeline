@@ -11,6 +11,8 @@ import json
 from control_env import *
 from control.veda_utils import Output, VideoProto
 
+from VEDA_OS01.utils import ValTranscriptStatus
+
 LOGGER = logging.getLogger(__name__)
 requests.packages.urllib3.disable_warnings()
 
@@ -28,6 +30,12 @@ requests.packages.urllib3.disable_warnings()
 "imported": _IMPORTED,
 
 '''
+
+FILE_COMPLETE_STATUSES = (
+    'file_complete',
+    ValTranscriptStatus.TRANSCRIPT_READY,
+    ValTranscriptStatus.TRANSCRIPTION_IN_PROGRESS,
+)
 
 
 class VALAPICall(object):
@@ -290,6 +298,20 @@ class VALAPICall(object):
 
         return
 
+    @staticmethod
+    def should_update_status(encode_list, val_status):
+        """
+        Check if we need to update video status in val
+
+        Arguments:
+            encode_list (list): list of video encodes
+            val_status (unicode): val status
+        """
+        if len(encode_list) == 0 and val_status in FILE_COMPLETE_STATUSES:
+            return False
+
+        return True
+
     def send_404(self):
         """
         Generate new VAL ID
@@ -298,7 +320,7 @@ class VALAPICall(object):
 
         self.val_data['status'] = self.val_status
 
-        if len(self.encode_data) == 0 and self.val_status is 'file_complete':
+        if self.should_update_status(self.encode_data, self.val_status) is False:
             return None
 
         sending_data = dict(
@@ -341,7 +363,7 @@ class VALAPICall(object):
         """
         Make Request, finally
         """
-        if len(self.encode_data) == 0 and self.val_status is 'file_complete':
+        if self.should_update_status(self.encode_data, self.val_status) is False:
             return None
 
         r4 = requests.put(

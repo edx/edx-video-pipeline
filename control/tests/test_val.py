@@ -3,6 +3,7 @@ import ast
 import os
 import sys
 from django.test import TestCase
+from ddt import data, ddt, unpack
 
 from mock import PropertyMock, patch
 
@@ -12,6 +13,7 @@ import responses
 from control.veda_val import VALAPICall
 from VEDA import utils
 from control.veda_file_ingest import VideoProto
+from VEDA_OS01.utils import ValTranscriptStatus
 
 
 requests.packages.urllib3.disable_warnings()
@@ -25,6 +27,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 CONFIG_DATA = utils.get_config('test_config.yaml')
 
 
+@ddt
 class TestVALAPI(TestCase):
 
     def setUp(self):
@@ -73,3 +76,43 @@ class TestVALAPI(TestCase):
 
         self.assertFalse(response.status_code == 404)
         self.assertFalse(response.status_code > 299)
+
+    @data(
+        {
+            'encode_list': [],
+            'val_status': 'file_complete',
+            'expected_response': False
+        },
+        {
+            'encode_list': [],
+            'val_status': ValTranscriptStatus.TRANSCRIPT_READY,
+            'expected_response': False
+        },
+        {
+            'encode_list': [],
+            'val_status': ValTranscriptStatus.TRANSCRIPTION_IN_PROGRESS,
+            'expected_response': False
+        },
+        {
+            'encode_list': ['abc.mp4'],
+            'val_status': 'file_complete',
+            'expected_response': True
+        },
+        {
+            'encode_list': ['abc.mp4'],
+            'val_status': ValTranscriptStatus.TRANSCRIPT_READY,
+            'expected_response': True
+        },
+        {
+            'encode_list': ['abc.mp4'],
+            'val_status': ValTranscriptStatus.TRANSCRIPTION_IN_PROGRESS,
+            'expected_response': True
+        },
+    )
+    @unpack
+    def test_val_should_update_status(self, encode_list, val_status, expected_response):
+        """
+        Verify that `should_update_status` works as expected.
+        """
+        response = self.VAC.should_update_status(encode_list, val_status)
+        self.assertEqual(response, expected_response)
