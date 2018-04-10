@@ -2,6 +2,7 @@
 # ---
 # Database information
 # ---
+# PRODUCTION
 DATABASES:
     default:
         ENGINE: django.db.backends.sqlite3
@@ -12,6 +13,13 @@ SECRET_KEY: "a_random_string"
 FERNET_KEYS: ["a_random_string"]
 
 debug: True
+
+# LOCAL DOCKER
+#  default:
+#        ENGINE: 'django.db.backends.sqlite3'
+#        NAME: 'veda-docker'
+#        HOST: 'localhost'
+#        PORT: 3306
 
 # Frontend S3 Auth
 veda_secret_access_key: A_RANDOM_STRING
