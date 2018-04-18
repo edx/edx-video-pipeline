@@ -24,17 +24,6 @@ ffmpeg_compiled: "ffmpeg"
 ffprobe_compiled: "ffprobe"
 target_aspect_ratio: 1.7777778
 
-# ---
-# Endpoints
-# ---
-# cielo24 api urls
-cielo24_api_base_url: 'https://sandbox.cielo24.com/api'
-
-# 3playmedia api urls
-three_play_api_base_url: https://api.3playmedia.com/
-three_play_api_transcript_url: https://static.3playmedia.com/
-threeplay_ftphost: ftp.3playmedia.com
-
 # This is a list of encodes and their respective course
 # boolean matches
 encode_dict:

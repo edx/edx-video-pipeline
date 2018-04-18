@@ -52,6 +52,12 @@ veda_base_url:
 aws_video_transcripts_bucket:
 aws_video_transcripts_prefix: video-transcripts/
 
+# cielo24 api urls
+cielo24_api_base_url: https://sandbox.cielo24.com/api
+
+# 3playmedia api urls
+three_play_api_base_url: https://api.3playmedia.com/
+three_play_api_transcript_url: https://static.3playmedia.com/
 
 # a token identifying a valid request from transcript provider
 transcript_provider_request_token:
@@ -107,5 +113,10 @@ onsite_worker: False
 sg_server_path:
 sg_script_name:
 sg_script_key:
+
+# ---
+# Endpoints
+# ---
+threeplay_ftphost:
 
 ...
