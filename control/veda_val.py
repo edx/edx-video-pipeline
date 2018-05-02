@@ -237,10 +237,11 @@ class VALAPICall(object):
 
         """
         # Defend against old/deprecated encodes
-        try:
-            self.auth_dict['val_profile_dict'][self.encode_profile]
-        except KeyError:
-            return
+        if self.encode_profile:
+            try:
+                self.auth_dict['val_profile_dict'][self.encode_profile]
+            except KeyError:
+                return
         if self.endpoint_url:
             for p in self.auth_dict['val_profile_dict'][self.encode_profile]:
 
@@ -270,7 +271,7 @@ class VALAPICall(object):
                     try:
                         self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]
                     except KeyError:
-                        return
+                        continue
                     for p in self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]:
                         test_list.append(dict(
                             url=str(final.encode_url),

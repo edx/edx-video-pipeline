@@ -55,10 +55,20 @@ class VedaHeal(object):
                 hours=HEAL_END
             )
         )
-
+        for v in self.video_query:
+            LOGGER.info('[HEAL] {studio_id} | {video_id}: Determining Missing Encodes'.format(
+                studio_id=v.studio_id,
+                video_id=v.edx_id,
+            ))
         self.send_encodes()
 
     def send_encodes(self):
+        """
+        Unified function to enqueue videos with missing encodes
+
+        Ingest/HEAL both call this function
+        """
+        # TODO: Refactor to common location
         for v in self.video_query:
             encode_list = self.determine_fault(video_object=v)
             # Using the 'Video Proto' Model
