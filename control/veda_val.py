@@ -223,6 +223,7 @@ class VALAPICall(object):
         """
         Update Status
         """
+        LOGGER.info('[INGEST] send_val_data : video ID : %s', self.video_proto.veda_id)
         url_query = URL.objects.filter(
             videoID=Video.objects.filter(
                 edx_id=self.video_proto.veda_id
