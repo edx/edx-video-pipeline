@@ -1,15 +1,12 @@
-import os
-import sys
-from email.mime.text import MIMEText
-from datetime import date
-import boto.ses
-from VEDA.utils import get_config
-
 '''
 ABVID REPORTING - email / etc.
 
 '''
+import boto.ses
+from django.core.exceptions import ObjectDoesNotExist
+
 from frontend_env import *
+from VEDA.utils import get_config
 
 '''
 v1 = Video.objects.filter(edx_id = upload_info['edx_id'])
