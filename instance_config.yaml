@@ -114,9 +114,4 @@ sg_server_path:
 sg_script_name:
 sg_script_key:
 
-# ---
-# Endpoints
-# ---
-threeplay_ftphost:
-
 ...
