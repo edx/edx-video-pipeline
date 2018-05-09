@@ -1,9 +1,6 @@
 ---
 # This configuration should only have static settings.
 
-# 3PlayMedia FTP host for old workflow
-threeplay_ftphost: ftp.3playmedia.com
-
 # s3 bucket static prefixes
 edx_s3_processed_prefix: prod-edx/processed/
 edx_s3_rejected_prefix: prod-edx/rejected/
