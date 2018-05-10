@@ -261,8 +261,7 @@ class VedaIngest(object):
                 v1.client_title = final_string
                 v1.save()
             self.complete = True
-            LOGGER.info('[INGEST] {studio_id} | {video_id} : Database record complete'.format(
-                    studio_id=self.video_proto.studio_id,
+            LOGGER.info('[INGEST] {video_id} : Corrupt file, database record complete'.format(
                     video_id=self.video_proto.veda_id
                 )
             )
