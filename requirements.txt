@@ -13,7 +13,7 @@ pysftp
 boto
 pyyaml
 requests==2.18.1
-celery==4.1.0
+celery==4.1.1
 pysrt==1.1.1
 MySQL-python==1.2.5
 gunicorn==0.17.4
