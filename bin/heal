@@ -57,7 +57,8 @@ def main():
         {cmd} -c course_id
         {cmd} -s schedule
         {cmd} --process-translations
-        [-i -c -s --process-translations]
+        {cmd} --no_audio
+        [-i -c -s --process-translations --no_audio]
         Use --help to see all options.
         '''.format(cmd=sys.argv[0])
 
@@ -81,6 +82,12 @@ def main():
         '--process-translations',
         dest='process_translations',
         help='Retrieves completed 3PlayMedia translations for the videos.',
+        action='store_true'
+    )
+
+    parser.add_argument(
+        '--no_audio',
+        help='Removes audio_mp3 from encode list.',
         action='store_true'
     )
 
@@ -118,7 +125,8 @@ def main():
         VH = VedaHeal(
             video_query=Video.objects.filter(
                 edx_id=veda_id.strip()
-                )
+                ),
+            no_audio=args.no_audio
             )
         VH.send_encodes()
         return
@@ -130,7 +138,8 @@ def main():
                     institution=course_id[0:3],
                     edx_classid=course_id[3:8]
                     )
-                )
+                ),
+            no_audio=args.no_audio
             )
         VH.send_encodes()
         return
