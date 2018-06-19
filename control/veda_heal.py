@@ -45,6 +45,7 @@ class VedaHeal(object):
         self.freezing_bug = kwargs.get('freezing_bug', False)
         self.val_status = None
         self.retry_barrier_hours = 24
+        self.no_audio = kwargs.get('no_audio', False)
 
     def discovery(self):
         self.video_query = Video.objects.filter(
@@ -157,6 +158,8 @@ class VedaHeal(object):
         ).determine_encodes()
         try:
             if uncompleted_encodes:
+                if self.no_audio and 'audio_mp3' in uncompleted_encodes:
+                    uncompleted_encodes.remove('audio_mp3')
                 uncompleted_encodes.remove('review')
         except KeyError:
             pass
