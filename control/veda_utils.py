@@ -18,26 +18,33 @@ class EmailAlert(object):
     """
     def __init__(self, **kwargs):
         self.auth_dict = get_config()
-        self.message = kwargs.get('message', None)
+        self.body = kwargs.get('body', None)
         self.subject = kwargs.get('subject', None)
+        self.additional_recipients = kwargs.get('additional_recipients', [])
+        self.production_environment = self.auth_dict['environment'] == "production"
+
+    def email_fault(self):
+        self.subject = '[ VEDA ALERTING ] : ' + str(self.subject)
+        self.body = 'There has been a fault:' + str(self.body)
+        self.email()
 
     def email(self):
-        email_subject = '[ VEDA ALERTING ]'
-        email_subject += ' : ' + self.subject
+        if self.production_environment:
+            try:
+                conn = boto.ses.connect_to_region('us-east-1')
+            except boto.exception.NoAuthHandlerFound:
+                return
 
-        email_body = 'There has been a fault:'
-        email_body += self.message
-        try:
-            conn = boto.ses.connect_to_region('us-east-1')
-        except boto.exception.NoAuthHandlerFound:
-            return
+            recipients = self.additional_recipients.append(self.auth_dict['admin_email'])
 
-        conn.send_email(
-            self.auth_dict['veda_noreply_email'],
-            email_subject,
-            email_body,
-            [self.auth_dict['admin_email']]
-        )
+            conn.send_email(
+                self.auth_dict['veda_noreply_email'],
+                self.subject,
+                self.body,
+                recipients
+            )
+        else:
+            pass
 
 
 class Output(object):
@@ -149,8 +156,7 @@ class Report(object):
                 youtube_id=self.youtube_id
             )
 
-        email_subject = 'VEDA / edX About Video Status Update : '
-        email_subject += final_success
+        email_subject = 'VEDA / edX About Video Status Update : ' + str(final_success)
 
         email_body = (
             'This is an auto generated message:\n\n'
@@ -167,17 +173,12 @@ class Report(object):
             'edX Studio Course URL : ' + v1[0].edx_studio_url + '\n\n'
             'Please do not reply to this email.\n\n <<EOM'
         )
-        try:
-            conn = boto.ses.connect_to_region('us-east-1')
-        except boto.exception.NoAuthHandlerFound:
-            return
 
-        conn.send_email(
-            self.auth_dict['veda_noreply_email'],
-            email_subject,
-            email_body,
-            [v1[0].status_email, self.auth_dict['admin_email']]
-        )
+        EmailAlert(
+            body=email_body,
+            subject=email_subject,
+            additional_recipients = [v1[0].status_email]
+        ).email()
 
 
 class VideoProto(object):

@@ -32,6 +32,7 @@ boto.config.set('Boto', 'http_socket_timeout', '100')
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("boto").setLevel(logging.ERROR)
 LOGGER = logging.getLogger(__name__)
 
 
@@ -42,6 +43,12 @@ class FileDiscovery(object):
         self.auth_dict = get_config()
         self.bucket = None
         self.node_work_directory = kwargs.get('node_work_directory', WORK_DIRECTORY)
+
+        # In stage, a course could possibly not exist in the local database
+        # but remain referenced by edx-platform.
+        # If the course doesn't exist but a course ID and hex is supplied,
+        # create the course anyway.
+        self.create_course_override = self.auth_dict['environment'] == "stage"
 
     def about_video_ingest(self):
         """
@@ -182,19 +189,45 @@ class FileDiscovery(object):
                     course.local_storedir = ','.join(course_runs)
                     course.save()
             else:
-                course_name = '{org} {number}'.format(org=course_key.org, number=course_key.course)
-                course = Course.objects.create(
-                    course_name=course_name,
-                    institution=course_key.org,
-                    edx_classid=course_key.course,
-                    local_storedir=course_id,
-                    yt_proc=False,
-                )
+                course = self._create_course(course_key, course_id)
         else:
             try:
                 course = Course.objects.get(studio_hex=course_hex)
             except Course.DoesNotExist:
-                return
+                if self.create_course_override:
+                    try:
+                        course_key = CourseKey.from_string(course_id)
+                    except InvalidKeyError:
+                        return
+
+                    course = self._create_course(course_key, course_id, course_hex)
+                else:
+                    return
+
+        return course
+
+    def _create_course(self, course_key, course_id, studio_hex=None):
+        """
+        Creates a course with the specified parameters.
+        If another class needs to create a course, use get_or_create_course
+        instead of this method.
+
+        Arguments:
+            -  course_key
+            -  course_id
+            -  studio_hex
+        """
+        course_name = '{org} {number}'.format(org=course_key.org, number=course_key.course)
+        course = Course.objects.create(
+            course_name=course_name,
+            institution=course_key.org,
+            edx_classid=course_key.course,
+            local_storedir=course_id,
+            yt_proc=False
+        )
+
+        if studio_hex:
+            setattr(course, 'studio_hex', studio_hex)
 
         return course
 
@@ -320,7 +353,8 @@ class FileDiscovery(object):
             ingest.insert()
 
             if ingest.complete:
-                # Move the video file into 'prod-edx/processed' directory, if ingestion is complete.
+                # Move the video file into 'prod-edx/processed' or 'stage-edx/processed
+                # directory, if ingestion is complete.
                 self.move_video(video_s3_key, destination_dir=self.auth_dict['edx_s3_processed_prefix'])
         else:
             # Reject the video file and update val status to 'invalid_token'

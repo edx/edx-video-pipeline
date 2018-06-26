@@ -64,8 +64,8 @@ class IngestCli(object):
         ))
         os.system(runcommand)
 
-        E1 = EmailAlert(message='Ingest Daemon Crash', subject='Ingest Daemon')
-        E1.email()
+        E1 = EmailAlert(body='Ingest Daemon Crash', subject='Ingest Daemon')
+        E1.email_fault()
 
 
 

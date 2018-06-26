@@ -147,7 +147,8 @@ class TestFileDiscovery(TestCase):
         file_discovery_instance = FileDiscovery()
         file_discovery_instance.bucket = self.ingest_bucket
 
-        # rejecting a key will move it to 'prod-edx/rejected/ingest/' directory in the bucket.
+        # rejecting a key will move it to 'prod-edx/rejected/ingest/' or 'stage-edx/rejected/ingest'
+        # directory in the bucket.
         file_discovery_instance.reject_file_and_update_val(self.video_key, ANY, ANY, ANY)
 
         self.assertTrue(mock_val_api.called)
