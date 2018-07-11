@@ -45,6 +45,9 @@ if not os.path.exists(WORK_DIRECTORY):
 Occasionally this throws an error in the env,
 but on EC2 with v_videocompile it's no biggie
 
+Ticket #: EDUCATOR-3005
+Removed v_videocompile, not sure if an error will be thrown.
+
 """
 FFPROBE = "ffprobe"
 FFMPEG = "ffmpeg"

@@ -103,7 +103,6 @@ celery_threads: 1
 
 rabbitmq_broker:
 rabbitmq_pass:
-rabbitmq_user:
 
 onsite_worker: False
 

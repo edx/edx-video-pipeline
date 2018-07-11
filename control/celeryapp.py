@@ -21,10 +21,9 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 auth_dict = get_config()
 
-CEL_BROKER = 'amqp://{rabbitmq_user}:{rabbitmq_pass}@{rabbitmq_broker}:5672//'.format(
-    rabbitmq_user=auth_dict['rabbitmq_user'],
-    rabbitmq_pass=auth_dict['rabbitmq_pass'],
-    rabbitmq_broker=auth_dict['rabbitmq_broker']
+CEL_BROKER = 'redis://:{redis_pass}@{redis_broker}:6379/0'.format(
+    redis_pass=auth_dict['redis_pass'],
+    redis_broker=auth_dict['redis_broker']
 )
 
 app = Celery(auth_dict['celery_app_name'], broker=CEL_BROKER, include=['celeryapp'])
