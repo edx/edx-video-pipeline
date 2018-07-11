@@ -75,8 +75,8 @@ class YoutubeCallbackCli(object):
             '-y'
         ))
         os.system(runcommand)
-        E1 = EmailAlert(message='Youtube Callback Daemon Crash', subject='Youtube Callback Daemon')
-        E1.email()
+        E1 = EmailAlert(body='Youtube Callback Daemon Crash', subject='Youtube Callback Daemon')
+        E1.email_fault()
 
 
 def main():
