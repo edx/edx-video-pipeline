@@ -19,3 +19,4 @@ MySQL-python==1.2.5
 gunicorn==0.17.4
 gevent==1.2.2
 six==1.11.0
+redis==2.10.6
