@@ -66,26 +66,8 @@ class DaemonCli(object):
         """
         actually run the function
         """
-        if self.ingest is True:
-            self.ingest_daemon()
-
         if self.youtube is True:
             self.youtube_daemon()
-
-    def ingest_daemon(self):
-        x = 0
-        while True:
-            FD = FileDiscovery(
-                node_work_directory=WORK_DIRECTORY
-            )
-
-            FD.discover_studio_ingested_videos()
-            FD.about_video_ingest()
-            reset_queries()
-            x += 1
-            if x >= 100:
-                LOGGER.info('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-                x = 0
 
     def youtube_daemon(self):
         x = 0
