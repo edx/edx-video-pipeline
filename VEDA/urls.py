@@ -56,4 +56,9 @@ urlpatterns = [
         view=views.heartbeat,
         name='heartbeat'
     ),
+    url(
+        r'^api/ingest_from_s3/',
+        view=views.IngestFromS3View.as_view(),
+        name='ingest_from_s3'
+    )
 ]

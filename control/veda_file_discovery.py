@@ -323,7 +323,7 @@ class FileDiscovery(object):
             if not file_downloaded:
                 # S3 Bucket ingest failed, move the file rejected directory.
                 self.move_video(video_s3_key, destination_dir=self.auth_dict['edx_s3_rejected_prefix'])
-                return
+                return False
 
             # Prepare to ingest.
             video_metadata = dict(
@@ -356,6 +356,9 @@ class FileDiscovery(object):
                 # Move the video file into 'prod-edx/processed' or 'stage-edx/processed
                 # directory, if ingestion is complete.
                 self.move_video(video_s3_key, destination_dir=self.auth_dict['edx_s3_processed_prefix'])
+
+            return ingest.complete
         else:
             # Reject the video file and update val status to 'invalid_token'
             self.reject_file_and_update_val(video_s3_key, filename, client_title, course_id)
+            return False

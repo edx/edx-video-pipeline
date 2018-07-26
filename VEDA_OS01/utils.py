@@ -1,6 +1,8 @@
 """
 Common utils.
 """
+from rest_framework.parsers import BaseParser
+
 from VEDA.utils import get_config
 from VEDA_OS01.models import Encode, TranscriptStatus, URL, Video
 
@@ -107,3 +109,16 @@ def is_video_ready(edx_id, ignore_encodes=list()):
         ignore_encodes(list): A list containing the profiles that should not be considered.
     """
     return set(get_incomplete_encodes(edx_id)).issubset(set(ignore_encodes))
+
+
+class PlainTextParser(BaseParser):
+    """
+    Plain text parser.
+    """
+    media_type = 'text/plain'
+
+    def parse(self, stream, media_type=None, parser_context=None):
+        """
+        Simply return a string representing the body of the request.
+        """
+        return stream.read()
