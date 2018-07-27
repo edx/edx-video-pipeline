@@ -50,31 +50,6 @@ class FileDiscovery(object):
         # create the course anyway.
         self.create_course_override = self.auth_dict['environment'] == "stage"
 
-    def about_video_ingest(self):
-        """
-        Crawl VEDA Upload bucket
-        """
-        if self.node_work_directory is None:
-            LOGGER.error('[DISCOVERY] No Workdir')
-            return
-        try:
-            conn = boto.connect_s3()
-        except NoAuthHandlerFound:
-            LOGGER.error('[DISCOVERY] BOTO Auth Handler')
-            return
-        try:
-            self.bucket = conn.get_bucket(self.auth_dict['veda_s3_upload_bucket'])
-        except S3ResponseError:
-            return None
-
-        for key in self.bucket.list('upload/', '/'):
-            meta = self.bucket.get_key(key.name)
-            if meta.name != 'upload/':
-                self.about_video_validate(
-                    meta=meta,
-                    key=key
-                )
-
     def about_video_validate(self, meta, key):
         abvid_serial = meta.name.split('/')[1]
         upload_query = VedaUpload.objects.filter(
@@ -271,25 +246,6 @@ class FileDiscovery(object):
             transcript_preferences = None
 
         return transcript_preferences
-
-    def discover_studio_ingested_videos(self):
-        """
-        Discovers studio ingested videos, for further validations and processes.
-        """
-        if self.node_work_directory:
-            try:
-                connection = boto.connect_s3()
-                self.bucket = connection.get_bucket(self.auth_dict['edx_s3_ingest_bucket'])
-                for video_s3_key in self.bucket.list(self.auth_dict['edx_s3_ingest_prefix'], '/'):
-                    if video_s3_key.name != self.auth_dict['edx_s3_ingest_prefix']:
-                        self.validate_metadata_and_feed_to_ingest(video_s3_key=self.bucket.get_key(video_s3_key.name))
-            except S3ResponseError:
-                LOGGER.error('[DISCOVERY] S3 Ingest Connection Failure')
-
-            except NoAuthHandlerFound:
-                LOGGER.error('[DISCOVERY] BOTO Auth Handler')
-        else:
-            LOGGER.error('[DISCOVERY] No Working Node directory')
 
     def validate_metadata_and_feed_to_ingest(self, video_s3_key):
         """
