@@ -12,8 +12,6 @@ from django.db import reset_queries
 import resource
 import time
 
-from control.control_env import WORK_DIRECTORY
-
 project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_path not in sys.path:
     sys.path.append(project_path)
@@ -21,7 +19,6 @@ if project_path not in sys.path:
 import django
 django.setup()
 
-from control.veda_file_discovery import FileDiscovery
 from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction
 
@@ -41,17 +38,11 @@ class DaemonCli(object):
     def get_args(self):
         parser = argparse.ArgumentParser()
         parser.usage = '''
-        {cmd} -ingest IngestDaemon
         {cmd} -youtube YoutubeCallbackDaemon
-        [-i -y]
+        [-y]
         Use --help to see all options.
         '''.format(cmd=sys.argv[0])
 
-        parser.add_argument(
-            '-i', '--ingest',
-            help='Activate alerted ingest daemon',
-            action='store_true'
-        )
         parser.add_argument(
             '-y', '--youtube',
             help='Activate alerted youtube callback daemon',
