@@ -5,6 +5,7 @@ Discovered file ingest/insert/job triggering
 import datetime
 import logging
 import subprocess
+import threading
 
 from django.db.utils import DatabaseError
 
@@ -216,17 +217,7 @@ class VedaIngest(object):
         * Note: defensive against the possibility of later passing in an ID
         """
         if self.video_proto.veda_id is None:
-            lsid = self.course_object.last_vid_number + 100
-            self.video_proto.veda_id = self.course_object.institution
-            self.video_proto.veda_id += self.course_object.edx_classid
-            self.video_proto.veda_id += self.course_object.semesterid
-            self.video_proto.veda_id += "-V" + str(lsid).zfill(6)
-
-            """
-            Update Course Record
-            """
-            self.course_object.last_vid_number = lsid
-            self.course_object.save()
+            self._generate_veda_id()
 
         v1.edx_id = self.video_proto.veda_id
 
@@ -387,3 +378,20 @@ class VedaIngest(object):
             upload_filepath=self.full_filename
         )
         return H1.upload()
+
+    def _generate_veda_id(self):
+        with threading.RLock():
+            lsid = self._get_last_vid_number() + 100
+            self.video_proto.veda_id = self.course_object.institution
+            self.video_proto.veda_id += self.course_object.edx_classid
+            self.video_proto.veda_id += self.course_object.semesterid
+            self.video_proto.veda_id += "-V" + str(lsid).zfill(6)
+
+            """
+            Update Course Record
+            """
+            self.course_object.last_vid_number = lsid
+            self.course_object.save()
+
+    def _get_last_vid_number(self):
+        return Course.objects.filter(course_name=self.course_object.course_name).first().last_vid_number
