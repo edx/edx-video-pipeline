@@ -100,7 +100,7 @@ class VedaHeal(object):
             api_call.call()
 
             # Enqueue
-            if not self.auth_dict['rabbitmq_broker']:
+            if not self.auth_dict['redis_broker']:
                 return
             for encode in encode_list:
                 veda_id = v.edx_id

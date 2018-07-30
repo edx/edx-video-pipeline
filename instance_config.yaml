@@ -101,9 +101,7 @@ celery_deliver_queue:
 celery_heal_queue:
 celery_threads: 1
 
-rabbitmq_broker:
-rabbitmq_pass:
-rabbitmq_user:
+redis_broker:
 
 onsite_worker: False
 

@@ -40,7 +40,7 @@ class VedaEncode(object):
             try:
                 encode_queryset = Encode.objects.filter(product_spec=encode)
                 if encode_queryset.exists():
-                    if not encode_queryset.first.profile_active:
+                    if not encode_queryset.first().profile_active:
                         self.encode_list.remove(encode)
                 else:
                     self.encode_list.remove(encode)
