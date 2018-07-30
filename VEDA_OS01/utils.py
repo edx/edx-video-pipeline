@@ -4,7 +4,9 @@ Common utils.
 from rest_framework.parsers import BaseParser
 
 from VEDA.utils import get_config
-from VEDA_OS01.models import Encode, TranscriptStatus, URL, Video
+from VEDA_OS01.models import Encode, TranscriptStatus, URL, Video, Course
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
 
 
 class ValTranscriptStatus(object):
@@ -122,3 +124,42 @@ class PlainTextParser(BaseParser):
         Simply return a string representing the body of the request.
         """
         return stream.read()
+
+
+def get_or_create_course(course_id, studio_hex):
+    """
+    Retrieves a course associated with course_hex, course_id or a creates new one.
+
+    Arguments:
+        course_id: course id identifying a course run
+        studio_hex: studio_hex identifying course runs
+
+    Details:
+     - If course_hex is there, try getting course with course_hex.
+     - Otherwise try making use of course_id to get the associated course
+       and if no course is associated with the course_id, try creating
+       a new course with course_name, institution, edx_classid and
+       local_storedir.
+    """
+
+    if studio_hex:
+        try:
+            course = Course.objects.get(studio_hex=studio_hex)
+        except Course.DoesNotExist:
+            try:
+                course_key = CourseKey.from_string(course_id)
+                course_name = '{org} {number}'.format(org=course_key.org, number=course_key.course)
+                course = Course.objects.create(
+                    course_name=course_name,
+                    institution=course_key.org,
+                    edx_classid=course_key.course,
+                    local_storedir=course_id,
+                    yt_proc=False,
+                    studio_hex=studio_hex
+                )
+            except InvalidKeyError:
+                return
+
+        return course
+    else:
+        return False

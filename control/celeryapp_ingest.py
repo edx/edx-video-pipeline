@@ -1,20 +1,18 @@
 """
-Start Celery Worker
+Celery worker for ingest
 """
 
 from __future__ import absolute_import
 
 from celery import Celery
 import logging
-import os
 import sys
 
+from control.control_env import WORK_DIRECTORY
+from control.veda_file_ingest import VedaIngest, VideoProto
+from control.veda_utils import get_video_metadata_from_studio_id
 from VEDA.utils import get_config
-
-try:
-    from control.veda_deliver import VedaDelivery
-except ImportError:
-    from veda_deliver import VedaDelivery
+from VEDA_OS01.models import Course
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout
@@ -42,32 +40,27 @@ app.conf.update(
 )
 
 
-@app.task(name='worker_encode')
-def worker_task_fire(veda_id, encode_profile):
-    LOGGER.info('[ENCODE] Misfire : {id} : {encode}'.format(id=veda_id, encode=encode_profile))
-    return 1
-
-
-@app.task(name='supervisor_deliver')
-def deliverable_route(veda_id, encode_profile):
+@app.task(name='ingest_worker')
+def ingest(s3_key_id, course_id, video_edx_id):
     """
-    Task for deliverable route.
+    Ingest a video in s3.
+    Arguments:
+        - s3_key_id: a valid studio upload ID
+        - course_id: course id identifying a course run
+        - video_edx_id: the edX ID of the video in the database
     """
-    veda_deliver = VedaDelivery(
-        veda_id=veda_id,
-        encode_profile=encode_profile
+    course = Course.objects.get(id=course_id)
+    video_metadata = get_video_metadata_from_studio_id(
+        s3_key_id,
+        video_edx_id
     )
-    veda_deliver.run()
-
-
-@app.task
-def node_test(command):
-    os.system(command)
-
-
-@app.task(name='legacy_heal')
-def maintainer_healer(command):
-    os.system(command)
+    veda_ingest = VedaIngest(
+        course_object=course,
+        video_proto=VideoProto(**video_metadata),
+        node_work_directory=WORK_DIRECTORY,
+        s3_key_id=s3_key_id
+    )
+    veda_ingest.ingest_from_s3()
 
 
 if __name__ == '__main__':

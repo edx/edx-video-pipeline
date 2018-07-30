@@ -124,3 +124,18 @@ def delete_directory_contents(path):
 
         if os.path.isfile(file_path):
             os.remove(file_path)
+
+
+def decode_to_ascii(char_string):
+    string_len = len(char_string)
+    s1 = 0
+    final_string = ""
+    while string_len > s1:
+        try:
+            char_string[s1].decode('ascii')
+            final_string += char_string[s1]
+        except:
+            final_string += "?"
+        s1 += 1
+
+    return final_string

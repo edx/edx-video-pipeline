@@ -23,6 +23,7 @@ from control.control_env import WORK_DIRECTORY
 from control.veda_file_discovery import FileDiscovery
 from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction
+from VEDA.utils import get_config
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout
@@ -36,6 +37,10 @@ class DaemonCli(object):
         self.ingest = False
         self.youtube = False
         self.course_list = []
+        self.auth_dict = get_config()
+        self.ROOT_DIR = os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)
+        ))
 
     def get_args(self):
         parser = argparse.ArgumentParser()
@@ -64,6 +69,19 @@ class DaemonCli(object):
         """
         actually run the function
         """
+        ingest_celery_daemon = os.path.join(self.ROOT_DIR, 'control', 'celeryapp_ingest.py')
+        os.system(
+            ' '.join((
+                'python',
+                ingest_celery_daemon,
+                'worker',
+                '--loglevel=info',
+                '--concurrency=' + str(self.auth_dict['celery_threads']),
+                '-Q ' + self.auth_dict['celery_ingest_queue'],
+                '-n ingest_queue.%h'
+            ))
+        )
+
         if self.youtube is True:
             self.youtube_daemon()
         if self.aboutingest is True:

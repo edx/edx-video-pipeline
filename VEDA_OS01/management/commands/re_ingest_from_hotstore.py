@@ -4,13 +4,11 @@ Management command used to re-ingest video from hotstore based on the params pro
 import logging
 import boto
 import boto.s3
-import os
-import subprocess
 
 from django.core.management.base import BaseCommand
 
 from VEDA_OS01.models import Video
-from control.veda_file_discovery import FileDiscovery
+from control.veda_file_discovery import feed_to_ingest
 
 try:
     boto.config.add_section('Boto')
@@ -39,7 +37,6 @@ class Command(BaseCommand):
             help="The bigger video id for the list"
         )
 
-
     def handle(self, *args, **options):
         """
         handle method for command class.
@@ -55,8 +52,5 @@ class Command(BaseCommand):
         bucket = conn.get_bucket(BUCKET_NAME)
         for vd in query:
             keyname = vd.edx_id + '.' + vd.video_orig_extension
-            filename = './' + keyname
-            vd_key = bucket.get_key(keyname)
-            file_discovery = FileDiscovery()  
-            file_discovery.validate_metadata_and_feed_to_ingest(vd_key)
+            feed_to_ingest(keyname, bucket)
             LOGGER.info('Ingest completed for {}'.format(vd.edx_id))

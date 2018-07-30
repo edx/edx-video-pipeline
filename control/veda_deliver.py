@@ -27,7 +27,7 @@ from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
 from VEDA.utils import build_url, extract_course_org, get_config, delete_directory_contents
 from veda_utils import Metadata, Output, VideoProto
 from veda_val import VALAPICall
-from veda_video_validation import Validation
+from veda_video_validation import validate_video
 
 try:
     from control.veda_deliver_3play import ThreePlayMediaClient
@@ -254,7 +254,7 @@ class VedaDelivery(object):
         self.video_proto.client_title = self.video_query.client_title
 
     def _VALIDATE(self):
-        V = Validation(
+        return validate_video(
             videofile=os.path.join(
                 self.node_work_directory,
                 self.encoded_file
@@ -262,7 +262,6 @@ class VedaDelivery(object):
             mezzanine=False,
             veda_id=self.veda_id
         )
-        return V.validate()
 
     def _CLEANUP(self):
         """

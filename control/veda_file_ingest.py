@@ -1,22 +1,24 @@
 """
-Discovered file ingest/insert/job triggering
-
+File ingest/insert/job triggering
+Called in two places:
+1. After an SNS notification from the HTTP endpoint '/api/ingest_from_s3'
+2. After file discovery for 'about' videos
 """
 import datetime
 import logging
 import subprocess
-import threading
 
+from boto.exception import NoAuthHandlerFound, S3DataError, S3ResponseError
 from django.db.utils import DatabaseError
 
 from control_env import *
-from VEDA.utils import get_config
+from control.veda_utils import connect_to_boto_and_get_bucket
+from VEDA.utils import get_config, decode_to_ascii
 from veda_heal import VedaHeal
 from veda_hotstore import Hotstore
-from VEDA_OS01.models import TranscriptStatus
-from veda_utils import Report
+from veda_utils import Report, move_video_within_s3
 from veda_val import VALAPICall
-from veda_video_validation import Validation
+from veda_video_validation import validate_video
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ class VideoProto(object):
         self.file_extension = kwargs.get('file_extension', None)
         self.platform_course_url = kwargs.get('platform_course_url', None)
         self.abvid_serial = kwargs.get('abvid_serial', None)
+        self.veda_id = kwargs.get('veda_id', None)
 
         # Transcription Process related Attributes
         self.process_transcription = kwargs.get('process_transcription', False)
@@ -63,7 +66,6 @@ class VideoProto(object):
         self.duration = 0
         self.bitrate = None
         self.resolution = None
-        self.veda_id = None
 
 
 class VedaIngest(object):
@@ -76,12 +78,44 @@ class VedaIngest(object):
         self.full_filename = kwargs.get('full_filename', None)
         self.complete = False
         self.archived = False
+        self.s3_key_id = kwargs.get('s3_key_id', None)
+        self.bucket = connect_to_boto_and_get_bucket(CONFIG['edx_s3_ingest_bucket'])
 
-    def insert(self):
-        self.database_record()
+        if self.s3_key_id:
+            self.studio_upload_id = self.s3_key_id.lstrip(CONFIG['edx_s3_ingest_prefix'])
+            self.s3_key = self.bucket.get_key(self.s3_key_id)
+
+    def ingest_from_s3(self):
+        """
+        Ingests a video from S3. Steps:
+        1 - Download video to node working directory from S3.
+        2 - Set up an ingest instance and insert video to ingestion phase.
+        3 - Move the video to 'processed' directory in s3.
+        """
+        filename = self.video_proto.s3_filename
+        file_downloaded = self._download_video_to_working_directory(filename)
+
+        if not file_downloaded:
+            move_video_within_s3(
+                bucket=self.bucket,
+                video_key=self.s3_key,
+                destination_dir=self.auth_dict['edx_s3_rejected_prefix']
+            )
+        else:
+            self.insert_video_to_ingestion_phase()
+
+            if self.complete:
+                move_video_within_s3(
+                    bucket=self.bucket,
+                    video_key=self.s3_key,
+                    destination_dir=self.auth_dict['edx_s3_processed_prefix']
+                )
+
+    def insert_video_to_ingestion_phase(self):
+        self.insert_video_to_database()
         self.val_insert()
         self.rename()
-        self.archived = self.store()
+        self.archived = self.upload_to_hotstore()
         LOGGER.info('[INGEST] {studio_id} | {video_id} : Video in hot store'.format(
             studio_id=self.video_proto.s3_filename,
             video_id=self.video_proto.veda_id
@@ -89,9 +123,9 @@ class VedaIngest(object):
         if self.video_proto.valid is False:
             self.abvid_report()
             self.complete = True
-            if self.archived is True:
+            if self.archived:
                 os.remove(self.full_filename)
-            return None
+            return
 
         LOGGER.info('[INGEST] {studio_id} | {video_id} : Ingested {datetime}'.format(
             studio_id=self.video_proto.s3_filename,
@@ -99,18 +133,135 @@ class VedaIngest(object):
             datetime=str(datetime.datetime.utcnow()))
         )
 
-        self.queue_job()
+        self._queue_encode_job()
         Course.objects.filter(
             pk=self.course_object.pk
         ).update(
             previous_statechange=datetime.datetime.utcnow().replace(tzinfo=utc)
         )
-        if self.archived is True:
+        if self.archived:
             os.remove(self.full_filename)
         self.complete = True
 
-    def queue_job(self):
-        # TODO: Break heal method listed here out into helper util
+    def insert_video_to_database(self):
+        """
+        Start DB Inserts, Get Basic File name information
+        """
+        if self.video_proto.s3_filename:
+            self.full_filename = '/'.join((
+                self.node_work_directory,
+                self.video_proto.s3_filename
+            ))
+        if self.video_proto.abvid_serial:
+            self.full_filename = '/'.join((
+                self.node_work_directory,
+                self.video_proto.client_title
+            ))
+            if len(self.video_proto.file_extension) > 2:
+                self.full_filename += "." + self.video_proto.file_extension
+
+        if not self.full_filename:
+            self.full_filename = '/'.join((
+                self.node_work_directory,
+                self.video_proto.client_title
+            ))
+
+        if not os.path.exists(self.full_filename):
+            LOGGER.exception(
+                '[INGEST] {studio_id} | {video_id} : Local file not found'.format(
+                    studio_id=self.video_proto.s3_filename,
+                    video_id=self.video_proto.veda_id
+                )
+            )
+            return
+
+        valid_video = self._validate_file()
+        if not valid_video:
+            return
+
+        valid_video.update_video_with_video_proto_data(self.video_proto)
+        self._mark_video_ready_for_task_fire(valid_video)
+
+        try:
+            valid_video.save()
+        except DatabaseError:
+            decoded_string = decode_to_ascii(self.video_proto.client_title)
+            valid_video.client_title = decoded_string
+            valid_video.save()
+        except Exception:
+            LOGGER.exception('[INGEST] {studio_id} | {video_id} : Video catalog failed.'.format(
+                studio_id=self.video_proto.s3_filename,
+                video_id=self.video_proto.veda_id
+            ))
+            raise
+        LOGGER.info('[INGEST] {studio_id} | {video_id} : Video record cataloged'.format(
+            studio_id=self.video_proto.s3_filename,
+            video_id=self.video_proto.veda_id
+        ))
+
+    def val_insert(self):
+        if self.video_proto.abvid_serial:
+            return None
+
+        if self.video_proto.valid is False:
+            val_status = 'file_corrupt'
+        else:
+            val_status = 'ingest'
+
+        val_call = VALAPICall(
+            video_proto=self.video_proto,
+            val_status=val_status,
+            platform_course_url=""  # Empty record for initial status update
+        )
+        val_call.call()
+
+    def abvid_report(self):
+        if self.video_proto.abvid_serial is None:
+            return None
+
+        email_report = Report(
+            status="File Corrupt on Ingest",
+            upload_serial=self.video_proto.abvid_serial,
+            youtube_id=''
+        )
+        email_report.upload_status()
+        LOGGER.info('[INGEST] {video_id} : About video reported'.format(
+            video_id=self.video_proto.veda_id
+        ))
+        self.complete = True
+
+    def rename(self):
+        """
+        Rename to VEDA ID
+        """
+        if self.video_proto.veda_id is None:
+            self.video_proto.valid = False
+            return
+
+        veda_filename = self.video_proto.veda_id
+        if self.video_proto.file_extension:
+            veda_filename += '.{ext}'.format(ext=self.video_proto.file_extension)
+        os.rename(
+            self.full_filename, os.path.join(
+                self.node_work_directory,
+                veda_filename
+            )
+        )
+        self.full_filename = os.path.join(self.node_work_directory, veda_filename)
+        os.system('chmod ugo+rwx ' + self.full_filename)
+        return
+
+    def upload_to_hotstore(self):
+        """
+        Ingest File Backup / Archive Policy
+        """
+        H1 = Hotstore(
+            video_proto=self.video_proto,
+            upload_filepath=self.full_filename
+        )
+        return H1.upload()
+
+    def _queue_encode_job(self):
         encode_instance = VedaHeal(
             video_query=Video.objects.filter(
                 edx_id=self.video_proto.veda_id.strip()
@@ -159,239 +310,69 @@ class VedaIngest(object):
                         else:
                             self.video_proto.resolution = '1920x1080'
 
-    def database_record(self):
+    def _download_video_to_working_directory(self, file_name):
         """
-        Start DB Inserts, Get Basic File name information
+        Downloads the video to working directory from S3 and
+        returns whether its successfully downloaded or not.
+
+        Arguments:
+            file_name: Name of the file when its in working directory
         """
-        if self.video_proto.s3_filename:
-            self.full_filename = '/'.join((
-                self.node_work_directory,
-                self.video_proto.s3_filename
-            ))
-        if self.video_proto.abvid_serial:
-            self.full_filename = '/'.join((
-                self.node_work_directory,
-                self.video_proto.client_title
-            ))
-            if len(self.video_proto.file_extension) > 2:
-                self.full_filename += "." + self.video_proto.file_extension
+        try:
+            self.s3_key.get_contents_to_filename(os.path.join(self.node_work_directory, file_name))
+            return True
+        except S3DataError:
+            LOGGER.error('[DISCOVERY] Error downloading the file into node working directory.')
+            return False
 
-        if not self.full_filename:
-            self.full_filename = '/'.join((
-                self.node_work_directory,
-                self.video_proto.client_title
-            ))
-
-        if not os.path.exists(self.full_filename):
-            LOGGER.exception(
-                '[INGEST] {studio_id} | {video_id} : Local file not found'.format(
-                    studio_id=self.video_proto.s3_filename,
-                    video_id=self.video_proto.veda_id
-                )
-            )
-            return
-
+    def _validate_file(self):
         """
-        Validate File
+        Validates a video file.
+        Returns False if the video file is invalid, otherwise returns a valid Video object.
         """
-        VV = Validation(videofile=self.full_filename)
+        if self.studio_upload_id:
+            video_set = Video.objects.filter(studio_id=self.studio_upload_id)
+            if video_set.count() > 1:
+                self.video_proto.veda_id = video_set.first().edx_id
+                self.video_proto.video_orig_duration = video_set.first().video_orig_duration
+                self.complete = True
+                return
+            elif video_set.count() == 0:
+                LOGGER.error('[INGEST] Video {studio_id} not found in database. Should have been added already.'.format(
+                    studio_id=self.studio_upload_id
+                ))
+                return
 
-        self.video_proto.valid = VV.validate()
+        video = Video.objects.get(studio_id=self.studio_upload_id)
+
+        self.video_proto.valid = validate_video(videofile=self.full_filename)
 
         if self.video_proto.valid is True:
             self._gather_metadata()
-
-        # DB Inserts
-        if self.video_proto.s3_filename:
-            video = Video.objects.filter(studio_id=self.video_proto.s3_filename).first()
-            if video:
-                # Protect against crash/duplicate inserts, won't insert object
-                self.video_proto.veda_id = video.edx_id
-                self.video_proto.video_orig_duration = video.video_orig_duration
-                self.complete = True
-                return
-
-        v1 = Video(inst_class=self.course_object)
-        """
-        Generate veda_id / update course record
-        * Note: defensive against the possibility of later passing in an ID
-        """
-        if self.video_proto.veda_id is None:
-            self._generate_veda_id()
-
-        v1.edx_id = self.video_proto.veda_id
-
-        v1.video_orig_extension = self.video_proto.file_extension
-        v1.studio_id = self.video_proto.s3_filename
-        v1.client_title = self.video_proto.client_title
-        v1.abvid_serial = self.video_proto.abvid_serial
-
-        if self.video_proto.valid is False:
-            """
-            Invalid File, Save, exit
-            """
-            v1.video_trans_status = 'Corrupt File'
-            v1.video_active = False
-            try:
-                v1.save()
-            except:
-                """
-                decode to ascii
-                """
-                char_string = self.video_proto.client_title
-                string_len = len(char_string)
-                s1 = 0
-                final_string = ""
-                while string_len > s1:
-                    try:
-                        char_string[s1].decode('ascii')
-                        final_string += char_string[s1]
-                    except:
-                        final_string += "?"
-                    s1 += 1
-                v1.client_title = final_string
-                v1.save()
-            self.complete = True
-            LOGGER.info('[INGEST] {video_id} : Corrupt file, database record complete'.format(
-                    video_id=self.video_proto.veda_id
-                )
-            )
-            return
-
-        # Update transcription preferences for the Video
-        if self.video_proto.process_transcription:
-            v1.process_transcription = self.video_proto.process_transcription
-            v1.transcript_status = TranscriptStatus.PENDING
-            v1.provider = self.video_proto.provider
-            v1.three_play_turnaround = self.video_proto.three_play_turnaround
-            v1.cielo24_turnaround = self.video_proto.cielo24_turnaround
-            v1.cielo24_fidelity = self.video_proto.cielo24_fidelity
-            v1.preferred_languages = self.video_proto.preferred_languages
-            v1.source_language = self.video_proto.source_language
-
-        """
-        Files Below are all valid
-        """
-        v1.video_orig_filesize = self.video_proto.filesize
-        v1.video_orig_duration = self.video_proto.duration
-        v1.video_orig_bitrate = self.video_proto.bitrate
-        v1.video_orig_resolution = self.video_proto.resolution
-
-        """
-        Ready for Task Fire
-        """
-        v1.video_active = True
-        v1.video_trans_status = 'Ingest'
-        v1.video_trans_start = datetime.datetime.utcnow().replace(tzinfo=utc)
-
-        """
-        Save / Decode / Update Course
-        """
-        try:
-            v1.save()
-        except DatabaseError:
-            # in case if the client title's length is too long
-            char_string = self.video_proto.client_title
-            string_len = len(char_string)
-            s1 = 0
-            final_string = ""
-            while string_len > s1:
-                try:
-                    char_string[s1].decode('ascii')
-                    final_string += char_string[s1]
-                except:
-                    final_string += "?"
-                s1 += 1
-            v1.client_title = final_string
-            v1.save()
-        except Exception:
-            # Log the exception and raise.
-            LOGGER.exception('[INGEST] {studio_id} | {video_id} : Video catalog failed.'.format(
-                studio_id=self.video_proto.s3_filename,
-                video_id=self.video_proto.veda_id
-            ))
-            raise
-        LOGGER.info('[INGEST] {studio_id} | {video_id} : Video record cataloged'.format(
-            studio_id=self.video_proto.s3_filename,
-            video_id=self.video_proto.veda_id
-        ))
-
-    def val_insert(self):
-        if self.video_proto.abvid_serial:
-            return None
-
-        if self.video_proto.valid is False:
-            val_status = 'file_corrupt'
         else:
-            val_status = 'ingest'
-
-        val_call = VALAPICall(
-            video_proto=self.video_proto,
-            val_status=val_status,
-            platform_course_url=""  # Empty record for initial status update
-        )
-        val_call.call()
-
-    def abvid_report(self):
-        if self.video_proto.abvid_serial is None:
-            return None
-
-        email_report = Report(
-            status="File Corrupt on Ingest",
-            upload_serial=self.video_proto.abvid_serial,
-            youtube_id=''
-        )
-        email_report.upload_status()
-        LOGGER.info('[INGEST] {video_id} : About video reported'.format(
-            video_id=self.video_proto.veda_id
-        ))
-        self.complete = True
-
-    def rename(self):
-        """
-        Rename to VEDA ID,
-
-        """
-        if self.video_proto.veda_id is None:
-            self.video_proto.valid = False
+            self._mark_file_corrupt(video)
             return
 
-        veda_filename = self.video_proto.veda_id
-        if self.video_proto.file_extension:
-            veda_filename += '.{ext}'.format(ext=self.video_proto.file_extension)
-        os.rename(
-            self.full_filename, os.path.join(
-                self.node_work_directory,
-                veda_filename
-            )
-        )
-        self.full_filename = os.path.join(self.node_work_directory, veda_filename)
-        os.system('chmod ugo+rwx ' + self.full_filename)
-        return
+        return video
 
-    def store(self):
+    def _mark_file_corrupt(self, video):
         """
-        Ingest File Backup / Archive Policy
+        Mark a file as corrupt in the database.
         """
-        H1 = Hotstore(
-            video_proto=self.video_proto,
-            upload_filepath=self.full_filename
-        )
-        return H1.upload()
+        video.video_trans_status = 'Corrupt File'
+        video.video_active = False
+        try:
+            video.save()
+        except:
+            decoded_string = decode_to_ascii(self.video_proto.client_title)
+            video.client_title = decoded_string
+            video.save()
+        self.complete = True
+        LOGGER.info('[INGEST] {video_id} : Corrupt file, database record complete'.format(
+            video_id=self.video_proto.veda_id
+        ))
 
-    def _generate_veda_id(self):
-        with threading.RLock():
-            lsid = self._get_last_vid_number() + 100
-            self.video_proto.veda_id = self.course_object.institution
-            self.video_proto.veda_id += self.course_object.edx_classid
-            self.video_proto.veda_id += self.course_object.semesterid
-            self.video_proto.veda_id += "-V" + str(lsid).zfill(6)
-
-            """
-            Update Course Record
-            """
-            self.course_object.last_vid_number = lsid
-            self.course_object.save()
-
-    def _get_last_vid_number(self):
-        return Course.objects.filter(course_name=self.course_object.course_name).first().last_vid_number
+    def _mark_video_ready_for_task_fire(self, video):
+        video.video_active = True
+        video.video_trans_status = 'Ingest'
+        video.video_trans_start = datetime.datetime.utcnow().replace(tzinfo=utc)

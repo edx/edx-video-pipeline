@@ -4,12 +4,17 @@ Quick and dirty output handling
 """
 import boto.ses
 import datetime
+import logging
+import json
 import subprocess
 
 from control.control_env import *
 from control.veda_encode import VedaEncode
-from VEDA.utils import get_config
+from VEDA_OS01.models import TranscriptCredentials
+from VEDA.utils import get_config, extract_course_org
 
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 class EmailAlert(object):
     """
@@ -343,3 +348,86 @@ class Metadata(object):
 
         self.val_status = 'transcode_queue'
         return encode_list
+
+
+def move_video_within_s3(bucket, video_key, destination_dir):
+    """
+    Moves an S3 video key to destination directory within the same bucket.
+
+    Arguments:
+        bucket: a boto s3 bucket object.
+        destination_dir: target directory where the key will be moved eventually.
+    """
+    new_key_name = os.path.join(destination_dir, os.path.basename(video_key.name))
+    video_key.copy(bucket, new_key_name)
+    video_key.delete()
+
+
+def get_video_metadata_from_studio_id(studio_upload_id, video_edx_id):
+    """
+    Given a video studio ID, connect to boto and retrieve metadata from the s3 key.
+    """
+    bucket = connect_to_boto_and_get_bucket(CONFIG['edx_s3_ingest_bucket'])
+    video_s3_key = bucket.get_key(studio_upload_id)
+
+    course_id = video_s3_key.get_metadata('course_key')
+    transcript_preferences = video_s3_key.get_metadata('transcript_preferences')
+    filename = os.path.basename(video_s3_key.name)
+    client_title = video_s3_key.get_metadata('client_video_id')
+
+    file_extension = os.path.splitext(client_title)[1][1:]
+
+    video_metadata = dict(
+        s3_filename=filename,
+        client_title=client_title,
+        file_extension=file_extension,
+        platform_course_url=course_id,
+        veda_id=video_edx_id
+    )
+
+    # Check if this video also having valid 3rd party transcription preferences.
+    transcript_preferences = _parse_transcript_preferences(course_id, transcript_preferences)
+    if transcript_preferences is not None:
+        video_metadata.update({
+            'process_transcription': True,
+            'provider': transcript_preferences.get('provider'),
+            'three_play_turnaround': transcript_preferences.get('three_play_turnaround'),
+            'cielo24_turnaround': transcript_preferences.get('cielo24_turnaround'),
+            'cielo24_fidelity': transcript_preferences.get('cielo24_fidelity'),
+            'preferred_languages': transcript_preferences.get('preferred_languages'),
+            'source_language': transcript_preferences.get('video_source_language'),
+        })
+
+    return video_metadata
+
+
+def connect_to_boto_and_get_bucket(bucket_name):
+    connection = boto.connect_s3()
+    bucket = connection.get_bucket(bucket_name)
+
+    return bucket
+
+
+def _parse_transcript_preferences(course_id, transcript_preferences):
+    """
+    Parses and validates transcript preferences.
+
+    Arguments:
+        course_id: course id identifying a course run.
+        transcript_preferences: A serialized dict containing third party transcript preferences.
+    """
+    try:
+        transcript_preferences = json.loads(transcript_preferences)
+        TranscriptCredentials.objects.get(
+            org=extract_course_org(course_id),
+            provider=transcript_preferences.get('provider')
+        )
+    except (TypeError, TranscriptCredentials.DoesNotExist):
+        # when the preferences are not set OR these are set to some data in invalid format OR these don't
+        # have associated 3rd party transcription provider API keys.
+        transcript_preferences = None
+    except ValueError:
+        LOGGER.error('[DISCOVERY] Invalid transcripts preferences=%s', transcript_preferences)
+        transcript_preferences = None
+
+    return transcript_preferences

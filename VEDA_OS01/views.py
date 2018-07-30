@@ -3,7 +3,6 @@
 import json
 import logging
 
-import boto
 import boto.s3
 from boto.exception import S3ResponseError
 import requests
@@ -20,7 +19,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import token_finisher
-from control.veda_file_discovery import FileDiscovery
+from control.veda_file_discovery import feed_to_ingest
+from control.veda_utils import connect_to_boto_and_get_bucket
 from VEDA import utils
 from VEDA_OS01.enums import TranscriptionProviderErrorType
 from VEDA_OS01.models import (URL, Course, Encode, TranscriptCredentials,
@@ -307,49 +307,33 @@ class IngestFromS3View(APIView):
         Handle ingest from s3 bucket.
         """
         bucket_name = CONFIG['edx_s3_ingest_bucket']
-        status = 400
-        reason = ''
 
         request_message = request_body.get('Message')
         try:
             message_json = json.loads(request_message)
             s3_object = message_json.get('Records')[0].get('s3')
-            video_s3_key = s3_object.get('object').get('key')
+            studio_upload_id = s3_object.get('object').get('key')
         except TypeError:
             reason = 'Request message body does not contain expected output'
             LOGGER.error('[HTTP INGEST] {reason}'.format(
                 reason=reason,
             ))
-            return status, reason
+            return 400, reason
 
-        if not video_s3_key:
-            return status, 'Video does not contain s3 key'
+        if not studio_upload_id:
+            return 400, 'Video does not contain s3 key'
 
         try:
-            connection = boto.connect_s3()
-            bucket = connection.get_bucket(bucket_name)
-            vd_key = bucket.get_key(video_s3_key)
+            bucket = connect_to_boto_and_get_bucket(bucket_name)
 
-            if vd_key is None:
-                LOGGER.error(
-                    '[INGEST] Video key {vd_key} supplied in notification but not found in the s3 bucket.'
-                    'Returning 200 to avoid retry attempts.'.format(
-                        vd_key=vd_key
-                ))
-                successful_ingest = 200
-            else:
-                file_discovery = FileDiscovery()
-                file_discovery.bucket = bucket
-                successful_ingest = file_discovery.validate_metadata_and_feed_to_ingest(
-                    video_s3_key=vd_key
-                )
-
-            status = 200 if successful_ingest else 400
+            feed_to_ingest(
+                s3_key_id=studio_upload_id,
+                bucket=bucket
+            )
+            return 200, ''
         except S3ResponseError:
             LOGGER.error('[INGEST] S3 Ingest Connection Failure')
-            reason = 'S3 ingest connection failure'
-
-        return status, reason
+            return 400, 'S3 ingest connection failure'
 
     @csrf_exempt
     def post(self, request):
@@ -407,9 +391,7 @@ class IngestFromS3View(APIView):
 @csrf_exempt
 def token_auth(request):
     """
-
     This is a hack to override the "Authorize" step in token generation
-
     """
     if request.method == 'POST':
         complete = token_finisher(request.POST['data'])

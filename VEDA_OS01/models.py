@@ -116,7 +116,8 @@ class VideoStatus(object):
     'Error',
     'Duplicate',
     'Review',
-    'Reject'
+    'Reject',
+    'SNS Notification' (ingested from SNS, but not yet in the ingest process)
 
     Possibles:
         'Invalid' (for ingest detected)
@@ -139,6 +140,7 @@ class VideoStatus(object):
     QUEUE = 'Queue'
     PROGRESS = 'Progress'
     COMPLETE = 'Complete'
+    SNS = 'SNS Notification'
 
     CHOICES = (
         (SI, 'System Ingest'),
@@ -157,6 +159,7 @@ class VideoStatus(object):
         (QUEUE, 'In Encode Queue'),
         (PROGRESS, 'In Progress'),
         (COMPLETE, 'Complete'),
+        (SNS, 'SNS Notification')
     )
 
 
@@ -530,6 +533,28 @@ class Video(models.Model):
     def __unicode__(self):
         return u'{edx_id}'.format(edx_id=self.edx_id)
 
+    def update_video_with_video_proto_data(self, video_proto):
+        if video_proto.process_transcription:
+            self.process_transcription = video_proto.process_transcription
+            self.transcript_status = TranscriptStatus.PENDING
+            self.provider = video_proto.provider
+            self.three_play_turnaround = video_proto.three_play_turnaround
+            self.cielo24_turnaround = video_proto.cielo24_turnaround
+            self.cielo24_fidelity = video_proto.cielo24_fidelity
+            self.preferred_languages = video_proto.preferred_languages
+            self.source_language = video_proto.source_language
+
+        self.video_orig_filesize = video_proto.filesize
+        self.video_orig_duration = video_proto.duration
+        self.video_orig_bitrate = video_proto.bitrate
+        self.video_orig_resolution = video_proto.resolution
+        self.video_orig_extension = video_proto.file_extension
+        self.studio_id = video_proto.s3_filename
+        self.client_title = video_proto.client_title
+        self.abvid_serial = video_proto.abvid_serial
+
+        if not self.edx_id:
+            self.edx_id = video_proto.veda_id
 
 class Destination(models.Model):
     """
