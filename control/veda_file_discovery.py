@@ -50,6 +50,31 @@ class FileDiscovery(object):
         # create the course anyway.
         self.create_course_override = self.auth_dict['environment'] == "stage"
 
+
+    def about_video_ingest(self):
+        """
+        Crawl VEDA Upload bucket
+        """
+        if self.node_work_directory is None:
+            LOGGER.error('[DISCOVERY] No Workdir')
+            return
+        try:
+            conn = boto.connect_s3()
+        except NoAuthHandlerFound:
+            LOGGER.error('[DISCOVERY] BOTO Auth Handler')
+            return
+        try:
+            self.bucket = conn.get_bucket(self.auth_dict['veda_s3_upload_bucket'])
+        except S3ResponseError:
+            return None
+        for key in self.bucket.list('upload/', '/'):
+            meta = self.bucket.get_key(key.name)
+            if meta.name != 'upload/':
+                self.about_video_validate(
+                    meta=meta,
+                    key=key
+                )
+
     def about_video_validate(self, meta, key):
         abvid_serial = meta.name.split('/')[1]
         upload_query = VedaUpload.objects.filter(
