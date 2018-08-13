@@ -68,6 +68,17 @@ def node_test(command):
 def maintainer_healer(command):
     os.system(command)
 
+@app.task(name=auth_dict['celery_online_heal_queue'])
+def web_healer(veda_id):
+    VH = VedaHeal(
+        video_query=Video.objects.filter(
+            edx_id=veda_id.strip()
+            ),
+        no_audio=False
+        )
+    VH.send_encodes()
+    return 'Video (%d) queued for healing' % veda_id
+
 
 if __name__ == '__main__':
     app.start()
