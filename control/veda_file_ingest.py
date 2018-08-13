@@ -126,12 +126,19 @@ class VedaIngest(object):
         """
         self.video_proto.filesize = os.stat(self.full_filename).st_size
 
+        escaped_filename = self.full_filename \
+            .replace(' ', '\ ') \
+            .replace('\'', '\\\'') \
+            .replace('[', '\[') \
+            .replace(']', '\]')
+
         ff_command = ' '.join((
             FFPROBE,
-            "\'" + self.full_filename + "\'"
+            escaped_filename
         ))
         p = subprocess.Popen(ff_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-
+        
+        LOGGER.info('ffprobe command has is: ' + ff_command)
         for line in iter(p.stdout.readline, b''):
             if "Duration: " in line:
 
