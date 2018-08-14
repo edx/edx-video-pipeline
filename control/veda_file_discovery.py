@@ -84,19 +84,22 @@ class FileDiscovery(object):
             # Non serialized upload - reject
             return
 
-        if upload_query[0].upload_filename is not None:
-            file_extension = upload_query[0].upload_filename.split('.')[-1]
+        upload_filename = upload_query[0].upload_filename.encode('utf-8')
+
+        if upload_filename is not None:
+            file_extension = upload_filename.split('.')[-1]
         else:
-            upload_query[0].upload_filename = 'null_file_name.mp4'
+            upload_filename = 'null_file_name.mp4'
             file_extension = 'mp4'
 
         if len(file_extension) > 4:
             file_extension = ''
 
+        LOGGER.info('[ABOUT_DISCOVERY] upload_filename is: ' + upload_filename)
         meta.get_contents_to_filename(
             os.path.join(
                 self.node_work_directory,
-                upload_query[0].upload_filename
+                upload_filename
             )
         )
 
@@ -105,7 +108,7 @@ class FileDiscovery(object):
         # Trigger Ingest Process
         V = VideoProto(
             abvid_serial=abvid_serial,
-            client_title=upload_query[0].upload_filename.replace('.' + file_extension, ''),
+            client_title=upload_filename.replace('.' + file_extension, ''),
             file_extension=file_extension,
         )
 
