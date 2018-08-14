@@ -65,9 +65,9 @@ class Command(BaseCommand):
             raise CommandError('Cannot pass in both an ID and a date.')
         elif key:
             bucket = self.connect_boto()
-
-            if bucket.get_key(CONFIG_DATA['edx_s3_ingest_prefix'] + key):
-                self.send_http_request(key)
+            key_path = CONFIG_DATA['edx_s3_ingest_prefix'] + key
+            if bucket.get_key(key_path):
+                self.send_http_request(key_path)
             else:
                 raise CommandError('Specified key cannot be found in s3.')
         elif date:
