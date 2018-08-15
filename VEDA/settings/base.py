@@ -5,7 +5,7 @@ Base settings
 import os
 from VEDA.settings.utils import get_logger_config
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname((__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 DJANGO_ADMIN = ('', '')
 ADMINS = (
