@@ -78,6 +78,7 @@ class ThreePlayMediaClient(object):
         self.upload_media_file_url = u'files/'
         self.available_languages_url = u'caption_imports/available_languages/'
         self.allowed_content_type = u'video/mp4'
+        self.default_dir = 'Default'
 
     def validate_media_url(self):
         """
@@ -157,6 +158,7 @@ class ThreePlayMediaClient(object):
             api_secret_key=self.api_secret,
             turnaround_level=self.turnaround_level,
             callback_url=self.callback_url,
+            batch_name=self.default_dir,
         )
 
         available_languages = self.get_available_languages()
