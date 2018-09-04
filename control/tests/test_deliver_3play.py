@@ -123,6 +123,7 @@ class ThreePlayMediaClientTests(TestCase):
             turnaround_level=self.video_transcript_preferences['turnaround_level'],
             callback_url=self.video_transcript_preferences['callback_url'],
             language_id=1,
+            batch_name='Default',
         )
 
         expected_requests = [
