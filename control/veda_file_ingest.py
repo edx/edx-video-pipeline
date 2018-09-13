@@ -5,8 +5,8 @@ Discovered file ingest/insert/job triggering
 import datetime
 import logging
 import subprocess
-import threading
 
+from django.db import transaction
 from django.db.utils import DatabaseError
 
 from control_env import *
@@ -388,18 +388,21 @@ class VedaIngest(object):
         return H1.upload()
 
     def _generate_veda_id(self):
-        with threading.RLock():
-            lsid = self._get_last_vid_number() + 100
-            self.video_proto.veda_id = self.course_object.institution
-            self.video_proto.veda_id += self.course_object.edx_classid
-            self.video_proto.veda_id += self.course_object.semesterid
-            self.video_proto.veda_id += "-V" + str(lsid).zfill(6)
+        current_vid_id = self._select_and_update_last_vid_number(self.course_object.course_name)
+        self.video_proto.veda_id = self.course_object.institution
+        self.video_proto.veda_id += self.course_object.edx_classid
+        self.video_proto.veda_id += self.course_object.semesterid
+        self.video_proto.veda_id += "-V" + str(current_vid_id).zfill(6)
 
-            """
-            Update Course Record
-            """
-            self.course_object.last_vid_number = lsid
-            self.course_object.save()
-
-    def _get_last_vid_number(self):
-        return Course.objects.filter(course_name=self.course_object.course_name).first().last_vid_number
+    @classmethod
+    def _select_and_update_last_vid_number(cls, course_name):
+        with transaction.atomic():
+            target_course_query = Course.objects.select_for_update().filter(course_name=course_name)
+            if(len(target_course_query) > 1):
+                LOGGER.error('[INGEST] Got multiple course with the same course name ' + course_name)
+            
+            target_course = target_course_query.first()
+            current_vid_id = target_course.last_vid_number + 100
+            target_course.last_vid_number = current_vid_id
+            target_course.save()
+            return current_vid_id
