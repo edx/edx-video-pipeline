@@ -131,7 +131,9 @@ class VedaIngest(object):
             .replace('\'', '\\\'') \
             .replace('[', '\[') \
             .replace(']', '\]') \
-            .replace('&', '\&')
+            .replace('&', '\&') \
+            .replace('(', '\(') \
+            .replace(')', '\)')
 
         ff_command = ' '.join((
             FFPROBE,
