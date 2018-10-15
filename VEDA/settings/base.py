@@ -119,7 +119,7 @@ DATABASES = {
 JWT_AUTH = {
     'JWT_AUDIENCE': 'video-pipeline',
     'JWT_ISSUER': 'video-pipeline',
-    'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.utils.jwt_decode_handler',
+    'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.auth.jwt.decoder.jwt_decode_handler',
     'JWT_VERIFY_AUDIENCE': False,
 }
 
@@ -132,7 +132,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'edx_rest_framework_extensions.authentication.JwtAuthentication',
+        'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
         'oauth2_provider.ext.rest_framework.OAuth2Authentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
