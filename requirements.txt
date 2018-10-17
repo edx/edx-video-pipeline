@@ -5,7 +5,8 @@ django-fernet-fields==0.5
 django-filter==1.0.4
 django-model-utils==3.0.0
 django-oauth-toolkit==0.11.0
-edx-drf-extensions==1.2.3
+edx-django-utils==1.0.1
+edx-drf-extensions==2.0.0
 edx-opaque-keys==0.4
 newrelic
 uwsgi
