@@ -108,12 +108,6 @@ class HealTests(TestCase):
 
     @data(
         {
-            'video_trans_status': 'Corrupt File',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': True,
-            'expected_encodes': set(['hls', 'mobile_low'])
-        },
-        {
             'video_trans_status': 'Review Reject',
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
@@ -124,18 +118,6 @@ class HealTests(TestCase):
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
             'expected_encodes': []
-        },
-        {
-            'video_trans_status': 'Complete',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': False,
-            'expected_encodes': set(['hls', 'mobile_low'])
-        },
-        {
-            'video_trans_status': 'Ingest',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': True,
-            'expected_encodes': set(['hls', 'mobile_low'])
         },
     )
     @unpack
@@ -174,20 +156,6 @@ class HealTests(TestCase):
             'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
             'video_active': True,
             'expected_encodes': []
-
-        },
-        {
-            'video_trans_status': 'Complete',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': False,
-            'expected_encodes': set(['hls', 'mobile_low'])
-
-        },
-        {
-            'video_trans_status': 'Ingest',
-            'video_trans_start': datetime.datetime.utcnow().replace(tzinfo=utc),
-            'video_active': True,
-            'expected_encodes': set(['hls', 'mobile_low'])
 
         },
         {
