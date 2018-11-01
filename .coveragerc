@@ -13,17 +13,11 @@ source =
 
 omit =
     templates/*
-    frontend/tests/*
     dependencies/*
-    control/tests/*
     VEDA/settings/*
     VEDA/wsgi.py
-    VEDA/tests/*
-    VEDA_OS01/tests/*
     VEDA_OS01/migrations/*
     VEDA_OS01/admin.py
-    VEDA_OS01/management/commands/tests/*
-    pavelib/tests/*
 
 concurrency=multiprocessing
 
