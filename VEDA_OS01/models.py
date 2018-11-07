@@ -9,6 +9,7 @@ from model_utils.models import TimeStampedModel
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
+from config_models.models import ConfigurationModel
 
 
 def _createHex():
@@ -737,4 +738,40 @@ class TranscriptProcessMetadata(TimeStampedModel):
             video=self.video.edx_id,
             provider=self.provider,
             lang=self.lang_code
+        )
+
+
+class EncodeVideosForHlsConfiguration(ConfigurationModel):
+    """
+    A configuration model for configuring `re_encode_videos_missing_hls` job.
+    """
+    command_run = models.PositiveIntegerField(default=1)
+    offset = models.PositiveIntegerField(default=0)
+    batch_size = models.PositiveIntegerField(default=0)
+    commit = models.BooleanField(
+        default=False,
+        help_text="Dry-run or commit."
+    )
+    all_videos = models.BooleanField(
+        default=False,
+        help_text="Encode all videos for HLS"
+    )
+    course_ids = models.TextField(
+        blank=True,
+        help_text="Whitespace-separated list of course ids for which to re-encode videos."
+    )
+
+    def increment_run(self):
+        self.command_run += 1
+        self.save()
+        return self.command_run
+
+    def update_offset(self):
+        self.offset += self.batch_size
+        self.save()
+
+    def __unicode__(self):
+        return "[EncodeVideosForHlsConfiguration] update for {courses} courses if commit as {commit}".format(
+            courses='ALL' if self.all_videos else self.course_ids,
+            commit=self.commit,
         )
