@@ -2,10 +2,11 @@
 Veda Admin.
 """
 from django.contrib import admin
+from config_models.admin import ConfigurationModelAdmin
 
 from VEDA_OS01.models import (
     Course, Video, Encode, URL, Destination, Institution, VedaUpload,
-    TranscriptCredentials, TranscriptProcessMetadata
+    TranscriptCredentials, TranscriptProcessMetadata, EncodeVideosForHlsConfiguration
 )
 
 
@@ -177,3 +178,4 @@ admin.site.register(Institution, InstitutionAdmin)
 admin.site.register(VedaUpload, VideoUploadAdmin)
 admin.site.register(TranscriptCredentials, TranscriptCredentialsAdmin)
 admin.site.register(TranscriptProcessMetadata, TranscriptProcessMetadataAdmin)
+admin.site.register(EncodeVideosForHlsConfiguration, ConfigurationModelAdmin)

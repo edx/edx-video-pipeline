@@ -1,9 +1,11 @@
 """
-Management command used to re-ingest video from hotstore based on the params provided.
+Management command used to re-encode video for HLS profiles.
 
  - Request edxval for set of videos to re-encode
- - Retrieve corresponding VEDA Video object and switch off process_transcription flag This is required to avoid unintentional transcription that happens in Delivery phase.
- - Check VEDA to see whether an HLS profile is there and if it does then, just update edxval with it otherwise kick off encoding task (a.k.a worker_tasks_fire) with veda_id and encode_profile=HLS.
+ - Retrieve corresponding VEDA Video object and switch off process_transcription flag. This is required
+   to avoid unintentional transcription that happens in Delivery phase.
+ - Check VEDA to see whether an HLS profile is there and if it does then, just update edxval with it otherwise
+   kick off encoding task (a.k.a worker_tasks_fire) with veda_id and encode_profile=HLS.
  - Encode worker generates the HLS encode, push it S3 and initiate a delivery task
  - Deliver worker process the delivery task and delivers the successful HLS encode profile to edxval
 
@@ -12,10 +14,13 @@ import ast
 import logging
 import uuid
 
-import requests
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
+from requests import get, post
+from six import text_type
 
-from VEDA_OS01.models import Video, EncodeVideosMissingHlsConfiguration, URL, Encode
+from VEDA_OS01.models import Video, EncodeVideosForHlsConfiguration, URL, Encode
 from VEDA.utils import get_config
 from control import celeryapp
 
@@ -34,11 +39,7 @@ def get_auth_token(settings):
         'username': settings['val_username'],
         'password': settings['val_password'],
     }
-    response = requests.post(
-        settings['val_token_url'],
-        data=payload,
-        timeout=settings['global_timeout']
-    )
+    response = post(settings['val_token_url'], data=payload, timeout=settings['global_timeout'])
 
     if response.status_code == 200:
         token = ast.literal_eval(response.text)['access_token']
@@ -46,6 +47,23 @@ def get_auth_token(settings):
         LOGGER.error('EDXVAL Token Generation Error: %s', response.text)
 
     return token
+
+
+def get_api_url_and_auth_headers():
+    """
+    Construct request headers.
+    """
+    settings = get_config()
+    token = get_auth_token(settings)
+    if not token:
+        return settings['val_api_url'], token
+
+    # Build and return request headers.
+    headers = {
+        'Authorization': 'Bearer {token}'.format(token=token),
+        'content-type': 'application/json'
+    }
+    return settings['val_api_url'], headers
 
 
 def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
@@ -57,16 +75,9 @@ def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
         batch_size: Number of videos per batch
         offset: Position to pick the batch of videos
     """
-    settings = get_config()
-    token = get_auth_token(settings)
-    if not token:
+    api_url, headers = get_api_url_and_auth_headers()
+    if not headers:
         return
-
-    # Build request headers and query parameters.
-    headers = {
-        'Authorization': 'Bearer {token}'.format(token=token),
-        'content-type': 'application/json'
-    }
 
     if courses:
         params = {
@@ -79,10 +90,8 @@ def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
         }
 
     # Make request to edxval for videos
-    val_videos_url = '/'.join([settings['val_api_url'], 'missing-hls/'])
-    response = requests.get(
-        val_videos_url, params=params, headers=headers
-    )
+    val_videos_url = '/'.join([api_url, 'missing-hls/'])
+    response = get(val_videos_url, params=params, headers=headers)
 
     videos = None
     if response.status_code == 200:
@@ -111,15 +120,37 @@ def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
     return videos
 
 
+def update_hls_profile_in_val(edx_video_id, profile, encode_data):
+    """
+    Update HLS profile in VAL for a video.
+    """
+    api_url, headers = get_api_url_and_auth_headers()
+    if not headers:
+        return
+
+    payload = {
+        'edx_video_id': edx_video_id,
+        'profile': profile,
+        'encode_data': encode_data
+    }
+    val_profile_update_url = '/'.join([api_url, 'missing-hls/'])
+    response = post(val_profile_update_url, payload, headers=headers, format='json')
+    return response
+
+
 def enqueue_video_for_hls_encode(veda_id, encode_queue):
+    """
+    Enqueue HLS encoding task.
+    """
+    task_id = uuid.uuid1().hex[0:10]
     task_result = celeryapp.worker_task_fire.apply_async(
-        (veda_id, 'hls', uuid.uuid1().hex[0:10]),
+        (veda_id, 'hls', task_id, False),
         queue=encode_queue.strip(),
         connect_timeout=3
     )
-    # Mis-queued Task
+    # Mis-fired Task
     if task_result == 1:
-        LOGGER.error('[ENQUEUE] {veda_id} queueing failed.'.format(veda_id=veda_id))
+        LOGGER.error('[ENQUEUE] %s task miss-fired.', veda_id)
 
 
 class Command(BaseCommand):
@@ -137,6 +168,32 @@ class Command(BaseCommand):
             '--veda_id',
             help="VEDA video ID"
         )
+
+    def _validate_course_ids(self, course_ids):
+        """
+        Validate a list of course key strings.
+        """
+        try:
+            for course_id in course_ids:
+                CourseKey.from_string(course_id)
+            return course_ids
+        except InvalidKeyError as error:
+            raise CommandError('Invalid key specified: {}'.format(text_type(error)))
+
+    def _validate_video_encode(self, video_encode):
+        """
+        Validate video encode object for
+        number of attributes.
+        """
+        is_valid = True
+        required_attrs = ('encode_size', 'encode_bitdepth', 'encode_url')
+        for attr in required_attrs:
+            if getattr(video_encode, attr) is None:
+                is_valid = False
+                LOGGER.info('Validation Error: video=%s - missing=%s', video_encode.videoID.edx_id, attr)
+                break
+
+        return is_valid
 
     def handle(self, *args, **options):
         """
@@ -156,29 +213,37 @@ class Command(BaseCommand):
                     encode_queue=settings['celery_worker_queue']
                 )
             except Video.DoesNotExist:
-                LOGGER.warning('HLS encode is present for video=%s in VEDA.', veda_id)
+                LOGGER.warning('Video "%s" not found.', veda_id)
         else:
-            config = EncodeVideosMissingHlsConfiguration.current()
+            config = EncodeVideosForHlsConfiguration.current()
             all_videos = config.all_videos
-            courses = config.course_ids.split(',')
+            courses = self._validate_course_ids(course_ids=config.course_ids.split())
             commit = config.commit
 
-            edx_video_ids = []
             if all_videos:
                 edx_video_ids = get_videos_wo_hls(batch_size=config.batch_size, offset=config.offset)
             elif courses:
                 edx_video_ids = get_videos_wo_hls(courses=courses)
+            else:
+                LOGGER.info('Missing job configuration.')
+                return
+
+            # Result will be None if we are Unable
+            # to retrieve edxval Token.
+            if edx_video_ids is None:
+                LOGGER.info('Unable to get edxval Token.')
+                return
 
             veda_videos = Video.objects.filter(studio_id__in=edx_video_ids)
             veda_video_ids = veda_videos.values_list('edx_id', flat=True)
             videos_with_hls_encodes = (URL.objects
-                                       .filter(encode_profile=hls_profile, videoID__veda_id__in=veda_video_ids)
-                                       .values_list('videoID__edx_id')
+                                       .filter(encode_profile=hls_profile, videoID__edx_id__in=veda_video_ids)
+                                       .values_list('videoID__edx_id', flat=True)
                                        .distinct())
 
-            # Log some stats about VEDA vs VAL videos.
+            # Log stats about VEDA vs VAL videos.
             num_videos_found_in_veda = veda_videos.count()
-            num_videos_not_found_in_veda = edx_video_ids - veda_videos.count()
+            num_videos_not_found_in_veda = len(edx_video_ids) - veda_videos.count()
             num_videos_hls_profile_found_in_veda = videos_with_hls_encodes.count()
             num_videos_actually_needing_hls_encode = veda_videos.count() - num_videos_hls_profile_found_in_veda
             LOGGER.info(
@@ -196,18 +261,69 @@ class Command(BaseCommand):
             # Check if this job is configured for dry run.
             if commit:
                 for veda_id in veda_video_ids:
-                    if veda_id not in videos_with_hls_encodes:
-                        enqueue_video_for_hls_encode(
-                            veda_id=veda_id,
-                            encode_queue=settings['celery_worker_queue']
-                        )
-                    else:
+                    video = veda_videos.filter(edx_id=veda_id).latest()
+                    if veda_id in videos_with_hls_encodes:
+                        # Update the URL's value in edxval directly
                         LOGGER.warning(
                             '[run=%s] HLS encode is present for video=%s in VEDA.',
                             config.command_run,
                             veda_id
                         )
-                        # TODO: update the URL's value in edxval directly
+                        try:
+                            video_encode = URL.objects.filter(
+                                videoID=video,
+                                encode_profile=hls_profile
+                            ).latest()
+                        except URL.DoesNotExist:
+                            LOGGER.warning(
+                                '[run=%s] HLS encode not found for video=%s in VEDA.',
+                                config.command_run,
+                                veda_id
+                            )
+                            continue
+
+                        if self._validate_video_encode(video_encode):
+                            response = update_hls_profile_in_val(video.studio_id, 'hls', encode_data={
+                                'file_size': video_encode.encode_size,
+                                'bitrate': int(video_encode.encode_bitdepth.split(' ')[0]),
+                                'url': video_encode.encode_url
+                            })
+
+                            # Response will be None if we are Unable to get edxval Token.
+                            if response is None:
+                                LOGGER.info('Unable to get edxval Token.')
+                                continue
+
+                            if response.status_code == 200:
+                                LOGGER.info("[run=%s] Success for video=%s.", config.command_run, veda_id)
+                            else:
+                                LOGGER.warning(
+                                    "[run=%s] Failure on VAL update - status_code=%s, video=%s.",
+                                    config.command_run,
+                                    response.status_code,
+                                    veda_id
+                                )
+                            continue
+                        else:
+                            # After this clause, veda_id will be re-enqueued for HLS encoding since the
+                            # encode data is corrupt.
+                            LOGGER.warning(
+                                '[run=%s] HLS encode data was corrupt for video=%s in VEDA - Re-enqueueing..',
+                                config.command_run,
+                                veda_id
+                            )
+
+                    # Disable transcription
+                    video.process_transcription = False
+                    video.save()
+
+                    # Enqueue video for HLS re-encode.
+                    enqueue_video_for_hls_encode(
+                        veda_id=veda_id,
+                        encode_queue=settings['celery_worker_queue']
+                    )
 
                 config.increment_run()
                 config.update_offset()
+            else:
+                LOGGER.info('[run=%s] Dry run is complete.', config.command_run)
