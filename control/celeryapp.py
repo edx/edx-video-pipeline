@@ -42,7 +42,7 @@ app.conf.update(
 
 
 @app.task(name='worker_encode')
-def worker_task_fire(veda_id, encode_profile, jobid):
+def worker_task_fire(veda_id, encode_profile, jobid, update_val_status=True):
     LOGGER.info('[ENCODE] Misfire : {id} : {encode}'.format(id=veda_id, encode=encode_profile))
     return 1
 
