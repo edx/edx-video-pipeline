@@ -15,6 +15,7 @@ import logging
 import uuid
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models.query_utils import Q
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from requests import get, post
@@ -234,7 +235,7 @@ class Command(BaseCommand):
                 LOGGER.info('Unable to get edxval Token.')
                 return
 
-            veda_videos = Video.objects.filter(studio_id__in=edx_video_ids)
+            veda_videos = Video.objects.filter(Q(studio_id__in=edx_video_ids) | Q(edx_id__in=edx_video_ids))
             veda_video_ids = veda_videos.values_list('edx_id', flat=True)
             videos_with_hls_encodes = (URL.objects
                                        .filter(encode_profile=hls_profile, videoID__edx_id__in=veda_video_ids)
