@@ -328,6 +328,12 @@ class IngestFromS3View(APIView):
         try:
             connection = boto.connect_s3()
             bucket = connection.get_bucket(bucket_name)
+
+            bucket_location = bucket.get_location()
+            if bucket_location:
+                conn = boto.s3.connect_to_region(bucket_location)
+                bucket = conn.get_bucket(bucket_name)
+
             vd_key = bucket.get_key(video_s3_key)
 
             if vd_key is None:
