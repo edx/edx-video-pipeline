@@ -81,6 +81,7 @@ class DaemonCli(object):
             if x >= 100:
                 LOGGER.info('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
                 x = 0
+            time.sleep(10);
 
     def youtube_daemon(self):
         x = 0
