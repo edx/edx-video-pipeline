@@ -28,8 +28,9 @@ def token_finisher(token_id):
 
     d.user = User.objects.get(pk=1)
     d.save()
-    try:
-        token = Token.objects.create(user=d.user)
-    except:
-        token = Token.objects.get(user=d.user)
+
+    Token.objects.filter(user=d.user).delete();
+
+    token = Token.objects.create(user=d.user)
+
     return token.key
