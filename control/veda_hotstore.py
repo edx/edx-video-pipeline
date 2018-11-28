@@ -71,8 +71,8 @@ class Hotstore(object):
                 )
                 bucket_location = delv_bucket.get_location()
                 if bucket_location:
-                  conn = boto.s3.connect_to_region(bucket_location)
-                  delv_bucket = conn.get_bucket(self.auth_dict['veda_s3_hotstore_bucket'])
+                    conn = boto.s3.connect_to_region(bucket_location)
+                    delv_bucket = conn.get_bucket(self.auth_dict['veda_s3_hotstore_bucket'])
             except S3ResponseError:
                 LOGGER.error('[HOTSTORE] No hotstore bucket connection')
                 return False
@@ -84,8 +84,8 @@ class Hotstore(object):
                 )
                 bucket_location = delv_bucket.get_location()
                 if bucket_location:
-                  conn = boto.s3.connect_to_region(bucket_location)
-                  delv_bucket = conn.get_bucket(self.auth_dict['edx_s3_endpoint_bucket'])
+                    conn = boto.s3.connect_to_region(bucket_location)
+                    delv_bucket = conn.get_bucket(self.auth_dict['edx_s3_endpoint_bucket'])
             except S3ResponseError:
                 LOGGER.error('[HOTSTORE] No endpoint bucket connection')
                 return False
