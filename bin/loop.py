@@ -8,21 +8,21 @@ import os
 import sys
 import argparse
 import logging
-from django.db import reset_queries
 import resource
 import time
 
-project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_path not in sys.path:
-    sys.path.append(project_path)
-
-import django
-django.setup()
-
+from django.db import reset_queries
 from control.control_env import WORK_DIRECTORY
 from control.veda_file_discovery import FileDiscovery
 from youtube_callback.daemon import generate_course_list
 from youtube_callback.sftp_id_retrieve import callfunction
+
+import django
+django.setup()
+
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_path not in sys.path:
+    sys.path.append(project_path)
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout
