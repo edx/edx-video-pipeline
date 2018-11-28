@@ -64,31 +64,22 @@ class Hotstore(object):
         self.auth_dict['multi_upload_barrier']
         """
         if self.endpoint is False:
-            try:
-                conn = boto.connect_s3()
-                delv_bucket = conn.get_bucket(
-                    self.auth_dict['veda_s3_hotstore_bucket']
-                )
-                bucket_location = delv_bucket.get_location()
-                if bucket_location:
-                    conn = boto.s3.connect_to_region(bucket_location)
-                    delv_bucket = conn.get_bucket(self.auth_dict['veda_s3_hotstore_bucket'])
-            except S3ResponseError:
-                LOGGER.error('[HOTSTORE] No hotstore bucket connection')
-                return False
+            bucket = self.auth_dict['veda_s3_hotstore_bucket']
         else:
-            try:
-                conn = boto.connect_s3()
-                delv_bucket = conn.get_bucket(
-                    self.auth_dict['edx_s3_endpoint_bucket']
-                )
-                bucket_location = delv_bucket.get_location()
-                if bucket_location:
-                    conn = boto.s3.connect_to_region(bucket_location)
-                    delv_bucket = conn.get_bucket(self.auth_dict['edx_s3_endpoint_bucket'])
-            except S3ResponseError:
-                LOGGER.error('[HOTSTORE] No endpoint bucket connection')
-                return False
+            bucket = self.auth_dict['edx_s3_endpoint_bucket']
+
+        try:
+            conn = boto.connect_s3()
+            delv_bucket = conn.get_bucket(bucket)
+            bucket_location = delv_bucket.get_location()
+            if bucket_location:
+                conn = boto.s3.connect_to_region(bucket_location)
+                if conn:
+                    # get the bucket from belonged region
+                    delv_bucket = conn.get_bucket(bucket)
+        except S3ResponseError:
+            LOGGER.error('[HOTSTORE] No hotstore/endpoint bucket connection')
+            return False
 
         upload_key = Key(delv_bucket)
         upload_key.key = '.'.join((
