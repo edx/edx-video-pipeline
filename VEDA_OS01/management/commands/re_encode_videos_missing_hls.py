@@ -15,6 +15,7 @@ import logging
 import uuid
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models.query_utils import Q
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from requests import get, post
@@ -120,21 +121,17 @@ def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
     return videos
 
 
-def update_hls_profile_in_val(edx_video_id, profile, encode_data):
+def update_hls_profile_in_val(api_url, headers, edx_video_id, profile, encode_data):
     """
     Update HLS profile in VAL for a video.
     """
-    api_url, headers = get_api_url_and_auth_headers()
-    if not headers:
-        return
-
     payload = {
         'edx_video_id': edx_video_id,
         'profile': profile,
         'encode_data': encode_data
     }
     val_profile_update_url = '/'.join([api_url, 'missing-hls/'])
-    response = post(val_profile_update_url, payload, headers=headers, format='json')
+    response = post(val_profile_update_url, json=payload, headers=headers)
     return response
 
 
@@ -234,7 +231,7 @@ class Command(BaseCommand):
                 LOGGER.info('Unable to get edxval Token.')
                 return
 
-            veda_videos = Video.objects.filter(studio_id__in=edx_video_ids)
+            veda_videos = Video.objects.filter(Q(studio_id__in=edx_video_ids) | Q(edx_id__in=edx_video_ids))
             veda_video_ids = veda_videos.values_list('edx_id', flat=True)
             videos_with_hls_encodes = (URL.objects
                                        .filter(encode_profile=hls_profile, videoID__edx_id__in=veda_video_ids)
@@ -260,6 +257,11 @@ class Command(BaseCommand):
 
             # Check if this job is configured for dry run.
             if commit:
+                api_url, headers = get_api_url_and_auth_headers()
+                if not headers:
+                    LOGGER.info('No headers. Unable to get VAL token.')
+                    return
+
                 for veda_id in veda_video_ids:
                     video = veda_videos.filter(edx_id=veda_id).latest()
                     if veda_id in videos_with_hls_encodes:
@@ -283,7 +285,8 @@ class Command(BaseCommand):
                             continue
 
                         if self._validate_video_encode(video_encode):
-                            response = update_hls_profile_in_val(video.studio_id, 'hls', encode_data={
+                            edx_video_id = video.studio_id or video.edx_id
+                            response = update_hls_profile_in_val(api_url, headers, edx_video_id, 'hls', encode_data={
                                 'file_size': video_encode.encode_size,
                                 'bitrate': int(video_encode.encode_bitdepth.split(' ')[0]),
                                 'url': video_encode.encode_url
@@ -298,10 +301,11 @@ class Command(BaseCommand):
                                 LOGGER.info("[run=%s] Success for video=%s.", config.command_run, veda_id)
                             else:
                                 LOGGER.warning(
-                                    "[run=%s] Failure on VAL update - status_code=%s, video=%s.",
+                                    "[run=%s] Failure on VAL update - status_code=%s, video=%s, traceback=%s.",
                                     config.command_run,
                                     response.status_code,
-                                    veda_id
+                                    veda_id,
+                                    response.text
                                 )
                             continue
                         else:
