@@ -207,7 +207,7 @@ class Command(BaseCommand):
                 video = Video.objects.filter(edx_id=veda_id).latest()
                 enqueue_video_for_hls_encode(
                     veda_id=video.edx_id,
-                    encode_queue=settings['celery_worker_queue']
+                    encode_queue=settings['celery_worker_low_queue']
                 )
             except Video.DoesNotExist:
                 LOGGER.warning('Video "%s" not found.', veda_id)
@@ -324,7 +324,7 @@ class Command(BaseCommand):
                     # Enqueue video for HLS re-encode.
                     enqueue_video_for_hls_encode(
                         veda_id=veda_id,
-                        encode_queue=settings['celery_worker_queue']
+                        encode_queue=settings['celery_worker_low_queue']
                     )
 
                 config.increment_run()
