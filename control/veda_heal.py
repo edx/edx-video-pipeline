@@ -108,7 +108,7 @@ class VedaHeal(object):
                 job_id = uuid.uuid1().hex[0:10]
                 task_result = celeryapp.worker_task_fire.apply_async(
                     (veda_id, encode_profile, job_id),
-                    queue=self.auth_dict['celery_worker_queue'].strip(),
+                    queue=self.auth_dict['celery_worker_medium_queue'].strip(),
                     connect_timeout=3
                 )
                 # Misqueued Task

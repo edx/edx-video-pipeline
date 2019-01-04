@@ -38,7 +38,9 @@ val_username: username
 val_transcript_create_url: http://val.edx.org/transcript/create
 val_video_transcript_status_url: http://val.edx.org/video/status
 
-celery_worker_queue: encode_worker
+celery_worker_high_queue:
+celery_worker_medium_queue:
+celery_worker_low_queue:
 celery_deliver_queue: deliver_worker
 
 # ----------
