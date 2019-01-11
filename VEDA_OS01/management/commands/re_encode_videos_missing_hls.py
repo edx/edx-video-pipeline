@@ -18,7 +18,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models.query_utils import Q
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
-from requests import get, post
+from requests import post, put
 from six import text_type
 
 from VEDA_OS01.models import Video, EncodeVideosForHlsConfiguration, URL, Encode
@@ -92,7 +92,7 @@ def get_videos_wo_hls(courses=None, batch_size=None, offset=None):
 
     # Make request to edxval for videos
     val_videos_url = '/'.join([api_url, 'missing-hls/'])
-    response = get(val_videos_url, params=params, headers=headers)
+    response = post(val_videos_url, json=params, headers=headers)
 
     videos = None
     if response.status_code == 200:
@@ -131,7 +131,7 @@ def update_hls_profile_in_val(api_url, headers, edx_video_id, profile, encode_da
         'encode_data': encode_data
     }
     val_profile_update_url = '/'.join([api_url, 'missing-hls/'])
-    response = post(val_profile_update_url, json=payload, headers=headers)
+    response = put(val_profile_update_url, json=payload, headers=headers)
     return response
 
 
