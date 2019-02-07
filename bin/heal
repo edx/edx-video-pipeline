@@ -56,14 +56,16 @@ def main():
         {cmd} -i veda_id
         {cmd} -c course_id
         {cmd} -s schedule
+        {cmd} -t veda_institution_id
         {cmd} --process-translations
         {cmd} --no_audio
-        [-i -c -s --process-translations --no_audio]
+        [-i -c -s -t --process-translations --no_audio]
         Use --help to see all options.
         '''.format(cmd=sys.argv[0])
 
     parser.add_argument(
-        '-i', '--veda_id', default=None,
+        '-i', '--veda_id',
+        default=None,
         help='VEDA ID'
         )
 
@@ -76,6 +78,12 @@ def main():
         '-s', '--schedule',
         help='Trigger Scheduler',
         action='store_true'
+        )
+
+    parser.add_argument(
+        '-t', '--veda_institution_id',
+        help='Veda institution ID used with course heal',
+        default=None
         )
 
     parser.add_argument(
@@ -96,6 +104,7 @@ def main():
     veda_id = args.veda_id
     course_id = args.course_id
     schedule = args.schedule
+    veda_institution_id = args.veda_institution_id
 
     process_translations = args.process_translations
     if process_translations:
@@ -132,11 +141,18 @@ def main():
         return
 
     if course_id is not None:
+        veda_institution=course_id[0:3]
+        veda_classid=course_id[3:8]
+
+        if veda_institution_id:
+            veda_institution = veda_institution_id
+            veda_classid = course_id.replace(veda_institution_id, '')
+        
         VH = VedaHeal(
             video_query=Video.objects.filter(
                 inst_class=Course.objects.filter(
-                    institution=course_id[0:3],
-                    edx_classid=course_id[3:8]
+                    institution=veda_institution,
+                    edx_classid=veda_classid
                     )
                 ),
             no_audio=args.no_audio
