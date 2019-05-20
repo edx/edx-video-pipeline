@@ -69,6 +69,7 @@ def get_config(yaml_config_file=DEFAULT_CONFIG_FILE_NAME):
         )
 
     with open(yaml_config_file, 'r') as config:
+	print "CONFIG FILE = ", yaml_config_file
         config_dict = yaml.load(config)
 
     # read static config file

@@ -2,39 +2,40 @@ version: "0.1"
 
 services:
   rabbitmq:
-    image: "veda-rabbitmq"
+    image: "ssemenova/veda-rabbitmq"
     container_name: "veda.rabbitmq"
     volumes:
       - ${VEDA_WORKSPACE}/rabbitmq:/rabbitmq
     tty: true
 
   pipeline:
-    image: "veda-pipeline"
+    image: "ssemenova/veda-pipeline"
     container_name: "veda.pipeline"
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     tty: true
 
   http:
-    image: "veda-http"
-    command: bash -c 'cd /edx-video-pipeline/; python manage.py runserver 0.0.0.0:8000 --settings=VEDA.settings.local'
-    container_name: "veda.http"
+    image: "azarembok/veda-web-frontend"
+    container_name: "veda-web-frontend"
+    working_dir: "/edx-video-pipeline"
+    command: bash -c 'source /edx/app/veda/veda_env && export VIDEO_PIPELINE_CFG=/edx-video-pipeline/instance_config.yaml && while true; do python manage.py runserver 0.0.0.0:8555 --settings=VEDA.settings.local; sleep 2; done'
     volumes:
        - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     ports:
-       - "8000:8000"
+       - "8000:8555"
     tty: true
     stdin_open: true
 
   encode:
-    image: "veda-encode"
+    image: "ssemenova/veda-encode"
     container_name: "veda.encode"
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-worker:/edx-video-worker
     tty: true
 
   deliver:
-    image: "veda-deliver"
+    image: "ssemenova/veda-deliver"
     container_name: "veda.deliver"
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-worker
