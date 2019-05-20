@@ -21,7 +21,7 @@ services:
     image: "azarembok/veda-web-frontend"
     container_name: "veda-web-frontend"
     working_dir: "/edx-video-pipeline"
-    command: bash -c 'source /edx/app/veda/veda_env && while true; do python manage.py runserver 0.0.0.0:8555 --settings=VEDA.settings.local; sleep 2; done'
+    command: bash -c 'source /edx/app/veda/veda_env && export VIDEO_PIPELINE_CFG=/edx-video-pipeline/instance_config.yaml && while true; do python manage.py runserver 0.0.0.0:8555 --settings=VEDA.settings.local; sleep 2; done'
     volumes:
        - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     ports:
