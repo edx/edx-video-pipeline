@@ -35,10 +35,10 @@ JWT_AUTH:
 # ---
 # AWS
 # ---
-#veda_s3_upload_bucket:
+veda_s3_upload_bucket: test-s3-upload-bucket
 #veda_s3_hotstore_bucket:
 #veda_deliverable_bucket:
-#veda_upload_bucket:
+veda_upload_bucket: test-upload-bucket
 #edx_s3_ingest_prefix:
 #edx_s3_ingest_bucket:
 #edx_s3_endpoint_bucket:
