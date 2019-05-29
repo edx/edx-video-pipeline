@@ -71,6 +71,7 @@ def node_test(command):
 def maintainer_healer(command):
     os.system(command)
 
+
 @app.task(name=auth_dict['celery_online_heal_queue'])
 def web_healer(veda_id):
     LOGGER.debug('[WEB_HEALER] id : {id}'.format(id=veda_id))

@@ -1,9 +1,9 @@
+import views
 from django.conf.urls import *
+from django.views.generic import TemplateView
 from django.contrib import admin
 admin.autodiscover()
-from django.views.generic import TemplateView
 
-import views
 
 urlpatterns = patterns(
     '',
