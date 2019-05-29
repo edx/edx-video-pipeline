@@ -12,6 +12,8 @@ urlpatterns = patterns(
     (r'^admin/', include(admin.site.urls)),
     # Input Form
     (r'cat/', views.input_form),
+    # Heal form
+    (r'heal/', views.heal_form),
     # Data Validation
     (r'institution_validator/', views.institution_name),
     (r'inst_id_validate/', views.inst_id_validate),

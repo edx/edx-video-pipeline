@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="UTF-8">
+    <title>VEDA recovery</title>
+  </head>
+  <form method="post">
+  <body>
+    ------V E D A------
+    <form method="post" action="">
+      {% csrf_token %}
+      <br />
+      Video ID: <input type="text" name="veda_id"><br>
+      <input type="submit" value="Heal">
+    </form>
+
+    {% if result %}
+      <p>Current status: {{ result }}</p>
+    {% endif %}
+  </body>
+</html>
