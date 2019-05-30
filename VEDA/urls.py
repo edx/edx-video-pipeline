@@ -1,16 +1,15 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(__file__))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
-
-# pep8: disable=E402
 from django.conf import settings
 from rest_framework import routers
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 
 from VEDA_OS01 import views, transcripts
+
+sys.path.append(os.path.abspath(__file__))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'VEDA.settings.local')
 
 router = routers.DefaultRouter()
 admin.autodiscover()

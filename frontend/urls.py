@@ -1,9 +1,9 @@
+import views
 from django.conf.urls import *
+from django.views.generic import TemplateView
 from django.contrib import admin
 admin.autodiscover()
-from django.views.generic import TemplateView
 
-import views
 
 urlpatterns = patterns(
     '',
@@ -12,6 +12,8 @@ urlpatterns = patterns(
     (r'^admin/', include(admin.site.urls)),
     # Input Form
     (r'cat/', views.input_form),
+    # Heal form
+    (r'heal/', views.heal_form),
     # Data Validation
     (r'institution_validator/', views.institution_name),
     (r'inst_id_validate/', views.inst_id_validate),
