@@ -90,23 +90,6 @@ def heal_form(request):
         return render(request, "heal.html", context)
     return render(request, "heal.html")
 
-=======
->>>>>>> Added VEDA heal webpage
-
-def heal_form(request):
-    template = loader.get_template("heal.html")
-    if request.method == 'POST':
-        veda_id = request.POST['veda_id']
-        auth_dict = get_config()
-        result = celeryapp.web_healer.apply_async(
-                    args=[veda_id],
-                    queue=auth_dict['celery_online_heal_queue'],
-                    connect_timeout=3
-                    )
-        context = {'result': result}
-        return render(request, "heal.html", context)
-    return render(request, "heal.html")
-
 
 def institution_name(request):
     if request.method == 'POST' and request.POST['input_text'] != 'NEWINST':
