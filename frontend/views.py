@@ -68,9 +68,9 @@ def heal_form(request):
         veda_id = request.POST['veda_id']
         auth_dict = get_config()
         result = celeryapp.web_healer.apply_async(
-                    args = [veda_id],
-                    queue = auth_dict['celery_online_heal_queue'],
-                    connect_timeout = 3
+                    args=[veda_id],
+                    queue=auth_dict['celery_online_heal_queue'],
+                    connect_timeout=3
                     )
         context = {'result': result}
         return render(request, "heal.html", context)
