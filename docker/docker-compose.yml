@@ -1,12 +1,12 @@
-version: "0.1"
+version: "3"
 
 services:
-  rabbitmq:
-    image: "ssemenova/veda-rabbitmq"
-    container_name: "veda.rabbitmq"
-    volumes:
-      - ${VEDA_WORKSPACE}/rabbitmq:/rabbitmq
+  redis:
+    image: "redis"
+    container_name: "veda.redis"
     tty: true
+    networks: 
+      - devstack_default
 
   pipeline:
     image: "ssemenova/veda-pipeline"
@@ -14,6 +14,8 @@ services:
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     tty: true
+    networks: 
+      - devstack_default
 
   http:
     image: "azarembok/veda-web-frontend"
@@ -24,8 +26,12 @@ services:
        - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     ports:
        - "8000:8555"
+    environment:
+       redis_broker: "veda.redis"
     tty: true
     stdin_open: true
+    networks: 
+      - devstack_default
 
   encode:
     image: "ssemenova/veda-encode"
@@ -33,10 +39,25 @@ services:
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-worker:/edx-video-worker
     tty: true
+    networks: 
+      - devstack_default
 
   deliver:
-    image: "ssemenova/veda-deliver"
+    image: "azarembok/veda-delivery-worker"
     container_name: "veda.deliver"
     volumes:
-      - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-worker
+      - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     tty: true
+    working_dir: "/edx-video-pipeline"
+    # command: "python bin/deliver"
+    environment:
+      DJANGO_SETTINGS_MODULE: "VEDA.settings.local"
+      redis_broker: "veda.redis"
+      # PYTHONPATH: "/edx-video-pipeline"
+      VIDEO_PIPELINE_CFG: "/edx-video-pipeline/instance_config.yaml"
+    networks: 
+      - devstack_default
+
+networks:
+    devstack_default:
+      external: true
