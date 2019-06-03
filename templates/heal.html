@@ -1,20 +1,28 @@
 <!DOCTYPE html>
   <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <meta charset="UTF-8">
     <title>VEDA recovery</title>
   </head>
-  <form method="post">
-  <body>
-    ------V E D A------
-    <form method="post" action="">
-      {% csrf_token %}
-      <br />
-      Video ID: <input type="text" name="veda_id"><br>
-      <input type="submit" value="Heal">
-    </form>
 
-    {% if result %}
-      <p>Current status: {{ result }}</p>
-    {% endif %}
+  <body>
+    <div class="container">
+        <h1 align="center">VEDA Heal Tool</h1>
+
+        <form method="post" action="">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="veda_id">Video ID</label>
+            <input type="text" name="veda_id" class="form-control" id="veda_id" aria-describedby="veda_id" placeholder="Enter Video ID">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
   </body>
 </html>
