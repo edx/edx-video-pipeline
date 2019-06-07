@@ -5,7 +5,7 @@ import sys
 import unittest
 
 from django.test import TestCase
-import requests
+import urllib3
 
 from control.veda_file_ingest import VedaIngest, VideoProto
 
@@ -16,7 +16,7 @@ set to pass if instance_config.yaml is missing
 """
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class TestIngest(TestCase):

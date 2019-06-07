@@ -5,6 +5,7 @@ Send data to VAL, either Video ID data or endpoint URLs
 
 import logging
 import requests
+import urllib3
 import ast
 import json
 
@@ -14,7 +15,7 @@ from control.veda_utils import Output, VideoProto
 from VEDA_OS01.utils import ValTranscriptStatus
 
 LOGGER = logging.getLogger(__name__)
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 '''
 "upload": _UPLOADING,
