@@ -8,10 +8,10 @@ import uuid
 import boto
 import django.dispatch
 import requests
+import urllib3
 from boto.s3.key import Key
 from django.db.models import Q
 from pysrt import SubRipFile
-from requests.packages.urllib3.exceptions import InsecurePlatformWarning
 from rest_framework import status
 from rest_framework.parsers import FormParser
 from rest_framework.permissions import AllowAny
@@ -24,7 +24,7 @@ from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProcessMetadata,
                               TranscriptProvider, TranscriptStatus, Video)
 
-requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 LOGGER = logging.getLogger(__name__)
 

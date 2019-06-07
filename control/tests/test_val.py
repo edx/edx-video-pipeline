@@ -8,6 +8,7 @@ from ddt import data, ddt, unpack
 from mock import PropertyMock, patch
 
 import requests
+import urllib3
 import responses
 
 from control.veda_val import VALAPICall
@@ -16,7 +17,7 @@ from control.veda_file_ingest import VideoProto
 from VEDA_OS01.utils import ValTranscriptStatus
 
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 """
 This is an API connection test
 set to pass if instance_config.yaml is missing

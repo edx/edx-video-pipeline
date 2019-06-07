@@ -6,14 +6,14 @@ import logging
 import json
 
 import requests
-from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+import urllib3
 
 from VEDA_OS01.models import (TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus)
 from VEDA.utils import build_url, scrub_query_params
 from VEDA_OS01.transcripts import CIELO24_API_VERSION
 
-requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 LOGGER = logging.getLogger(__name__)
 
