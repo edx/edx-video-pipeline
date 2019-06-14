@@ -38,10 +38,11 @@ val_username: username
 val_transcript_create_url: http://val.edx.org/transcript/create
 val_video_transcript_status_url: http://val.edx.org/video/status
 
-celery_worker_high_queue:
-celery_worker_medium_queue:
-celery_worker_low_queue:
+celery_worker_high_queue: worker_high_queue
+celery_worker_medium_queue: worker_medium_queue
+celery_worker_low_queue: worker_low_queue
 celery_deliver_queue: deliver_worker
+celery_online_heal_queue: online_heal_queue
 
 # ----------
 ##---

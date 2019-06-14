@@ -19,7 +19,7 @@ from django.utils.timezone import utc
 from VEDA_OS01.models import Encode, URL, Video
 from VEDA_OS01.utils import VAL_TRANSCRIPT_STATUS_MAP
 
-import celeryapp
+from encode_worker_tasks import enqueue_encode
 from control_env import WORK_DIRECTORY, HEAL_START, HEAL_END
 from veda_encode import VedaEncode
 from veda_val import VALAPICall
@@ -106,18 +106,7 @@ class VedaHeal(object):
                 veda_id = v.edx_id
                 encode_profile = encode
                 job_id = uuid.uuid1().hex[0:10]
-                task_result = celeryapp.worker_task_fire.apply_async(
-                    (veda_id, encode_profile, job_id),
-                    queue=self.auth_dict['celery_worker_medium_queue'].strip(),
-                    connect_timeout=3
-                )
-                # Misqueued Task
-                if task_result == 1:
-                    LOGGER.error('[ENQUEUE] {studio_id} | {video_id} : queueing call'.format(
-                        studio_id=v.studio_id,
-                        video_id=v.edx_id
-                    ))
-                    continue
+                enqueue_encode(veda_id, encode_profile, job_id)
 
             # Update Status
             LOGGER.info('[ENQUEUE] {studio_id} | {video_id}: file enqueued for encoding'.format(

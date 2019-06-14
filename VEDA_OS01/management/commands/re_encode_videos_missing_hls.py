@@ -23,7 +23,7 @@ from six import text_type
 
 from VEDA_OS01.models import Video, EncodeVideosForHlsConfiguration, URL, Encode
 from VEDA.utils import get_config
-from control import celeryapp
+from encode_worker_tasks import enqueue_encode
 
 LOGGER = logging.getLogger(__name__)
 
@@ -140,14 +140,7 @@ def enqueue_video_for_hls_encode(veda_id, encode_queue):
     Enqueue HLS encoding task.
     """
     task_id = uuid.uuid1().hex[0:10]
-    task_result = celeryapp.worker_task_fire.apply_async(
-        (veda_id, 'hls', task_id, False),
-        queue=encode_queue.strip(),
-        connect_timeout=3
-    )
-    # Mis-fired Task
-    if task_result == 1:
-        LOGGER.error('[ENQUEUE] %s task miss-fired.', veda_id)
+    enqueue_encode(veda_id, 'hls', task_id, False)
 
 
 class Command(BaseCommand):

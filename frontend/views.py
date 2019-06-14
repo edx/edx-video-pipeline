@@ -7,11 +7,11 @@ import base64
 import hmac
 import hashlib
 import uuid
-
+from control import celeryapp
 from django.http import HttpResponse
 from django.template import RequestContext, loader
 from django.http import HttpResponseRedirect
-
+from django.shortcuts import render
 from frontend_env import *
 from course_validate import VEDACat
 from abvid_validate import validate_incoming, create_record, send_to_pipeline
@@ -61,6 +61,21 @@ def input_form(request):
         'institution_list': inst_list
     }))
     return HttpResponse(template.render(context))
+
+
+def heal_form(request):
+    template = loader.get_template("heal.html")
+    if request.method == 'POST':
+        veda_id = request.POST['veda_id']
+        auth_dict = get_config()
+        result = celeryapp.web_healer.apply_async(
+                    args=[veda_id],
+                    queue=auth_dict['celery_online_heal_queue'],
+                    connect_timeout=3
+                    )
+        context = {'result': result}
+        return render(request, "heal.html", context)
+    return render(request, "heal.html")
 
 
 def institution_name(request):
