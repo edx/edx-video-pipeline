@@ -4,12 +4,12 @@ import logging
 import os
 import shutil
 import sys
-import yaml
 
 import boto.s3
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 from os.path import expanduser
+from tempfile import mkdtemp
 
 from VEDA.utils import get_config
 
@@ -54,11 +54,11 @@ class Hotstore(object):
         self.upload_filesize = os.stat(self.upload_filepath).st_size
 
         if self.upload_filesize < self.auth_dict['multi_upload_barrier']:
-            return self._BOTO_SINGLEPART()
+            return self._upload_single_part_file_to_hotstore()
         else:
-            return self._BOTO_MULTIPART()
+            return self._upload_multi_part_file_to_hotstore()
 
-    def _BOTO_SINGLEPART(self):
+    def _upload_single_part_file_to_hotstore(self):
         """
         Upload single part (under threshold in instance_auth)
         self.auth_dict['multi_upload_barrier']
@@ -94,27 +94,19 @@ class Hotstore(object):
             upload_key.set_contents_from_filename(self.upload_filepath)
             return True
 
-    def _BOTO_MULTIPART(self):
-        """
-        Split file into chunks, upload chunks
+    def _upload_multi_part_file_to_hotstore(self):
 
-        NOTE: this should never happen, as your files should be much
-        smaller than this, but one never knows
-        """
         path_to_multipart = os.path.dirname(self.upload_filepath)
         filename = os.path.basename(self.upload_filepath)
-        """
-        This is modular
-        """
-        if not os.path.exists(os.path.join(path_to_multipart, filename.split('.')[0])):
-            os.mkdir(os.path.join(path_to_multipart, filename.split('.')[0]))
 
-        os.chdir(os.path.join(path_to_multipart, filename.split('.')[0]))
+        directory_name = mkdtemp(dir=path_to_multipart)
+        LOGGER.info('Using temp directory %s for upload_filepath %s' % (directory_name, self.upload_filepath))
+        os.chdir(directory_name)
         """
         Split File into chunks
         """
-        split_command = 'split -b10m -a5'  # 5 part names of 5mb
-        sys.stdout.write('%s : %s\n' % (filename, 'Generating Multipart'))
+        split_command = 'split -b10m -a5'  # 5 char suffixes, 10mb chunk size
+        sys.stdout.write('%s : Generating Multipart\n' % filename)
         os.system(' '.join((split_command, self.upload_filepath)))
         sys.stdout.flush()
 
@@ -151,14 +143,9 @@ class Hotstore(object):
         )
 
         x = 1
-        for file in sorted(os.listdir(
-            os.path.join(
-                path_to_multipart,
-                filename.split('.')[0]
-            )
-        )):
-            sys.stdout.write('%s : %s\r' % (file, 'uploading part'))
-            fp = open(file, 'rb')
+        for part_file in sorted(os.listdir(directory_name)):
+            sys.stdout.write('%s : uploading part\r' % part_file)
+            fp = open(part_file, 'rb')
             mp.upload_part_from_file(fp, x)
             fp.close()
             sys.stdout.flush()
@@ -170,5 +157,5 @@ class Hotstore(object):
         Clean up multipart
         """
         os.chdir(homedir)
-        shutil.rmtree(os.path.join(path_to_multipart, filename.split('.')[0]))
+        shutil.rmtree(directory_name)
         return True
