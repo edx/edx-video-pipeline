@@ -100,12 +100,13 @@ class Hotstore(object):
         filename = os.path.basename(self.upload_filepath)
 
         directory_name = mkdtemp(dir=path_to_multipart)
+        LOGGER.info('Using temp directory %s for upload_filepath %s' % (directory_name, self.upload_filepath))
         os.chdir(directory_name)
         """
         Split File into chunks
         """
         split_command = 'split -b10m -a5'  # 5 char suffixes, 10mb chunk size
-        sys.stdout.write('%s : %s\n' % (filename, 'Generating Multipart'))
+        sys.stdout.write('%s : Generating Multipart\n' % filename)
         os.system(' '.join((split_command, self.upload_filepath)))
         sys.stdout.flush()
 
