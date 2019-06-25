@@ -3,9 +3,6 @@
 import json
 import logging
 
-import boto
-import boto.s3
-from boto.exception import S3ResponseError
 import requests
 from django.db import connection
 from django.db.utils import DatabaseError
@@ -20,7 +17,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import token_finisher
-from control.veda_file_discovery import FileDiscovery
 from VEDA import utils
 from VEDA_OS01.enums import TranscriptionProviderErrorType
 from VEDA_OS01.models import (URL, Course, Encode, TranscriptCredentials,
@@ -29,21 +25,16 @@ from VEDA_OS01.serializers import (CourseSerializer, EncodeSerializer,
                                    URLSerializer, VideoSerializer)
 from VEDA_OS01.transcripts import CIELO24_API_VERSION
 from VEDA_OS01.utils import PlainTextParser
+from control.http_ingest_celeryapp import ingest_video_and_upload_to_hotstore
 
 LOGGER = logging.getLogger(__name__)
 
 
-CONFIG = utils.get_config()
+auth_dict = utils.get_config()
 CIELO24_LOGIN_URL = utils.build_url(
-    CONFIG['cielo24_api_base_url'],
+    auth_dict['cielo24_api_base_url'],
     '/account/login'
 )
-
-try:
-    boto.config.add_section('Boto')
-except:
-    pass
-boto.config.set('Boto', 'http_socket_timeout', '100')
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -306,10 +297,8 @@ class IngestFromS3View(APIView):
         """
         Handle ingest from s3 bucket.
         """
-        bucket_name = CONFIG['edx_s3_ingest_bucket']
         status = 400
         reason = ''
-
         request_message = request_body.get('Message')
         try:
             message_json = json.loads(request_message)
@@ -317,38 +306,16 @@ class IngestFromS3View(APIView):
             video_s3_key = s3_object.get('object').get('key')
         except TypeError:
             reason = 'Request message body does not contain expected output'
-            LOGGER.error('[HTTP INGEST] {reason}'.format(
-                reason=reason,
-            ))
+            LOGGER.error('[HTTP INGEST] {reason}'.format(reason=reason))
             return status, reason
 
         if not video_s3_key:
-            return status, 'Video does not contain s3 key'
-
-        try:
-            connection = boto.connect_s3()
-            bucket = connection.get_bucket(bucket_name)
-            vd_key = bucket.get_key(video_s3_key)
-
-            if vd_key is None:
-                LOGGER.error(
-                    '[INGEST] Video key {vd_key} supplied in notification but not found in the s3 bucket.'
-                    'Returning 200 to avoid retry attempts.'.format(
-                        vd_key=vd_key
-                ))
-                successful_ingest = 200
-            else:
-                file_discovery = FileDiscovery()
-                file_discovery.bucket = bucket
-                successful_ingest = file_discovery.validate_metadata_and_feed_to_ingest(
-                    video_s3_key=vd_key
-                )
-
-            status = 200 if successful_ingest else 400
-        except S3ResponseError:
-            LOGGER.error('[INGEST] S3 Ingest Connection Failure')
-            reason = 'S3 ingest connection failure'
-
+            reason = 'Video does not contain s3 key'
+            LOGGER.error('[HTTP INGEST] {reason}'.format(reason=reason))
+            return status, reason
+        ingest_video_and_upload_to_hotstore.apply_async(args=[video_s3_key],
+                                                        queue=auth_dict['celery_http_ingest_queue'])
+        status = 200
         return status, reason
 
     @csrf_exempt

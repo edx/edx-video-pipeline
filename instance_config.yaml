@@ -104,6 +104,7 @@ celery_worker_low_queue:
 celery_deliver_queue:
 celery_heal_queue:
 celery_online_heal_queue:
+celery_http_ingest_queue:
 celery_threads: 1
 
 redis_broker:
