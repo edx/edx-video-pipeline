@@ -23,7 +23,8 @@ services:
     working_dir: "/edx-video-pipeline"
     command: bash -c 'source /edx/app/veda/veda_env && while true; do python manage.py runserver 0.0.0.0:8555 --settings=VEDA.settings.local; sleep 2; done'
     volumes:
-       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
+    #   - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
+        - /Users/azarembok/dev/edx-video-pipeline:/edx-video-pipeline
     ports:
        - "8000:8555"
     environment:
@@ -34,10 +35,12 @@ services:
       - devstack_default
 
   encode:
-    image: "ssemenova/veda-encode"
+    image: "azarembok/veda-encode-worker"
     container_name: "veda.encode"
     volumes:
       - ${VEDA_WORKSPACE}/edx-video-worker:/edx-video-worker
+    working_dir: "/edx-video-worker"
+    # command: bash -c 'source /edx/app/veda_encode_worker/veda_encode_worker_env;export PYTHONPATH=/edx-video-worker;export VEDA_ENCODE_WORKER_CFG=/edx-video-worker/instance_config.yaml;export SERVER_NAME="Worker0";./worker.sh celery_worker_medium_queue 0'
     tty: true
     networks: 
       - devstack_default
@@ -49,7 +52,7 @@ services:
       - ${VEDA_WORKSPACE}/edx-video-pipeline:/edx-video-pipeline
     tty: true
     working_dir: "/edx-video-pipeline"
-    # command: "python bin/deliver"
+    command: bash -c 'source /edx/app/veda_delivery_worker/veda_delivery_worker_env; export PYTHONPATH="/edx-video-pipeline"; python bin/deliver'
     environment:
       DJANGO_SETTINGS_MODULE: "VEDA.settings.local"
       redis_broker: "veda.redis"
