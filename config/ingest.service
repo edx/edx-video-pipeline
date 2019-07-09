@@ -1,0 +1,17 @@
+[Unit]
+Description=edX Video Ingest Worker
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+Environment=NEW_RELIC_CONFIG_FILE=/home/ec2-user/edx-video-pipeline/veda_newrelic.ini
+Environment=DJANGO_SETTINGS_MODULE=VEDA.settings.production
+Environment=PYTHONPATH=/home/ec2-user/edx-video-pipeline
+WorkingDirectory=/home/ec2-user/edx-video-pipeline
+ExecStart=/bin/newrelic-admin run-program /home/ec2-user/edx-video-pipeline/bin/ingest
+StandardOutput=/home/ec2-user/logs/ingest.out
+StandardError=/home/ec2-user/logs/ingest.out
+
+[Install]
+WantedBy=multi-user.target
