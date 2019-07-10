@@ -12,6 +12,7 @@ WorkingDirectory=/home/ec2-user/edx-video-pipeline
 ExecStart=/bin/newrelic-admin run-program /home/ec2-user/edx-video-pipeline/bin/ingest
 StandardOutput=/home/ec2-user/logs/ingest.out
 StandardError=/home/ec2-user/logs/ingest.out
+SyslogIdentifier=veda-ingest
 
 [Install]
 WantedBy=multi-user.target
