@@ -12,6 +12,7 @@ WorkingDirectory=/home/ec2-user/edx-video-pipeline
 ExecStart=/bin/newrelic-admin run-program /home/ec2-user/edx-video-pipeline/bin/youtubecallback
 StandardOutput=/home/ec2-user/logs/youtubecallback.out
 StandardError=/home/ec2-user/logs/youtubecallback.out
+SyslogIdentifier=veda-youtube
 
 [Install]
 WantedBy=multi-user.target
