@@ -1,5 +1,6 @@
 # VEDA F/E Views
 
+from __future__ import absolute_import
 import json
 import datetime
 from datetime import timedelta
@@ -12,9 +13,9 @@ from django.http import HttpResponse
 from django.template import RequestContext, loader
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from frontend_env import *
-from course_validate import VEDACat
-from abvid_validate import validate_incoming, create_record, send_to_pipeline
+from .frontend_env import *
+from .course_validate import VEDACat
+from .abvid_validate import validate_incoming, create_record, send_to_pipeline
 from VEDA.utils import get_config
 
 """

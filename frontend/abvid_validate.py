@@ -3,10 +3,11 @@ About Video Input and Validation
 
 """
 
+from __future__ import absolute_import
 import datetime
 import logging
 
-from frontend_env import *
+from frontend.frontend_env import *
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout

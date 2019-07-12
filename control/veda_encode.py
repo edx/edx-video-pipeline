@@ -5,10 +5,12 @@ Get a list of needed encodes from VEDA
 
 """
 
-from control_env import *
+from __future__ import absolute_import
+from .control_env import *
 from dependencies.shotgun_api3 import Shotgun
 from dependencies.shotgun_api3.lib.xmlrpclib import ProtocolError
 from VEDA.utils import get_config
+import six
 
 
 class VedaEncode(object):
@@ -64,7 +66,7 @@ class VedaEncode(object):
                     self.encode_list.add(e)
                 return None
 
-        for key, entry in self.encode_dict.iteritems():
+        for key, entry in six.iteritems(self.encode_dict):
             # Adding default to avoid AttributeError on trying to get
             # `mobile_override`, it is currently in `encode_dict`.
             if getattr(self.course_object, key, False) is True:

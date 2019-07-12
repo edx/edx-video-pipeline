@@ -1,5 +1,6 @@
 """views"""
 
+from __future__ import absolute_import
 import json
 import logging
 
@@ -16,7 +17,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api import token_finisher
+from .api import token_finisher
 from VEDA import utils
 from VEDA_OS01.enums import TranscriptionProviderErrorType
 from VEDA_OS01.models import (URL, Course, Encode, TranscriptCredentials,

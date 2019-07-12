@@ -1,6 +1,7 @@
 """
 Models for Video Pipeline
 """
+from __future__ import absolute_import
 import json
 import uuid
 from django.db import models
@@ -10,6 +11,7 @@ from model_utils.models import TimeStampedModel
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from config_models.models import ConfigurationModel
+import six
 
 
 def _createHex():
@@ -215,7 +217,7 @@ class ListField(models.TextField):
         Raises:
             ValidationError
         """
-        if all(isinstance(item, basestring) for item in value) is False:
+        if all(isinstance(item, six.string_types) for item in value) is False:
             raise ValueError(u'list must only contain strings.')
 
         return value
@@ -729,7 +731,7 @@ class TranscriptProcessMetadata(TimeStampedModel):
         Keyword Arguments:
             fields(dict): dict containing all the fields to be updated.
         """
-        for attr, value in fields.iteritems():
+        for attr, value in six.iteritems(fields):
             setattr(self, attr, value)
         self.save()
 

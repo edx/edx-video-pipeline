@@ -1,5 +1,6 @@
 #! usr/bin/env python
 
+from __future__ import absolute_import
 from rest_framework import serializers
 
 from VEDA_OS01.models import Course, Video, URL, Encode

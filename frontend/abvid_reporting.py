@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 import sys
 from email.mime.text import MIMEText
@@ -9,7 +10,7 @@ from VEDA.utils import get_config
 ABVID REPORTING - email / etc.
 
 '''
-from frontend_env import *
+from frontend.frontend_env import *
 
 '''
 v1 = Video.objects.filter(edx_id = upload_info['edx_id'])

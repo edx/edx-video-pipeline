@@ -10,6 +10,7 @@ Management command used to re-encode video for HLS profiles.
  - Deliver worker process the delivery task and delivers the successful HLS encode profile to edxval
 
 """
+from __future__ import absolute_import
 import ast
 import logging
 import uuid

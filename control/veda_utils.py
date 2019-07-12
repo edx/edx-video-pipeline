@@ -2,6 +2,7 @@
 Quick and dirty output handling
 
 """
+from __future__ import absolute_import
 import boto.ses
 import datetime
 import subprocess

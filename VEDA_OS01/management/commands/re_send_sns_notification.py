@@ -12,6 +12,7 @@ Usage:
 python manage.py re_send_sns_notification --date=2018-08-03
 python manage.py re_send_sns_notification --key=12345678-1234-1234-1234-123456789abc
 """
+from __future__ import absolute_import
 import logging
 import boto
 import boto.s3

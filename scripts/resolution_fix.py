@@ -3,6 +3,8 @@
 Fix resolution 'progressive)' bug
 
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import datetime
@@ -100,7 +102,7 @@ def get_videos():
         # )
     for v in video_q:
         if ')' in v.video_orig_resolution:
-            print v.edx_id
+            print(v.edx_id)
 
         # Video.objects.filter(pk=v.pk).update(video_orig_resolution='1920x1080')
         # print '***'

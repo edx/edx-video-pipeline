@@ -4,6 +4,7 @@ Determine the destination and upload to the appropriate
 endpoint via the custom methods
 
 """
+from __future__ import absolute_import
 import datetime
 import logging
 import shutil
@@ -18,21 +19,21 @@ from boto.exception import S3ResponseError, NoAuthHandlerFound
 from boto.s3.key import Key
 from django.core.urlresolvers import reverse
 
-from control_env import *
-from veda_deliver_cielo import Cielo24Transcript
-from veda_deliver_youtube import DeliverYoutube
+from .control_env import *
+from .veda_deliver_cielo import Cielo24Transcript
+from .veda_deliver_youtube import DeliverYoutube
 from VEDA_OS01 import utils
 from VEDA_OS01.models import (TranscriptCredentials, TranscriptProvider,
                               TranscriptStatus)
 from VEDA.utils import build_url, extract_course_org, get_config, delete_directory_contents
-from veda_utils import Metadata, Output, VideoProto
-from veda_val import VALAPICall
-from veda_video_validation import Validation
+from .veda_utils import Metadata, Output, VideoProto
+from .veda_val import VALAPICall
+from .veda_video_validation import Validation
 
 try:
     from control.veda_deliver_3play import ThreePlayMediaClient
 except ImportError:
-    from veda_deliver_3play import ThreePlayMediaClient
+    from .veda_deliver_3play import ThreePlayMediaClient
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout

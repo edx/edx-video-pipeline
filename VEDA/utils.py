@@ -1,11 +1,12 @@
 """
 Common utils.
 """
+from __future__ import absolute_import
 import glob
 import os
 import shutil
-import urllib
-import urlparse
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.parse
 import yaml
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -43,7 +44,7 @@ def build_url(*urls, **query_params):
     """
     url = '/'.join(item.strip('/') for item in urls if item)
     if query_params:
-        url = '{}?{}'.format(url, urllib.urlencode(query_params))
+        url = '{}?{}'.format(url, six.moves.urllib.parse.urlencode(query_params))
 
     return url
 
@@ -69,11 +70,11 @@ def get_config(yaml_config_file=DEFAULT_CONFIG_FILE_NAME):
         )
 
     with open(yaml_config_file, 'r') as config:
-        config_dict = yaml.load(config)
+        config_dict = yaml.safe_load(config)
 
     # read static config file
     with open(STATIC_CONFIG_FILE_PATH, 'r') as config:
-        static_config_dict = yaml.load(config)
+        static_config_dict = yaml.safe_load(config)
 
     return dict(config_dict, **static_config_dict)
 
@@ -92,10 +93,10 @@ def scrub_query_params(url, params_to_scrub):
     >>> old_url = https://sandbox.veda.com/api/do?api_token=veda_api_key&job_name=12345&language=en&v=1
     >>> new_url = https://sandbox.veda.com/api/do?v=1&job_name=12345&language=en&api_token=XXXXXXXXXXXX
     """
-    parsed = urlparse.urlparse(url)
+    parsed = six.moves.urllib.parse.urlparse(url)
 
     # query_params will be in the form of [('v', '1'), ('job_name', '12345')]
-    query_params = urlparse.parse_qsl(parsed.query)
+    query_params = six.moves.urllib.parse.parse_qsl(parsed.query)
 
     new_query_params = {}
     for key, value in query_params:

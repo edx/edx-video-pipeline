@@ -1,6 +1,7 @@
 """
 Tests of the re_encrypt_transcript_credentials management command.
 """
+from __future__ import absolute_import
 from cryptography.fernet import InvalidToken
 from django.conf import settings
 from django.core.management import call_command

@@ -137,20 +137,22 @@ Exported functions:
                  name (None if not present).
 """
 
+from __future__ import absolute_import
 import re, string, time, operator
 
 from types import *
 import socket
 import errno
-import httplib
+import six.moves.http_client
+import six
 
 # --------------------------------------------------------------------
 # Internal stuff
 
 try:
-    unicode
+    six.text_type
 except NameError:
-    unicode = None # unicode support not available
+    six.text_type = None # unicode support not available
 
 try:
     import datetime
@@ -165,8 +167,8 @@ except NameError:
 
 def _decode(data, encoding, is8bit=re.compile("[\x80-\xff]").search):
     # decode non-ascii string (if possible)
-    if unicode and encoding and is8bit(data):
-        data = unicode(data, encoding)
+    if six.text_type and encoding and is8bit(data):
+        data = six.text_type(data, encoding)
     return data
 
 def escape(s, replace=string.replace):
@@ -174,7 +176,7 @@ def escape(s, replace=string.replace):
     s = replace(s, "<", "&lt;")
     return replace(s, ">", "&gt;",)
 
-if unicode:
+if six.text_type:
     def _stringify(string):
         # convert to 7-bit ascii if possible
         try:
@@ -188,8 +190,8 @@ else:
 #__version__ = "1.0.1"
 
 # xmlrpc integer limits
-MAXINT =  2L**31-1
-MININT = -2L**31
+MAXINT =  2**31-1
+MININT = -2**31
 
 # --------------------------------------------------------------------
 # Error constants (from Dan Libby's specification at

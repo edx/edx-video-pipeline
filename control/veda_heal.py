@@ -7,6 +7,7 @@ Roll through videos, check for completion
     - reschedule self
 
 """
+from __future__ import absolute_import
 import datetime
 from datetime import timedelta
 import logging
@@ -19,10 +20,10 @@ from django.utils.timezone import utc
 from VEDA_OS01.models import Encode, URL, Video
 from VEDA_OS01.utils import VAL_TRANSCRIPT_STATUS_MAP
 
-from encode_worker_tasks import enqueue_encode
-from control_env import WORK_DIRECTORY, HEAL_START, HEAL_END
-from veda_encode import VedaEncode
-from veda_val import VALAPICall
+from .encode_worker_tasks import enqueue_encode
+from .control_env import WORK_DIRECTORY, HEAL_START, HEAL_END
+from .veda_encode import VedaEncode
+from .veda_val import VALAPICall
 from VEDA.utils import get_config
 
 time_safetygap = datetime.datetime.utcnow().replace(tzinfo=utc) - timedelta(days=1)

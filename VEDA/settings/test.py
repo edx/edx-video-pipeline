@@ -2,6 +2,7 @@
 Test settings
 
 """
+from __future__ import absolute_import
 from VEDA.settings.base import *
 from VEDA.settings.utils import get_logger_config
 

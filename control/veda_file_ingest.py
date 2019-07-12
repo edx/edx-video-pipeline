@@ -2,6 +2,7 @@
 Discovered file ingest/insert/job triggering
 
 """
+from __future__ import absolute_import
 import datetime
 import logging
 import subprocess
@@ -9,14 +10,14 @@ import subprocess
 from django.db import transaction
 from django.db.utils import DatabaseError
 
-from control_env import *
+from .control_env import *
 from VEDA.utils import get_config
-from veda_heal import VedaHeal
-from veda_hotstore import Hotstore
+from .veda_heal import VedaHeal
+from .veda_hotstore import Hotstore
 from VEDA_OS01.models import TranscriptStatus
-from veda_utils import Report
-from veda_val import VALAPICall
-from veda_video_validation import Validation
+from .veda_utils import Report
+from .veda_val import VALAPICall
+from .veda_video_validation import Validation
 
 LOGGER = logging.getLogger(__name__)
 
