@@ -1,4 +1,4 @@
-django==1.9
+django==1.11.22
 djangorestframework==3.6.4
 django-config-models==0.2.2
 django-cors-headers

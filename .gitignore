@@ -21,3 +21,5 @@ youtube_callback/static_files/youtubekey
 
 ### VisualStudioCode ###
 .vscode/*
+
+.python-version
