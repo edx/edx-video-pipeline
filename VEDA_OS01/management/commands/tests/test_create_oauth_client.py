@@ -2,6 +2,7 @@
 Tests of the create_oauth_client management command.
 """
 
+from __future__ import absolute_import
 from itertools import product
 
 import ddt
@@ -11,6 +12,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from oauth2_provider.models import Application
 from VEDA_OS01.management.commands.create_oauth_client import CLIENT_TYPES, GRANT_TYPES
+from six.moves import zip
 
 
 USER_ID = 1
@@ -71,7 +73,7 @@ class CreateOauthAppClientTests(TestCase):
             (g for g in GRANT_TYPES),
         ),
         # Generate all valid option combinations
-        (dict(zip(OPTIONAL_COMMAND_ARGS, p)) for p in product(
+        (dict(list(zip(OPTIONAL_COMMAND_ARGS, p))) for p in product(
             (USERNAME, None),
             (REDIRECT_URI, None),
             ('client_name', None),

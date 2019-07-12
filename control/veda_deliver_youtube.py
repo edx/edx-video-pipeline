@@ -6,13 +6,14 @@ is only maintained, and not prioritized for refactoring
 
 """
 
+from __future__ import absolute_import
 import logging
 import os.path
 import pysftp
 import paramiko
 import time
 
-from control_env import *
+from .control_env import *
 
 LOGGER = logging.getLogger(__name__)
 # TODO: Remove this temporary logging to stdout

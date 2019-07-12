@@ -1,6 +1,7 @@
 """
 Tests common utils
 """
+from __future__ import absolute_import
 import glob
 import os
 import shutil
@@ -12,6 +13,7 @@ from ddt import data, ddt, unpack
 from mock import MagicMock, Mock, patch
 
 from VEDA import utils
+from six.moves import range
 
 TEST_CONFIG = {
     'var1': 123,
@@ -161,11 +163,11 @@ class UtilTests(TestCase):
             utils.DEFAULT_CONFIG_FILE_NAME
         )
         with open(default_yaml_config_file, 'r') as config:
-            config_dict = yaml.load(config)
+            config_dict = yaml.safe_load(config)
 
         # read the default static config file
         with open(utils.STATIC_CONFIG_FILE_PATH, 'r') as config:
-            static_config_dict = yaml.load(config)
+            static_config_dict = yaml.safe_load(config)
 
         self.assertDictEqual(
             instance_config,
@@ -218,7 +220,7 @@ class DeleteDirectoryContentsTests(TestCase):
         """
         # create a temp directory with temp directories and files in it
         self.temp_dir = tempfile.mkdtemp()
-        dir_paths = map(lambda index: '{}/dir{}'.format(self.temp_dir, index), range(5))
+        dir_paths = ['{}/dir{}'.format(self.temp_dir, index) for index in range(5)]
         for dir_path in dir_paths:
             os.makedirs(dir_path)
             __, file_path = tempfile.mkstemp(

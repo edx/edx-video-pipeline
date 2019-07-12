@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 from django.test import TestCase
 
 from VEDA_OS01.models import Course, Destination, Encode, URL, Video
 from VEDA_OS01.serializers import CourseSerializer, EncodeSerializer, URLSerializer, VideoSerializer
+import six
 
 
 class TestCourseSerializer(TestCase):
@@ -173,6 +175,6 @@ class TestEncodeSerializer(TestCase):
         self.assertEqual(Encode.objects.count(), 1)
 
         actual_serialized_encode = EncodeSerializer(encode).data
-        for attr, actual_value in actual_serialized_encode.iteritems():
+        for attr, actual_value in six.iteritems(actual_serialized_encode):
             expected_value = getattr(encode, attr)
             self.assertEqual(actual_value, expected_value)

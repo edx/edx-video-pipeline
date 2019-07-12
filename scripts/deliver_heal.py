@@ -1,4 +1,6 @@
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import datetime
@@ -19,7 +21,7 @@ def get_videos():
         video_trans_start__lt=(datetime.datetime.now().replace(tzinfo=utc)) - timedelta(days=7)
     )
     for v in video_query:
-        print v.edx_id
+        print(v.edx_id)
         VH = VedaHeal()
         encode_list = VH.determine_fault(video_object=v)
         # if len(encode_list) > 0:

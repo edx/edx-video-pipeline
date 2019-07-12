@@ -1,4 +1,6 @@
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import datetime
@@ -40,23 +42,23 @@ class ReEncodeCrawler(object):
                 encode_suffix=self.crawl_suffix
             )
         )
-        print len(self.url_query)
+        print(len(self.url_query))
 
 
     def _run_reencode(self):
         batching = 0
 
         for u in self.url_query:
-            print u.encode_url
+            print(u.encode_url)
             if batching >= BATCH_SIZE:
-                print "%s :: %s" % (
+                print("%s :: %s" % (
                     "Sleeping", 
                     "BatchSize"
-                )   
+                ))   
                 time.sleep(SLEEP_TIME)
                 batching = 0
 
-            print "%s : %s" % (u.encode_url, u.url_date)
+            print("%s : %s" % (u.encode_url, u.url_date))
             URL.objects.filter(pk=u.pk).delete()
             """Must be sent to heal as iterable"""
             video_query = Video.objects.filter(pk=u.videoID.pk)

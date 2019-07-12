@@ -1,6 +1,8 @@
 """
 Check code quality
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import re
 
@@ -39,7 +41,7 @@ def run_pep8(options):
     )
 
     violations_message = violation_message('pep8', violations_limit, num_violations)
-    print violations_message
+    print(violations_message)
 
     # Fail if number of violations is greater than the limit
     if num_violations > violations_limit > -1:
@@ -91,7 +93,7 @@ def run_pylint(options):
         '{report_dir}/pylint.report'.format(report_dir=REPORTS_DIR)
     )
     violations_message = violation_message('pylint', violations_limit, num_violations)
-    print violations_message
+    print(violations_message)
 
     # Fail if number of violations is greater than the limit
     if num_violations > violations_limit > -1:

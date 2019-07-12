@@ -2,6 +2,7 @@
 Management command used to create an OAuth client in the database.
 """
 
+from __future__ import absolute_import
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError

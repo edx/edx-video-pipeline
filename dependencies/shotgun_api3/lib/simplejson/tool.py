@@ -10,6 +10,7 @@ Usage::
     Expecting property name: line 1 column 2 (char 2)
 
 """
+from __future__ import absolute_import
 import sys
 import simplejson as json
 
@@ -29,7 +30,7 @@ def main():
         obj = json.load(infile,
                         object_pairs_hook=json.OrderedDict,
                         use_decimal=True)
-    except ValueError, e:
+    except ValueError as e:
         raise SystemExit(e)
     json.dump(obj, outfile, sort_keys=True, indent='    ', use_decimal=True)
     outfile.write('\n')

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 """SocksiPy - Python SOCKS module.
 Version 1.00
 
@@ -429,7 +431,7 @@ class socksocket(socket.socket):
                 portnum = 8080
             _orgsocket.connect(self,(self.__proxy[1],portnum))
             if destpair[1] == 443:
-                print "WARN: SSL connections (generally on port 443) require the use of tunneling - failing back to PROXY_TYPE_HTTP"
+                print("WARN: SSL connections (generally on port 443) require the use of tunneling - failing back to PROXY_TYPE_HTTP")
                 self.__negotiatehttp(destpair[0],destpair[1])
             else:
                 self.__httptunnel = False

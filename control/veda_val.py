@@ -3,13 +3,14 @@ Send data to VAL, either Video ID data or endpoint URLs
 
 """
 
+from __future__ import absolute_import
 import logging
 import requests
 import urllib3
 import ast
 import json
 
-from control_env import *
+from .control_env import *
 from control.veda_utils import Output, VideoProto
 
 from VEDA_OS01.utils import ValTranscriptStatus
@@ -351,7 +352,7 @@ class VALAPICall(object):
         """
         for retrieved_course in val_api_return['courses']:
             for course in list(self.val_data['courses']):
-                if retrieved_course.keys() == course.keys():
+                if list(retrieved_course.keys()).sort() == list(course.keys()).sort():
                     self.val_data['courses'].remove(course)
 
         self.profile_determiner(val_api_return=val_api_return)

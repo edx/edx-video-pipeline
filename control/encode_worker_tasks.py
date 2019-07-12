@@ -3,6 +3,7 @@ This module contains calls to remote celery tasks that are run by the veda encod
 The code for those tasks lives in the edx-video-worker repository.
 """
 
+from __future__ import absolute_import
 from celery import Celery
 from VEDA.utils import get_config
 

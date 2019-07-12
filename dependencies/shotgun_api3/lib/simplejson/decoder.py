@@ -1,10 +1,13 @@
 """Implementation of JSONDecoder
 """
+from __future__ import absolute_import
 import re
 import sys
 import struct
 
 from simplejson.scanner import make_scanner
+from six import unichr
+import six
 def _import_c_scanstring():
     try:
         from simplejson._speedups import scanstring
@@ -117,8 +120,8 @@ def py_scanstring(s, end, encoding=None, strict=True,
         content, terminator = chunk.groups()
         # Content is contains zero or more unescaped string characters
         if content:
-            if not isinstance(content, unicode):
-                content = unicode(content, encoding)
+            if not isinstance(content, six.text_type):
+                content = six.text_type(content, encoding)
             _append(content)
         # Terminator is the end of string, a literal control character,
         # or a backslash denoting that an escape sequence follows
@@ -177,10 +180,11 @@ scanstring = c_scanstring or py_scanstring
 WHITESPACE = re.compile(r'[ \t\n\r]*', FLAGS)
 WHITESPACE_STR = ' \t\n\r'
 
-def JSONObject((s, end), encoding, strict, scan_once, object_hook,
+def JSONObject(string_and_end_index_tuple, encoding, strict, scan_once, object_hook,
         object_pairs_hook, memo=None,
         _w=WHITESPACE.match, _ws=WHITESPACE_STR):
     # Backwards compatibility
+    (s, end) = string_and_end_index_tuple
     if memo is None:
         memo = {}
     memo_get = memo.setdefault
@@ -269,7 +273,8 @@ def JSONObject((s, end), encoding, strict, scan_once, object_hook,
         pairs = object_hook(pairs)
     return pairs, end
 
-def JSONArray((s, end), scan_once, _w=WHITESPACE.match, _ws=WHITESPACE_STR):
+def JSONArray(string_and_end_index_tuple, scan_once, _w=WHITESPACE.match, _ws=WHITESPACE_STR):
+    (s, end) = string_and_end_index_tuple
     values = []
     nextchar = s[end:end + 1]
     if nextchar in _ws:

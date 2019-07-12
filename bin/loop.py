@@ -4,6 +4,7 @@ This is a cheapo way to get a pager (using SES)
 
 """
 
+from __future__ import absolute_import
 import os
 import sys
 import argparse

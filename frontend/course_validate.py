@@ -1,12 +1,14 @@
 """
 Validate Course / Predict Inputs for advanced fields
 """
+from __future__ import absolute_import
 import uuid
 import json
 import yaml
 import datetime
 
-from frontend_env import *
+from frontend.frontend_env import *
+import six
 
 
 class VEDACat(object):
@@ -32,7 +34,7 @@ class VEDACat(object):
         """
         with open(self.model_yaml, 'r') as stream:
             try:
-                set_dict = yaml.load(stream)
+                set_dict = yaml.safe_load(stream)
                 return set_dict
             except yaml.YAMLError as exc:
                 return None
@@ -195,15 +197,15 @@ class VEDACat(object):
 
         '''Checkbox/false doesn't show up'''
         for x in self.veda_model['bools']:
-            if x not in [a for a, b in data.iteritems()]:
+            if x not in [a for a, b in six.iteritems(data)]:
                 setattr(c1, x, False)
 
         """
         decode undecodable characters
         """
         decode_data = data
-        for a, b in decode_data.iteritems():
-            if isinstance(b, unicode):
+        for a, b in six.iteritems(decode_data):
+            if isinstance(b, six.text_type):
                 try:
                     b.encode('ascii')
                 except:
@@ -212,7 +214,7 @@ class VEDACat(object):
         """
         Translate fields into django models
         """
-        for a, b in data.iteritems():
+        for a, b in six.iteritems(data):
             if b is not None:
 
                 if a != 'institution' and a != 'class_name' and len(str(b)) > 0:
@@ -290,7 +292,7 @@ class VEDACat(object):
         comparitor = {'None': 0}
         for a in attribute_list:
             in_it = False
-            for b, c in comparitor.iteritems():
+            for b, c in six.iteritems(comparitor):
                 if a is None:
                     comparitor['None'] += 1
                 if a == b:
@@ -303,7 +305,7 @@ class VEDACat(object):
 
         data = {}
 
-        for d, e in comparitor.iteritems():
+        for d, e in six.iteritems(comparitor):
             if e > len(attribute_list) * 0.5:
                 data['majority'] = True
                 data['field'] = d

@@ -7,6 +7,7 @@ will get the token id from a url view, auth it, then push forward with a success
 
 """
 
+from __future__ import absolute_import
 import os
 import sys
 

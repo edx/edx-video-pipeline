@@ -8,6 +8,7 @@ Currently:
 
 """
 
+from __future__ import absolute_import
 import json
 import logging
 import os.path
@@ -18,11 +19,11 @@ from boto.exception import NoAuthHandlerFound, S3DataError, S3ResponseError
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
-from control_env import *
+from .control_env import *
 from VEDA.utils import extract_course_org, get_config
-from veda_file_ingest import VedaIngest, VideoProto
+from .veda_file_ingest import VedaIngest, VideoProto
 from VEDA_OS01.models import TranscriptCredentials
-from veda_val import VALAPICall
+from .veda_val import VALAPICall
 
 try:
     boto.config.add_section('Boto')

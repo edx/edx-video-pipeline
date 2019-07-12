@@ -1,6 +1,7 @@
 """
 3PlayMedia transcription unit tests
 """
+from __future__ import absolute_import
 import json
 import responses
 
@@ -20,6 +21,7 @@ from VEDA_OS01.models import (
     ThreePlayTurnaround,
 )
 from VEDA.utils import build_url
+import six
 
 VIDEO_DATA = {
     'studio_id': '12345',
@@ -71,7 +73,7 @@ class ThreePlayMediaClientTests(TestCase):
             if request_attr == 'headers':
                 expected_headers = expected_request[request_attr]
                 actual_headers = getattr(received_request, request_attr)
-                for attr, expect_value in expected_headers.iteritems():
+                for attr, expect_value in six.iteritems(expected_headers):
                     self.assertEqual(actual_headers[attr], expect_value)
             elif request_attr == 'body' and decode_func:
                 self.assertDictEqual(decode_func(received_request.body), expected_request[request_attr])

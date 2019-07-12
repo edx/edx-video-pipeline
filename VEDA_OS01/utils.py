@@ -1,10 +1,12 @@
 """
 Common utils.
 """
+from __future__ import absolute_import
 from rest_framework.parsers import BaseParser
 
 from VEDA.utils import get_config
 from VEDA_OS01.models import Encode, TranscriptStatus, URL, Video
+import six
 
 
 class ValTranscriptStatus(object):
@@ -78,7 +80,7 @@ def get_incomplete_encodes(edx_id):
     # Pick the encodes map from the settings.
     encodes_map = get_config().get('encode_dict', {})
     # Active encodes according to course instance.
-    for attr, encodes in encodes_map.iteritems():
+    for attr, encodes in six.iteritems(encodes_map):
         if getattr(course, attr, False):
             encode_list += [encode.strip() for encode in encodes]
 

@@ -1,6 +1,7 @@
 """
 Management command used to re-ingest video from hotstore based on the params provided.
 """
+from __future__ import absolute_import
 import logging
 import boto
 import boto.s3

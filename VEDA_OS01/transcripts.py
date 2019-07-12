@@ -1,6 +1,7 @@
 """
 Transcript handlers.
 """
+from __future__ import absolute_import
 import json
 import logging
 import uuid
@@ -135,7 +136,7 @@ class Cielo24CallbackHandlerView(APIView):
         Handle Cielo24 callback request.
         """
         required_attrs = ('job_id', 'iwp_name', 'lang_code', 'org', 'video_id')
-        missing = [attr for attr in required_attrs if attr not in request.query_params.keys()]
+        missing = [attr for attr in required_attrs if attr not in list(request.query_params.keys())]
         if missing:
             LOGGER.warning(
                 '[CIELO24 HANDLER] Required params are missing %s',
@@ -375,7 +376,7 @@ class ThreePlayMediaCallbackHandlerView(APIView):
         Handle 3PlayMedia callback request.
         """
         required_attrs = ['file_id', 'lang_code', 'status', 'org', 'edx_video_id']
-        received_attributes = request.data.keys() + request.query_params.keys()
+        received_attributes = list(request.data.keys()) + list(request.query_params.keys())
         missing = [attr for attr in required_attrs if attr not in received_attributes]
         if missing:
             LOGGER.warning(

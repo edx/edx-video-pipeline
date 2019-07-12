@@ -2,10 +2,11 @@
 """
 Transcript tests
 """
+from __future__ import absolute_import
 import json
 import responses
-import urllib
-import urlparse
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.parse
 
 from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
@@ -22,6 +23,7 @@ from VEDA_OS01 import transcripts, utils
 from VEDA_OS01.models import (Course, TranscriptCredentials,
                               TranscriptProcessMetadata, TranscriptProvider,
                               TranscriptStatus, Video)
+import six
 
 CONFIG_DATA = get_config('test_config.yaml')
 
@@ -403,7 +405,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 org=self.org, lang_code=self.video_source_language
             )),
             content_type='application/x-www-form-urlencoded',
-            data=urllib.urlencode(dict(file_id=self.file_id, status=state))
+            data=six.moves.urllib.parse.urlencode(dict(file_id=self.file_id, status=state))
         )
         return response
 
@@ -422,7 +424,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         ).update(status=TranscriptStatus.READY)
 
         # Create translation processes and set their statuses to 'IN PROGRESS'.
-        for target_language, translation_id in translation_lang_map.iteritems():
+        for target_language, translation_id in six.iteritems(translation_lang_map):
             # Create translation processes for all the target languages.
             TranscriptProcessMetadata.objects.create(
                 video=self.video,
@@ -441,12 +443,12 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             if request_attr == 'headers':
                 expected_headers = expected_request[request_attr]
                 actual_headers = getattr(received_request, request_attr)
-                for attr, expect_value in expected_headers.iteritems():
+                for attr, expect_value in six.iteritems(expected_headers):
                     self.assertEqual(actual_headers[attr], expect_value)
             elif request_attr == 'body' and decode_func:
                 expected_body = expected_request[request_attr]
                 actual_body = decode_func(getattr(received_request, request_attr))
-                for attr, expect_value in expected_body.iteritems():
+                for attr, expect_value in six.iteritems(expected_body):
                     self.assertEqual(actual_body[attr], expect_value)
             else:
                 self.assertEqual(getattr(received_request, request_attr), expected_request[request_attr])
@@ -482,13 +484,13 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         response = self.client.post(
             '/{}'.format(build_url(self.url, **request_data['query_params'])),
             content_type='application/x-www-form-urlencoded',
-            data=urllib.urlencode(request_data['data']),
+            data=six.moves.urllib.parse.urlencode(request_data['data']),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Assert the logs
         required_attrs = ['file_id', 'lang_code', 'status', 'org', 'edx_video_id']
-        received_attrs = request_data['data'].keys() + request_data['query_params'].keys()
+        received_attrs = list(request_data['data'].keys()) + list(request_data['query_params'].keys())
         missing_attrs = [attr for attr in required_attrs if attr not in received_attrs]
         mock_logger.warning.assert_called_with(
             u'[3PlayMedia Callback] process_id=%s Received Attributes=%s Missing Attributes=%s',
@@ -519,7 +521,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         self.url = '/{}'.format(build_url(
             self.url, edx_video_id='12345', org='MAx', lang_code=self.video_source_language
         ))
-        self.client.post(self.url, content_type='application/x-www-form-urlencoded', data=urllib.urlencode({
+        self.client.post(self.url, content_type='application/x-www-form-urlencoded', data=six.moves.urllib.parse.urlencode({
             'file_id': self.file_id,
             'status': state,
             'error_description': state  # this will be logged.
@@ -591,7 +593,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     'username': [CONFIG_DATA['val_username']],
                     'password': [CONFIG_DATA['val_password']],
                 },
-                'decode_func': urlparse.parse_qs,
+                'decode_func': six.moves.urllib.parse.parse_qs,
             },
             # request - 3
             {
@@ -754,7 +756,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     'username': [CONFIG_DATA['val_username']],
                     'password': [CONFIG_DATA['val_password']],
                 },
-                'decode_func': urlparse.parse_qs,
+                'decode_func': six.moves.urllib.parse.parse_qs,
             },
             # request - 3
             {
@@ -1124,7 +1126,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
         # Setup mock responses
         translation_status_mock_response = []
-        for target_language, translation_id in translations_lang_map.iteritems():
+        for target_language, translation_id in six.iteritems(translations_lang_map):
             translation_status_mock_response.append({
                 'id': translation_id,
                 'source_language_iso_639_1_code': 'en',
@@ -1173,7 +1175,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             decode_func=json.loads,
         )
         position = 1
-        for lang_code, translation_id in translations_lang_map.iteritems():
+        for lang_code, translation_id in six.iteritems(translations_lang_map):
             expected_requests = [
                 # request - 1
                 {
@@ -1191,7 +1193,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                         'username': [CONFIG_DATA['val_username']],
                         'password': [CONFIG_DATA['val_password']],
                     },
-                    'decode_func': urlparse.parse_qs,
+                    'decode_func': six.moves.urllib.parse.parse_qs,
                 },
                 # request - 3
                 {

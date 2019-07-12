@@ -30,8 +30,9 @@
 '''
 
 
+from __future__ import absolute_import
 import base64
-import cookielib    # used for attachment upload
+import six.moves.http_cookiejar    # used for attachment upload
 import cStringIO    # used for attachment upload
 import datetime
 import logging
@@ -44,16 +45,17 @@ import stat         # used for attachment upload
 import sys
 import time
 import types
-import urllib
-import urllib2      # used for image upload
-import urlparse
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.request, six.moves.urllib.error, six.moves.urllib.parse      # used for image upload
+import six.moves.urllib.parse
 import shutil       # used for attachment download
+import six
 
 # use relative import for versions >=2.5 and package import for python versions <2.5
 if (sys.version_info[0] > 2) or (sys.version_info[0] == 2 and sys.version_info[1] >= 5):
-    from sg_25 import *
+    from .sg_25 import *
 else:
-    from sg_24 import *
+    from .sg_24 import *
 
 LOG = logging.getLogger("shotgun_api3")
 LOG.setLevel(logging.WARN)
@@ -255,11 +257,11 @@ class Shotgun(object):
 
         self.base_url = (base_url or "").lower()
         self.config.scheme, self.config.server, api_base, _, _ = \
-            urlparse.urlsplit(self.base_url)
+            six.moves.urllib.parse.urlsplit(self.base_url)
         if self.config.scheme not in ("http", "https"):
             raise ValueError("base_url must use http or https got '%s'" %
                 self.base_url)
-        self.config.api_path = urlparse.urljoin(urlparse.urljoin(
+        self.config.api_path = six.moves.urllib.parse.urljoin(six.moves.urllib.parse.urljoin(
             api_base or "/", self.config.api_ver + "/"), "json")
 
         self.reset_user_agent()
@@ -267,9 +269,9 @@ class Shotgun(object):
         # if the service contains user information strip it out
         # copied from the xmlrpclib which turned the user:password into
         # and auth header
-        auth, self.config.server = urllib.splituser(self.config.server)
+        auth, self.config.server = six.moves.urllib.parse.splituser(self.config.server)
         if auth:
-            auth = base64.encodestring(urllib.unquote(auth))
+            auth = base64.encodestring(six.moves.urllib.parse.unquote(auth))
             self.config.authorization = "Basic " + auth.strip()
 
         # foo:bar@123.456.789.012:3456
@@ -489,7 +491,7 @@ class Shotgun(object):
         if order:
             sort_list = []
             for sort in order:
-                if sort.has_key('column'):
+                if 'column' in sort:
                     # TODO: warn about deprecation of 'column' param name
                     sort['field_name'] = sort['column']
                 sort.setdefault("direction", "asc")
@@ -939,7 +941,7 @@ class Shotgun(object):
             "field_name" : field_name,
             "properties": [
                 {"property_name" : k, "value" : v}
-                for k, v in (properties or {}).iteritems()
+                for k, v in six.iteritems((properties or {}))
             ]
         }
 
@@ -1052,7 +1054,7 @@ class Shotgun(object):
 
         # Create opener with extended form post support
         opener = self._build_opener(FormPostHandler)
-        url = urlparse.urlunparse((self.config.scheme, self.config.server,
+        url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
             "/upload/share_thumbnail", None, None, None))
 
         # Perform the request
@@ -1060,7 +1062,7 @@ class Shotgun(object):
             resp = opener.open(url, params)
             result = resp.read()
             # response headers are in str(resp.info()).splitlines()
-        except urllib2.HTTPError, e:
+        except six.moves.urllib.error.HTTPError as e:
             if e.code == 500:
                 raise ShotgunError("Server encountered an internal error. "
                     "\n%s\n(%s)\n%s\n\n" % (url, params, e))
@@ -1131,14 +1133,14 @@ class Shotgun(object):
             params["session_uuid"] = self.config.session_uuid
 
         if is_thumbnail:
-            url = urlparse.urlunparse((self.config.scheme, self.config.server,
+            url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
                 "/upload/publish_thumbnail", None, None, None))
             params["thumb_image"] = open(path, "rb")
             if field_name == "filmstrip_thumb_image":
                 params["filmstrip"] = True
 
         else:
-            url = urlparse.urlunparse((self.config.scheme, self.config.server,
+            url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
                 "/upload/upload_file", None, None, None))
             if display_name is None:
                 display_name = os.path.basename(path)
@@ -1158,7 +1160,7 @@ class Shotgun(object):
         # Perform the request
         try:
             result = opener.open(url, params).read()
-        except urllib2.HTTPError, e:
+        except six.moves.urllib.error.HTTPError as e:
             if e.code == 500:
                 raise ShotgunError("Server encountered an internal error. "
                     "\n%s\n(%s)\n%s\n\n" % (url, params, e))
@@ -1215,7 +1217,7 @@ class Shotgun(object):
         if file_path:
             try:
                 fp = open(file_path, 'wb')
-            except IOError, e:
+            except IOError as e:
                 raise IOError("Unable to write Attachment to disk using "\
                               "file_path. %s" % e) 
 
@@ -1228,16 +1230,16 @@ class Shotgun(object):
             self.set_up_auth_cookie()
    
         try:
-            request = urllib2.Request(url)
+            request = six.moves.urllib.request.Request(url)
             request.add_header('user-agent', "; ".join(self._user_agents))
-            req = urllib2.urlopen(request)
+            req = six.moves.urllib.request.urlopen(request)
             if file_path:
                 shutil.copyfileobj(req, fp)
             else:
                 attachment = req.read()
         # 400 [sg] Attachment id doesn't exist or is a local file
         # 403 [s3] link is invalid
-        except urllib2.URLError, e:
+        except six.moves.urllib.error.URLError as e:
             if file_path:
                 fp.close()
             err = "Failed to open %s\n%s" % (url, e)
@@ -1268,14 +1270,14 @@ class Shotgun(object):
         instance.
         """
         sid = self._get_session_token()
-        cj = cookielib.LWPCookieJar()
-        c = cookielib.Cookie('0', '_session_id', sid, None, False,
+        cj = six.moves.http_cookiejar.LWPCookieJar()
+        c = six.moves.http_cookiejar.Cookie('0', '_session_id', sid, None, False,
             self.config.server, False, False, "/", True, False, None, True,
             None, None, {})
         cj.set_cookie(c)
-        cookie_handler = urllib2.HTTPCookieProcessor(cj)
+        cookie_handler = six.moves.urllib.request.HTTPCookieProcessor(cj)
         opener = self._build_opener(cookie_handler)
-        urllib2.install_opener(opener)
+        six.moves.urllib.request.install_opener(opener)
 
     def get_attachment_download_url(self, attachment):
         """Returns the URL for downloading provided Attachment.
@@ -1313,8 +1315,8 @@ class Shotgun(object):
                 "dict, int, or NoneType. Instead got %s" % type(attachment))
 
         if attachment_id: 
-            url = urlparse.urlunparse((self.config.scheme, self.config.server,
-                "/file_serve/attachment/%s" % urllib.quote(str(attachment_id)),
+            url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
+                "/file_serve/attachment/%s" % six.moves.urllib.parse.quote(str(attachment_id)),
                 None, None, None))
         return url
 
@@ -1377,11 +1379,11 @@ class Shotgun(object):
             else:
                 auth_string = ""
             proxy_addr = "http://%s%s:%d" % (auth_string, self.config.proxy_server, self.config.proxy_port)
-            proxy_support = urllib2.ProxyHandler({self.config.scheme : proxy_addr})
+            proxy_support = six.moves.urllib.request.ProxyHandler({self.config.scheme : proxy_addr})
 
-            opener = urllib2.build_opener(proxy_support, handler)
+            opener = six.moves.urllib.request.build_opener(proxy_support, handler)
         else:
-            opener = urllib2.build_opener(handler)
+            opener = six.moves.urllib.request.build_opener(handler)
         return opener
 
     # Deprecated methods from old wrapper
@@ -1417,7 +1419,7 @@ class Shotgun(object):
         LOG.debug("Completed rpc call to %s" % (method))
         try:
             self._parse_http_status(http_status)
-        except ProtocolError, e:
+        except ProtocolError as e:
             e.headers = resp_headers
             # 403 is returned with custom error page when api access is blocked
             if e.errcode == 403:
@@ -1486,7 +1488,7 @@ class Shotgun(object):
         """
 
         wire = json.dumps(payload, ensure_ascii=False)
-        if isinstance(wire, unicode):
+        if isinstance(wire, six.text_type):
             return wire.encode("utf-8")
         return wire
 
@@ -1519,7 +1521,7 @@ class Shotgun(object):
     def _http_request(self, verb, path, body, headers):
         """Makes the actual HTTP request.
         """
-        url = urlparse.urlunparse((self.config.scheme, self.config.server,
+        url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
             path, None, None, None))
         LOG.debug("Request is %s:%s" % (verb, url))
         LOG.debug("Request headers are %s" % headers)
@@ -1532,7 +1534,7 @@ class Shotgun(object):
         http_status = (resp.status, resp.reason)
         resp_headers = dict(
             (k.lower(), v)
-            for k, v in resp.iteritems()
+            for k, v in six.iteritems(resp)
         )
         resp_body = content
 
@@ -1592,7 +1594,7 @@ class Shotgun(object):
         def _decode_list(lst):
             newlist = []
             for i in lst:
-                if isinstance(i, unicode):
+                if isinstance(i, six.text_type):
                     i = i.encode('utf-8')
                 elif isinstance(i, list):
                     i = _decode_list(i)
@@ -1601,10 +1603,10 @@ class Shotgun(object):
 
         def _decode_dict(dct):
             newdict = {}
-            for k, v in dct.iteritems():
-                if isinstance(k, unicode):
+            for k, v in six.iteritems(dct):
+                if isinstance(k, six.text_type):
                     k = k.encode('utf-8')
-                if isinstance(v, unicode):
+                if isinstance(v, six.text_type):
                     v = v.encode('utf-8')
                 elif isinstance(v, list):
                     v = _decode_list(v)
@@ -1640,7 +1642,7 @@ class Shotgun(object):
         if isinstance(data, dict):
             return dict(
                 (k, recursive(v, visitor))
-                for k, v in data.iteritems()
+                for k, v in six.iteritems(data)
             )
 
         return visitor(data)
@@ -1704,7 +1706,7 @@ class Shotgun(object):
             _change_tz = None
 
         def _inbound_visitor(value):
-            if isinstance(value, basestring):
+            if isinstance(value, six.string_types):
                 if len(value) == 20 and self._DATE_TIME_PATTERN.match(value):
                     try:
                         # strptime was not on datetime in python2.4
@@ -1783,12 +1785,12 @@ class Shotgun(object):
                 continue
 
             # iterate over each item and check each field for possible injection
-            for k, v in rec.iteritems():
+            for k, v in six.iteritems(rec):
                 if not v:
                     continue
 
                 # Check for html entities in strings
-                if isinstance(v, types.StringTypes):
+                if isinstance(v, str):
                     rec[k] = rec[k].replace('&lt;', '<')
 
                 # check for thumbnail for older version (<3.3.0) of shotgun
@@ -1823,8 +1825,8 @@ class Shotgun(object):
         # curl "https://foo.com/upload/get_thumbnail_url?entity_type=Version&entity_id=1"
         # 1
         # /files/0000/0000/0012/232/shot_thumb.jpg.jpg
-        entity_info = {'e_type':urllib.quote(entity_type),
-                       'e_id':urllib.quote(str(entity_id))}
+        entity_info = {'e_type':six.moves.urllib.parse.quote(entity_type),
+                       'e_id':six.moves.urllib.parse.quote(str(entity_id))}
         url = ("/upload/get_thumbnail_url?" +
                 "entity_type=%(e_type)s&entity_id=%(e_id)s" % entity_info)
 
@@ -1838,7 +1840,7 @@ class Shotgun(object):
             raise ShotgunError(thumb_url)
 
         if code == 1:
-            return urlparse.urlunparse((self.config.scheme,
+            return six.moves.urllib.parse.urlunparse((self.config.scheme,
                 self.config.server, thumb_url.strip(), None, None, None))
 
         # Comments in prev version said we can get this sometimes.
@@ -1853,22 +1855,22 @@ class Shotgun(object):
 
         return [
             {key_name : k, value_name : v }
-            for k, v in (d or {}).iteritems()
+            for k, v in six.iteritems((d or {}))
         ]
 
 
 # Helpers from the previous API, left as is.
 
 # Based on http://code.activestate.com/recipes/146306/
-class FormPostHandler(urllib2.BaseHandler):
+class FormPostHandler(six.moves.urllib.request.BaseHandler):
     """
     Handler for multipart form data
     """
-    handler_order = urllib2.HTTPHandler.handler_order - 10 # needs to run first
+    handler_order = six.moves.urllib.request.HTTPHandler.handler_order - 10 # needs to run first
 
     def http_request(self, request):
         data = request.get_data()
-        if data is not None and not isinstance(data, basestring):
+        if data is not None and not isinstance(data, six.string_types):
             files = []
             params = []
             for key, value in data.items():
@@ -1877,7 +1879,7 @@ class FormPostHandler(urllib2.BaseHandler):
                 else:
                     params.append((key, value))
             if not files:
-                data = urllib.urlencode(params, True) # sequencing on
+                data = six.moves.urllib.parse.urlencode(params, True) # sequencing on
             else:
                 boundary, data = self.encode(params, files)
                 content_type = 'multipart/form-data; boundary=%s' % boundary
