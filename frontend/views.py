@@ -62,6 +62,7 @@ def input_form(request):
     }))
     return HttpResponse(template.render(context))
 
+
 def heal_form(request):
     template = loader.get_template("heal.html")
     if request.method == 'POST':
