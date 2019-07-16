@@ -30,7 +30,6 @@ app.conf.update(
 
 
 def enqueue_encode(veda_id, encode_profile, job_id, update_val_status=True):
-<<<<<<< HEAD
     """
     Send an encode request to the remote encode worker.
     """
