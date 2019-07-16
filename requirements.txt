@@ -17,7 +17,6 @@ boto
 pyyaml
 requests==2.18.4
 urllib3==1.22
-configparser
 celery==4.1.1
 pysrt==1.1.1
 MySQL-python==1.2.5
