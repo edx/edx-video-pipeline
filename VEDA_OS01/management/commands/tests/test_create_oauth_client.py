@@ -110,9 +110,6 @@ class CreateOauthAppClientTests(TestCase):
         },
         {
             'client_id': '    ',
-        },
-        {
-            'client_id': None,
         }
     )
     @ddt.unpack
