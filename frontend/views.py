@@ -37,12 +37,12 @@ def index(request):
         linkers = links
     template = loader.get_template('index.html')
 
-    context = RequestContext(request, ({
+    context = {
         'links': linkers,
         'auth': auth
-    }))
+    }
 
-    return HttpResponse(template.render(context))
+    return HttpResponse(template.render(context=context, request=request))
 
 
 def input_form(request):
@@ -58,10 +58,10 @@ def input_form(request):
     inst_list = json.dumps(VC1.inst_list)
 
     template = loader.get_template('course_form.html')
-    context = RequestContext(request, ({
+    context = {
         'institution_list': inst_list
-    }))
-    return HttpResponse(template.render(context))
+    }
+    return HttpResponse(template.render(context=context, request=request))
 
 
 def heal_form(request):
@@ -75,8 +75,8 @@ def heal_form(request):
                     connect_timeout=3
                     )
         context = {'result': result}
-        return render(request, "heal.html", context)
-    return render(request, "heal.html")
+        return HttpResponse(render(context=context, request=request))
+    return HttpResponse(template.render(request=request))
 
 
 def institution_name(request):
@@ -207,24 +207,20 @@ def upload_alpha_1(request):
     ).digest())
     template = loader.get_template('upload_video.html')
 
-    context = RequestContext(
-        request, ({
+    context = {
             'policy': policy,
             'signature': signature,
             'abvid_serial': abvid_serial,
             'access_key': auth_dict['veda_access_key_id'],
             'upload_bucket': auth_dict['veda_upload_bucket'],
-        })
-    )
-    return HttpResponse(template.render(context))
+    }
+
+    return HttpResponse(template.render(context=context, request=request))
 
 
 def upload_success(request):
     template = loader.get_template('upload_success.html')
-    context = RequestContext(
-        request, ({})
-    )
-    return HttpResponse(template.render(context))
+    return HttpResponse(template.render(request=request))
 
 
 def about_input(request):
