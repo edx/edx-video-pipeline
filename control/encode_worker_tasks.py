@@ -8,7 +8,6 @@ from celery import Celery
 from VEDA.utils import get_config
 
 auth_dict = get_config()
-encode_worker_queue = auth_dict['celery_worker_medium_queue'].strip()
 
 CEL_BROKER = 'redis://:@{redis_broker}:6379/0'.format(redis_broker=auth_dict['redis_broker'])
 
@@ -30,7 +29,7 @@ app.conf.update(
 )
 
 
-def enqueue_encode(veda_id, encode_profile, job_id, update_val_status=True):
+def enqueue_encode(veda_id, encode_profile, job_id, encode_worker_queue, update_val_status=True):
     """
     Send an encode request to the remote encode worker.
     """

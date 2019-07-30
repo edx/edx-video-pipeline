@@ -141,7 +141,7 @@ def enqueue_video_for_hls_encode(veda_id, encode_queue):
     Enqueue HLS encoding task.
     """
     task_id = uuid.uuid1().hex[0:10]
-    enqueue_encode(veda_id, 'hls', task_id, False)
+    enqueue_encode(veda_id, 'hls', task_id, encode_queue, update_val_status=False)
 
 
 class Command(BaseCommand):
@@ -222,7 +222,7 @@ class Command(BaseCommand):
             # Result will be None if we are Unable
             # to retrieve edxval Token.
             if edx_video_ids is None:
-                LOGGER.info('Unable to get edxval Token.')
+                LOGGER.error('Unable to get edxval Token.')
                 return
 
             veda_videos = Video.objects.filter(Q(studio_id__in=edx_video_ids) | Q(edx_id__in=edx_video_ids))
@@ -253,10 +253,11 @@ class Command(BaseCommand):
             if commit:
                 api_url, headers = get_api_url_and_auth_headers()
                 if not headers:
-                    LOGGER.info('No headers. Unable to get VAL token.')
+                    LOGGER.error('No headers. Unable to get VAL token.')
                     return
 
                 for veda_id in veda_video_ids:
+                    LOGGER.info('Processing veda_id %s', veda_id)
                     video = veda_videos.filter(edx_id=veda_id).latest()
                     if veda_id in videos_with_hls_encodes:
                         # Update the URL's value in edxval directly
@@ -312,10 +313,12 @@ class Command(BaseCommand):
                             )
 
                     # Disable transcription
+
                     video.process_transcription = False
                     video.save()
 
                     # Enqueue video for HLS re-encode.
+                    LOGGER.info('Enqueueing id %s for hls encode', veda_id)
                     enqueue_video_for_hls_encode(
                         veda_id=veda_id,
                         encode_queue=settings['celery_worker_low_queue']

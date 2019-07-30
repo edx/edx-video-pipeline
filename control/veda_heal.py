@@ -47,6 +47,7 @@ class VedaHeal(object):
         self.val_status = None
         self.retry_barrier_hours = 24
         self.no_audio = kwargs.get('no_audio', False)
+        self.encode_worker_queue = self.auth_dict['celery_worker_medium_queue'].strip()
 
     def discovery(self):
         self.video_query = Video.objects.filter(
@@ -107,7 +108,7 @@ class VedaHeal(object):
                 veda_id = v.edx_id
                 encode_profile = encode
                 job_id = uuid.uuid1().hex[0:10]
-                enqueue_encode(veda_id, encode_profile, job_id)
+                enqueue_encode(veda_id, encode_profile, job_id, self.encode_worker_queue)
 
             # Update Status
             LOGGER.info('[ENQUEUE] {studio_id} | {video_id}: file enqueued for encoding'.format(
