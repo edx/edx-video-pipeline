@@ -24,7 +24,7 @@ from six import text_type
 
 from VEDA_OS01.models import Video, EncodeVideosForHlsConfiguration, URL, Encode
 from VEDA.utils import get_config
-from encode_worker_tasks import enqueue_encode
+from control.encode_worker_tasks import enqueue_encode
 
 LOGGER = logging.getLogger(__name__)
 
