@@ -75,7 +75,7 @@ def heal_form(request):
                     connect_timeout=3
                     )
         context = {'result': result}
-        return HttpResponse(render(context=context, request=request))
+        return HttpResponse(template.render(context=context, request=request))
     return HttpResponse(template.render(request=request))
 
 
