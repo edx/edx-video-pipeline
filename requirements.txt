@@ -1,4 +1,4 @@
-django==1.11.22
+django==1.11.23
 djangorestframework==3.6.4
 django-config-models==0.2.2
 django-cors-headers
@@ -15,8 +15,8 @@ uwsgi
 pysftp
 boto
 pyyaml
-requests==2.18.4
-urllib3==1.22
+requests==2.22.0
+urllib3==1.25.3
 celery==4.1.1
 pysrt==1.1.1
 MySQL-python==1.2.5
@@ -24,4 +24,4 @@ gunicorn==0.17.4
 gevent==1.2.2
 six==1.11.0
 redis==2.10.6
-paramiko==2.4.1
+paramiko==2.4.3
