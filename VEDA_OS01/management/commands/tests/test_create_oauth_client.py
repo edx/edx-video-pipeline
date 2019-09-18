@@ -102,7 +102,7 @@ class CreateOauthAppClientTests(TestCase):
         with self.assertRaises(CommandError) as exc:
             self._call_command(args, {})
 
-        self.assertIn(err_msg, exc.exception.message)
+            self.assertIn(err_msg, str(exc.exception))
 
     @ddt.data(
         {
@@ -122,7 +122,7 @@ class CreateOauthAppClientTests(TestCase):
 
         self.assertEqual(
             'Client id provided is invalid.',
-            exc.exception.message
+            str(exc.exception)
         )
 
     def test_client_type_validation(self):
@@ -134,7 +134,7 @@ class CreateOauthAppClientTests(TestCase):
 
         self.assertEqual(
             'Client type provided is invalid. Please use one of {}.'.format(CLIENT_TYPES),
-            exc.exception.message
+            str(exc.exception)
         )
 
     def test_grant_type_validation(self):
@@ -146,7 +146,7 @@ class CreateOauthAppClientTests(TestCase):
 
         self.assertEqual(
             'Grant type provided is invalid. Please use one of {}.'.format(GRANT_TYPES),
-            exc.exception.message
+            str(exc.exception)
         )
 
     def test_username_validation(self):
@@ -161,7 +161,7 @@ class CreateOauthAppClientTests(TestCase):
 
         self.assertEqual(
             'User matching the provided username does not exist.',
-            exc.exception.message
+            str(exc.exception)
         )
 
     def test_url_validation(self):
@@ -174,7 +174,7 @@ class CreateOauthAppClientTests(TestCase):
 
         self.assertEqual(
             'URIs provided are invalid. Please provide valid redirect URIs.',
-            exc.exception.message
+            str(exc.exception)
         )
 
     def test_idempotency(self):

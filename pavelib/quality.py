@@ -34,7 +34,7 @@ def run_pep8(options):
     """
     violations_limit = int(getattr(options, 'limit', -1))
 
-    sh('pep8 . | tee {report_dir}/pep8.report'.format(report_dir=REPORTS_DIR))
+    sh('pep8 {packages} | tee {report_dir}/pep8.report'.format(packages=PACKAGES, report_dir=REPORTS_DIR))
 
     num_violations, __ = _count_pep8_violations(
         '{report_dir}/pep8.report'.format(report_dir=REPORTS_DIR)

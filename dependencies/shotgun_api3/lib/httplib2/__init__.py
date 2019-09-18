@@ -31,10 +31,9 @@ __version__ = "0.7.0"
 import re
 import sys
 import email
-import email.Utils
-import email.Message
-import email.FeedParser
-import StringIO
+import email.utils
+import email.message
+import email.feedparser
 import gzip
 import zlib
 import six.moves.http_client
@@ -386,7 +385,7 @@ def _decompressContent(response, new_content):
         encoding = response.get('content-encoding', None)
         if encoding in ['gzip', 'deflate']:
             if encoding == 'gzip':
-                content = gzip.GzipFile(fileobj=StringIO.StringIO(new_content)).read()
+                content = gzip.GzipFile(fileobj=six.StringIO(new_content)).read()
             if encoding == 'deflate':
                 content = zlib.decompress(content)
             response['content-length'] = str(len(content))
@@ -405,7 +404,7 @@ def _updateCache(request_headers, response_headers, content, cache, cachekey):
         if 'no-store' in cc or 'no-store' in cc_response:
             cache.delete(cachekey)
         else:
-            info = email.Message.Message()
+            info = email.message.Message()
             for key, value in six.iteritems(response_headers):
                 if key not in ['status','content-encoding','transfer-encoding']:
                     info[key] = value
@@ -1332,7 +1331,7 @@ a string that contains the response entity body.
             if 'range' not in headers and 'accept-encoding' not in headers:
                 headers['accept-encoding'] = 'gzip, deflate'
 
-            info = email.Message.Message()
+            info = email.message.Message()
             cached_value = None
             if self.cache:
                 cachekey = defrag_uri
@@ -1345,7 +1344,7 @@ a string that contains the response entity body.
                     # bug report: http://mail.python.org/pipermail/python-bugs-list/2005-September/030289.html
                     try:
                         info, content = cached_value.split('\r\n\r\n', 1)
-                        feedparser = email.FeedParser.FeedParser()
+                        feedparser = email.feedparser.FeedParser()
                         feedparser.feed(info)
                         info = feedparser.close()
                         feedparser._parse = None
@@ -1475,7 +1474,7 @@ a string that contains the response entity body.
 
 
 class Response(dict):
-    """An object more like email.Message than httplib.HTTPResponse."""
+    """An object more like email.message than httplib.HTTPResponse."""
 
     """Is this response from our local cache"""
     fromcache = False
@@ -1492,7 +1491,7 @@ class Response(dict):
     previous = None
 
     def __init__(self, info):
-        # info is either an email.Message or
+        # info is either an email.message or
         # an httplib.HTTPResponse object.
         if isinstance(info, six.moves.http_client.HTTPResponse):
             for key, value in info.getheaders():
@@ -1501,7 +1500,7 @@ class Response(dict):
             self['status'] = str(self.status)
             self.reason = info.reason
             self.version = info.version
-        elif isinstance(info, email.Message.Message):
+        elif isinstance(info, email.message.Message):
             for key, value in info.items():
                 self[key] = value
             self.status = int(self['status'])

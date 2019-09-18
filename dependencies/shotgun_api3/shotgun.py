@@ -32,11 +32,10 @@
 
 from __future__ import absolute_import
 import base64
+import email.generator
 import six.moves.http_cookiejar    # used for attachment upload
-import cStringIO    # used for attachment upload
 import datetime
 import logging
-import mimetools    # used for attachment upload
 import mimetypes    # used for attachment upload
 import os
 import re
@@ -242,7 +241,7 @@ class Shotgun(object):
         form [username:pass@]proxy.com[:8080]
 
         :param connect: If True, connect to the server. Only used for testing.
-		
+
 		:param ca_certs: The path to the SSL certificate file. Useful for users
 		who would like to package their application into an executable.
         """
@@ -801,60 +800,60 @@ class Shotgun(object):
 
     def follow(self, user, entity):
         """Adds the entity to the user's followed entities (or does nothing if the user is already following the entity)
-        
+
         :param dict user: User entity to follow the entity
         :param dict entity: Entity to be followed
-        
+
         :returns: dict with 'followed'=true, and dicts for the 'user' and 'entity' that were passed in
         """
 
         if not self.server_caps.version or self.server_caps.version < (5, 1, 22):
             raise ShotgunError("Follow support requires server version 5.2 or "\
                 "higher, server is %s" % (self.server_caps.version,))
-        
+
         params = dict(
             user=user,
             entity=entity
         )
-        
+
         return self._call_rpc('follow', params)
 
     def unfollow(self, user, entity):
         """Removes entity from the user's followed entities (or does nothing if the user is not following the entity)
-        
+
         :param dict user: User entity to unfollow the entity
         :param dict entity: Entity to be unfollowed
-        
+
         :returns: dict with 'unfollowed'=true, and dicts for the 'user' and 'entity' that were passed in
         """
 
         if not self.server_caps.version or self.server_caps.version < (5, 1, 22):
             raise ShotgunError("Follow support requires server version 5.2 or "\
                 "higher, server is %s" % (self.server_caps.version,))
-        
+
         params = dict(
             user=user,
             entity=entity
         )
-        
+
         return self._call_rpc('unfollow', params)
 
     def followers(self, entity):
         """Gets all followers of the entity.
-        
+
         :param dict entity: Find all followers of this entity
-        
+
         :returns list of dicts for all the users following the entity
         """
 
         if not self.server_caps.version or self.server_caps.version < (5, 1, 22):
             raise ShotgunError("Follow support requires server version 5.2 or "\
                 "higher, server is %s" % (self.server_caps.version,))
-        
+
         params = dict(
             entity=entity
         )
-        
+
         return self._call_rpc('followers', params)
 
     def schema_entity_read(self):
@@ -1176,16 +1175,16 @@ class Shotgun(object):
         attachment_id = int(str(result).split(":")[1].split("\n")[0])
         return attachment_id
 
-    def download_attachment(self, attachment=False, file_path=None, 
+    def download_attachment(self, attachment=False, file_path=None,
                             attachment_id=None):
         """Downloads the file associated with a Shotgun Attachment.
 
-        NOTE: On older (< v5.1.0) Shotgun versions, non-downloadable files 
-        on Shotgun don't raise exceptions, they cause a server error which 
+        NOTE: On older (< v5.1.0) Shotgun versions, non-downloadable files
+        on Shotgun don't raise exceptions, they cause a server error which
         returns a 200 with the page content.
 
         :param attachment: (mixed) Usually a dict representing an Attachment.
-        The dict should have a 'url' key that specifies the download url. 
+        The dict should have a 'url' key that specifies the download url.
         Optionally, the dict can be a standard entity hash format with 'id' and
         'type' keys as long as 'type'=='Attachment'. This is only supported for
         backwards compatibility (#22150).
@@ -1193,19 +1192,19 @@ class Shotgun(object):
         be downloaded from the Shotgun server.
 
         :param file_path: (str) Optional. If provided, write the data directly
-        to local disk using the file_path. This avoids loading all of the data 
+        to local disk using the file_path. This avoids loading all of the data
         in memory and saves the file locally which is probably what is desired
-        anyway. 
+        anyway.
 
-        :param attachment_id: (int) Optional. Deprecated in favor of passing in 
+        :param attachment_id: (int) Optional. Deprecated in favor of passing in
         Attachment hash to attachment param. This attachment_id exists only for
         backwards compatibility for scripts specifying the parameter with
         keywords.
 
-        :returns: (str) If file_path is None, returns data of the Attachment 
+        :returns: (str) If file_path is None, returns data of the Attachment
         file as a string. If file_path is provided, returns file_path.
         """
-        # backwards compatibility when passed via keyword argument 
+        # backwards compatibility when passed via keyword argument
         if attachment is False:
             if type(attachment_id) == int:
                 attachment = attachment_id
@@ -1219,7 +1218,7 @@ class Shotgun(object):
                 fp = open(file_path, 'wb')
             except IOError as e:
                 raise IOError("Unable to write Attachment to disk using "\
-                              "file_path. %s" % e) 
+                              "file_path. %s" % e)
 
         url = self.get_attachment_download_url(attachment)
         if url is None:
@@ -1228,7 +1227,7 @@ class Shotgun(object):
         # We only need to set the auth cookie for downloads from Shotgun server
         if self.config.server in url:
             self.set_up_auth_cookie()
-   
+
         try:
             request = six.moves.urllib.request.Request(url)
             request.add_header('user-agent', "; ".join(self._user_agents))
@@ -1247,7 +1246,7 @@ class Shotgun(object):
                 if e.code == 400:
                     err += "\nAttachment may not exist or is a local file?"
                 elif e.code == 403:
-                    # Only parse the body if it is an Amazon S3 url. 
+                    # Only parse the body if it is an Amazon S3 url.
                     if url.find('s3.amazonaws.com') != -1 \
                         and e.headers['content-type'] == 'application/xml':
                         body = e.readlines()
@@ -1266,7 +1265,7 @@ class Shotgun(object):
                 return attachment
 
     def set_up_auth_cookie(self):
-        """Sets up urllib2 with a cookie for authentication on the Shotgun 
+        """Sets up urllib2 with a cookie for authentication on the Shotgun
         instance.
         """
         sid = self._get_session_token()
@@ -1283,12 +1282,12 @@ class Shotgun(object):
         """Returns the URL for downloading provided Attachment.
 
         :param attachment: (mixed) If type is an int, construct url to download
-        Attachment with id from Shotgun. 
-        If type is a dict, and a url key is present, use that url. 
+        Attachment with id from Shotgun.
+        If type is a dict, and a url key is present, use that url.
         If type is a dict, and url key is not present, check if we have
-        an id and type keys and the type is 'Attachment' in which case we 
+        an id and type keys and the type is 'Attachment' in which case we
         construct url to download Attachment with id from Shotgun as if just
-        the id has been passed in. 
+        the id has been passed in.
 
         :todo: Support for a standard entity hash should be removed: #22150
 
@@ -1303,7 +1302,7 @@ class Shotgun(object):
             try:
                 url = attachment['url']
             except KeyError:
-                if ('id' in attachment and 'type' in attachment and 
+                if ('id' in attachment and 'type' in attachment and
                     attachment['type'] == 'Attachment'):
                     attachment_id = attachment['id']
                 else:
@@ -1314,7 +1313,7 @@ class Shotgun(object):
             raise TypeError("Unable to determine download url. Expected "\
                 "dict, int, or NoneType. Instead got %s" % type(attachment))
 
-        if attachment_id: 
+        if attachment_id:
             url = six.moves.urllib.parse.urlunparse((self.config.scheme, self.config.server,
                 "/file_serve/attachment/%s" % six.moves.urllib.parse.quote(str(attachment_id)),
                 None, None, None))
@@ -1331,7 +1330,7 @@ class Shotgun(object):
 
         if not user_password:
             raise ValueError('Please supply a password for the user.')
-            
+
         # Override permissions on Config obj
         self.config.user_login = user_login
         self.config.user_password = user_password
@@ -1889,9 +1888,9 @@ class FormPostHandler(six.moves.urllib.request.BaseHandler):
 
     def encode(self, params, files, boundary=None, buffer=None):
         if boundary is None:
-            boundary = mimetools.choose_boundary()
+            boundary = email.generator._make_boundary()
         if buffer is None:
-            buffer = cStringIO.StringIO()
+            buffer = six.StringIO()
         for (key, value) in params:
             buffer.write('--%s\r\n' % boundary)
             buffer.write('Content-Disposition: form-data; name="%s"' % key)
@@ -1930,7 +1929,7 @@ def _translate_filters(filters, filter_operator):
 def _translate_filters_dict(sg_filter):
     new_filters = {}
     filter_operator = sg_filter.get("filter_operator")
-    
+
     if filter_operator == "all" or filter_operator == "and":
         new_filters["logical_operator"] = "and"
     elif filter_operator == "any" or filter_operator == "or":
@@ -1940,14 +1939,14 @@ def _translate_filters_dict(sg_filter):
 
     if not isinstance(sg_filter["filters"], (list,tuple)):
         raise ShotgunError("Invalid filters, expected a list or a tuple, got %s" % sg_filter["filters"])
-        
+
     new_filters["conditions"] = _translate_filters_list(sg_filter["filters"])
-    
+
     return new_filters
-    
+
 def _translate_filters_list(filters):
     conditions = []
-    
+
     for sg_filter in filters:
         if isinstance(sg_filter, (list,tuple)):
             conditions.append(_translate_filters_simple(sg_filter))
@@ -1955,7 +1954,7 @@ def _translate_filters_list(filters):
             conditions.append(_translate_filters_dict(sg_filter))
         else:
             raise ShotgunError("Invalid filters, expected a list, tuple or dict, got %s" % sg_filter)
-    
+
     return conditions
 
 def _translate_filters_simple(sg_filter):
@@ -1963,7 +1962,7 @@ def _translate_filters_simple(sg_filter):
         "path": sg_filter[0],
         "relation": sg_filter[1]
     }
-    
+
     values = sg_filter[2:]
     if len(values) == 1 and isinstance(values[0], (list, tuple)):
         values = values[0]
@@ -1972,4 +1971,4 @@ def _translate_filters_simple(sg_filter):
 
     return condition
 
-     
+
