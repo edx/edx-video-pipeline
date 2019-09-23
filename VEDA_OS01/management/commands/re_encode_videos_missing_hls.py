@@ -15,6 +15,8 @@ import ast
 import logging
 import uuid
 
+import boto
+
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models.query_utils import Q
 from opaque_keys import InvalidKeyError
@@ -27,7 +29,7 @@ from VEDA.utils import get_config
 from control.encode_worker_tasks import enqueue_encode
 
 LOGGER = logging.getLogger(__name__)
-
+BUCKET_NAME = 'veda-hotstore'
 
 def get_auth_token(settings):
     """
@@ -327,4 +329,38 @@ class Command(BaseCommand):
                 config.increment_run()
                 config.update_offset()
             else:
+                videos_not_in_hotstore = 0
+                for veda_id in veda_video_ids:
+                    if source_video_not_in_hotstore(veda_id):
+                        videos_not_in_hotstore += 1
+                        LOGGER.info('VEDA ID %s not found in hotstore', veda_id)
+                LOGGER.info('Number of videos missing source: %d', videos_not_in_hotstore)
                 LOGGER.info('[run=%s] Dry run is complete.', config.command_run)
+
+
+def source_video_not_in_hotstore(video_id):
+    try:
+        video = Video.objects.filter(edx_id=video_id).latest()
+    except Exception as e:
+        LOGGER.error('Exception during VEDA lookup: %s', e)
+        return True
+    if not video:
+        LOGGER.error('Video ID %s not found in VEDA', video_id)
+        return True
+
+    conn = boto.connect_s3()
+    bucket = conn.get_bucket(BUCKET_NAME)
+
+    if not video.video_orig_extension:
+        LOGGER.info('Cannot look up %s, unknown extension', video_id)
+        return True
+    key_name = video.edx_id + '.' + video.video_orig_extension
+    try:
+        if not bucket.get_key(key_name):
+            return True
+        else:
+            return False
+    except Exception as e:
+        LOGGER.error('Exception during get_key: %s', e)
+        return True
+
