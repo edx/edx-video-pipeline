@@ -74,8 +74,9 @@ class HealTests(TestCase):
         url.save()
 
     @patch('control.veda_heal.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @patch('control.veda_val.OAuthAPIClient')
     @responses.activate
-    def test_heal(self):
+    def test_heal(self, mock_client_init):
         val_response = {
             'courses': [{u'WestonHS/PFLC1x/3T2015': None}],
             'encoded_videos': [{
@@ -85,12 +86,6 @@ class HealTests(TestCase):
                 'profile': 'mobile_low',
             }]
         }
-        responses.add(
-            responses.POST,
-            CONFIG_DATA['val_token_url'],
-            '{"access_token": "1234567890"}',
-            status=200
-        )
         responses.add(
             responses.GET,
             build_url(CONFIG_DATA['val_api_url'], self.video_id),

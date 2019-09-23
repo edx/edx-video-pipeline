@@ -30,9 +30,4 @@ for key, value in dict_updates.items():
 
 vars().update(CONFIG_DATA)
 
-JWT_AUTH = {
-    'JWT_SECRET_KEY': CONFIG_DATA['val_secret_key'],
-    'JWT_ISSUER': '{}/oauth2'.format(CONFIG_DATA['lms_base_url'].rstrip('/')),
-    'JWT_AUDIENCE': CONFIG_DATA['val_client_id'],
-    'JWT_VERIFY_AUDIENCE': True,
-}
+

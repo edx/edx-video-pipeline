@@ -1,12 +1,11 @@
 
 from __future__ import absolute_import
-import ast
 import os
 import sys
 from django.test import TestCase
 from ddt import data, ddt, unpack
 
-from mock import PropertyMock, patch
+from mock import Mock, PropertyMock, patch
 
 import requests
 import urllib3
@@ -31,7 +30,6 @@ CONFIG_DATA = utils.get_config('test_config.yaml')
 
 @ddt
 class TestVALAPI(TestCase):
-
     def setUp(self):
         self.VP = VideoProto(
             client_title='Test Title',
@@ -48,15 +46,13 @@ class TestVALAPI(TestCase):
 
     def test_val_setup(self):
         # register val url to send api response
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
+        responses.add(responses.POST, CONFIG_DATA['oauth2_provider_url'], '{"access_token": "1234567890"}', status=200)
 
         salient_variables = [
             'val_api_url',
-            'val_client_id',
-            'val_password',
-            'val_secret_key',
-            'val_username',
-            'val_token_url',
+            'oauth2_client_id',
+            'oauth2_client_secret',
+            'oauth2_provider_url',
         ]
         for salient_variable in salient_variables:
             self.assertTrue(len(self.VAC.auth_dict[salient_variable]) > 0)
@@ -64,11 +60,7 @@ class TestVALAPI(TestCase):
     @responses.activate
     def test_val_connection(self):
         # register val url to send api response
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
         responses.add(responses.GET, CONFIG_DATA['val_api_url'], status=200)
-
-        self.VAC.val_tokengen()
-        self.assertFalse(self.VAC.val_token is None)
 
         response = requests.get(
             self.VAC.auth_dict['val_api_url'],
