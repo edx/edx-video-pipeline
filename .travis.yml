@@ -2,17 +2,25 @@ language: python
 
 python:
   - "2.7"
+  - "3.6"
+
+env:
+  - TOXENV=django111
+  - TOXENV=quality
 
 sudo: required
 
+cache: pip
+
 before_install:
   - export BOTO_CONFIG=/dev/null
+  - export DJANGO_SETTINGS_MODULE=VEDA.settings.test
 
 install:
   - make requirements
 
 script:
-  - make validate
+  - tox
 
 after_success:
   - pip install -U codecov

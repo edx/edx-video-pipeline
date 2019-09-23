@@ -119,7 +119,9 @@ class TestPaverQuality(unittest.TestCase):
             limit = options.get('limit', -1)
             mock_violation_message.assert_called_once_with('pep8', limit, 1)
             mock_quality_sh.assert_called_once_with(
-                'pep8 . | tee {report_dir}/pep8.report'.format(report_dir=pavelib.quality.REPORTS_DIR)
+                'pep8 {packages} | tee {report_dir}/pep8.report'.format(
+                    packages=pavelib.quality.PACKAGES, report_dir=pavelib.quality.REPORTS_DIR
+                )
             )
 
     @patch('pavelib.quality.sh')
@@ -134,7 +136,9 @@ class TestPaverQuality(unittest.TestCase):
 
             mock_violation_message.assert_called_once_with('pep8', 0, 1)
             mock_quality_sh.assert_called_once_with(
-                'pep8 . | tee {report_dir}/pep8.report'.format(report_dir=pavelib.quality.REPORTS_DIR)
+                'pep8 {packages} | tee {report_dir}/pep8.report'.format(
+                    packages=pavelib.quality.PACKAGES, report_dir=pavelib.quality.REPORTS_DIR
+                )
             )
 
     @data(
@@ -181,9 +185,9 @@ class TestPaverQuality(unittest.TestCase):
         Tests that run_pylint task works as expected for actual python code.
         """
         with patch('pavelib.quality.PACKAGES', [self.test_code_dir]):
-            call_task('pavelib.quality.run_pylint', options={'limit': 3})
+            call_task('pavelib.quality.run_pylint', options={'limit': 2})
 
-        mock_violation_message.assert_called_once_with('pylint', 3, 3)
+        mock_violation_message.assert_called_once_with('pylint', 2, 2)
 
     @patch('pavelib.quality.violation_message')
     def test_pylint_with_errors_only(self, mock_violation_message):

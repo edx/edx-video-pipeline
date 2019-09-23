@@ -3,9 +3,14 @@ import os
 import sys
 import logging
 
+import six
 from shotgun_api3.lib.httplib2 import Http, ProxyInfo, socks
 from shotgun_api3.lib.sgtimezone import SgTimezone
-from shotgun_api3.lib.xmlrpclib import Error, ProtocolError, ResponseError
+
+if six.PY3:
+    from xmlrpc.client import Error, ProtocolError, ResponseError
+else:
+    from shotgun_api3.lib.xmlrpclib import Error, ProtocolError, ResponseError
 
 
 LOG = logging.getLogger("shotgun_api3")

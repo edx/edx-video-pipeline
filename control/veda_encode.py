@@ -8,9 +8,13 @@ Get a list of needed encodes from VEDA
 from __future__ import absolute_import
 from .control_env import *
 from dependencies.shotgun_api3 import Shotgun
-from dependencies.shotgun_api3.lib.xmlrpclib import ProtocolError
 from VEDA.utils import get_config
 import six
+
+if six.PY3:
+    from xmlrpc.client import ProtocolError
+else:
+    from xmlrpclib import ProtocolError
 
 
 class VedaEncode(object):

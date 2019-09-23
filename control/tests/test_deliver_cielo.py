@@ -2,9 +2,13 @@
 Cielo24 transcription testing
 """
 from __future__ import absolute_import
+
+import json
+
 from django.test import TestCase
 
 import responses
+import six.moves.urllib.parse
 from ddt import ddt
 from mock import patch
 
@@ -75,8 +79,21 @@ class Cielo24TranscriptTests(TestCase):
         """
         Verify that `received_request` matches `expected_request`
         """
+        expected_parsed_url = six.moves.urllib.parse.urlparse(expected_request['url'])
+        expected_request_url = '{scheme}://{netloc}/{path}'.format(
+            scheme=expected_parsed_url.scheme, netloc=expected_parsed_url.netloc, path=expected_parsed_url.path
+        )
+        expected_request_params = dict(six.moves.urllib.parse.parse_qsl(expected_parsed_url.query))
+
+        received_parsed_url = six.moves.urllib.parse.urlparse(received_request.url)
+        received_request_url = '{scheme}://{netloc}/{path}'.format(
+            scheme=received_parsed_url.scheme, netloc=received_parsed_url.netloc, path=received_parsed_url.path
+        )
+        received_request_params = dict(six.moves.urllib.parse.parse_qsl(received_parsed_url.query))
+
         self.assertEqual(received_request.method, expected_request['method'])
-        self.assertEqual(received_request.url, expected_request['url'])
+        self.assertEqual(received_request_url, expected_request_url)
+        self.assertDictEqual(received_request_params, expected_request_params)
         self.assertEqual(received_request.body, expected_request['body'])
 
     @responses.activate
@@ -94,19 +111,19 @@ class Cielo24TranscriptTests(TestCase):
         responses.add(
             responses.GET,
             self.cielo24_url(cielo24, cielo24.cielo24_new_job),
-            body={'JobId': job_id},
+            body=json.dumps({'JobId': job_id}),
             status=200
         )
         responses.add(
             responses.GET,
             self.cielo24_url(cielo24, cielo24.cielo24_add_media),
-            body={'TaskId': '000-000-111'},
+            body=json.dumps({'TaskId': '000-000-111'}),
             status=200
         )
         responses.add(
             responses.GET,
             self.cielo24_url(cielo24, cielo24.cielo24_perform_transcription),
-            body={'TaskId': '000-000-000'},
+            body=json.dumps({'TaskId': '000-000-000'}),
             status=200
         )
 
@@ -198,7 +215,7 @@ class Cielo24TranscriptTests(TestCase):
         responses.add(
             responses.GET,
             self.cielo24_url(cielo24, cielo24.cielo24_new_job),
-            body={'JobId': job_id},
+            body=json.dumps({'JobId': job_id}),
             status=200
         )
         responses.add(

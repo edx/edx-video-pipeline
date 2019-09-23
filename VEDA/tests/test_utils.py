@@ -8,6 +8,7 @@ import shutil
 import tempfile
 from unittest import TestCase
 
+import six.moves.urllib.parse
 import yaml
 from ddt import data, ddt, unpack
 from mock import MagicMock, Mock, patch
@@ -75,32 +76,27 @@ class UtilTests(TestCase):
     @data(
         {
             'urls': ('http://api.cielo24/', '/add/job'),
-            'params': {},
-            'expected_url': 'http://api.cielo24/add/job'
+            'params': {}
         },
         {
             'urls': ('http://api.cielo24', '/add/job'),
-            'params': {'a': 1, 'b': 2},
-            'expected_url': 'http://api.cielo24/add/job?a=1&b=2'
+            'params': {'a': '1', 'b': '2'}
         },
         {
             'urls': ('http://api.cielo24/', 'add/job'),
-            'params': {'c': 3, 'd': 4},
-            'expected_url': 'http://api.cielo24/add/job?c=3&d=4'
+            'params': {'c': '3', 'd': '4'}
         },
         {
             'urls': ('http://api.cielo24', 'add/job'),
-            'params': {'p': 100},
-            'expected_url': 'http://api.cielo24/add/job?p=100'
+            'params': {'p': '100'}
         },
         {
             'urls': ('http://api.cielo24', 'add/job', 'media'),
-            'params': {'p': 100},
-            'expected_url': 'http://api.cielo24/add/job/media?p=100'
+            'params': {'p': '100'}
         }
     )
     @unpack
-    def test_build_url(self, urls, params, expected_url):
+    def test_build_url(self, urls, params):
         """
         Tests that utils.build_url works as expected.
         """
@@ -108,10 +104,16 @@ class UtilTests(TestCase):
             *urls,
             **params
         )
-        self.assertEqual(
-            url,
-            expected_url
+        parsed = six.moves.urllib.parse.urlparse(url)
+        expected_query_params = six.moves.urllib.parse.parse_qsl(parsed.query)
+        expected_url = '/'.join(item.strip('/') for item in urls if item)
+
+        self.assertDictEqual(
+            params,
+            dict(expected_query_params)
         )
+
+        self.assertTrue(url.startswith(expected_url))
 
     @data(
         {
@@ -186,28 +188,27 @@ class UtilTests(TestCase):
         {
             'url': 'http://sandbox.edx.org/do?aaa=11&vvv=234',
             'params_to_scrub': ['aaa'],
-            'expected_url': 'http://sandbox.edx.org/do?vvv=234&aaa=XX'
+            'expected_scrubbed_value': 'XX'
         },
         {
             'url': 'http://sandbox.edx.org/do?aaa=1&vvv=234',
             'params_to_scrub': ['aaa', 'vvv'],
-            'expected_url': 'http://sandbox.edx.org/do?vvv=XXX&aaa=X'
+            'expected_scrubbed_value': 'XXX'
         },
         {
             'url': 'http://sandbox.edx.org/do?aaa=1&vvv=234',
             'params_to_scrub': ['zzzz'],
-            'expected_url': 'http://sandbox.edx.org/do?vvv=234&aaa=1'
+            'expected_scrubbed_value': None
         },
     )
     @unpack
-    def test_scrub_query_params(self, url, params_to_scrub, expected_url):
+    def test_scrub_query_params(self, url, params_to_scrub, expected_scrubbed_value):
         """
         Tests that utils.scrub_query_params works as expected.
         """
-        self.assertEqual(
-            utils.scrub_query_params(url, params_to_scrub),
-            expected_url
-        )
+        scrubed_url = utils.scrub_query_params(url, params_to_scrub)
+        if expected_scrubbed_value:
+            self.assertIn(expected_scrubbed_value, scrubed_url)
 
 
 class DeleteDirectoryContentsTests(TestCase):

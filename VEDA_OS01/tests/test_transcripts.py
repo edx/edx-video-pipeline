@@ -293,7 +293,7 @@ class Cielo24TranscriptTests(APITestCase):
                 )
 
             self.assertEqual(
-                conversion_exception.exception.message,
+                str(conversion_exception.exception),
                 conversion_exception_message
             )
 
@@ -319,7 +319,7 @@ class Cielo24TranscriptTests(APITestCase):
                     )
 
             self.assertEqual(
-                s3_exception.exception.message,
+                str(s3_exception.exception),
                 s3_message
             )
 
