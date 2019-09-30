@@ -22,13 +22,6 @@ DATABASES = {
 }
 # END DATABASE CONFIGURATION
 
-JWT_AUTH.update({
-    'JWT_SECRET_KEY': 'lms-secret',
-    'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
-    'JWT_AUDIENCE': 'lms-key',
-    'JWT_VERIFY_AUDIENCE': False
-})
-
 LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
 
 # See if the developer has any local overrides.

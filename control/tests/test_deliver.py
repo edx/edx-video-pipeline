@@ -4,6 +4,7 @@ Veda Delivery unit tests
 from __future__ import absolute_import
 import os
 import unittest
+import datetime
 
 from django.test import TestCase
 
@@ -54,13 +55,13 @@ class VedaDeliverRunTest(TestCase):
         )
 
     @patch('control.veda_val.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @patch('control.veda_val.OAuthAPIClient.request')
     @responses.activate
-    def test_run(self):
+    def test_run(self, _):
         """
         Test of HLS run-through function
         """
         # VAL Patching
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
         responses.add(
             responses.GET,
             CONFIG_DATA['val_api_url'] + '/XXXXXXXX2014-V00TES1',
@@ -154,13 +155,13 @@ class VedaDeliverRunTest(TestCase):
         self.assertTrue(self.deliver_instance._VALIDATE_URL())
 
     @patch('control.veda_val.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @patch('control.veda_val.OAuthAPIClient.request')
     @responses.activate
-    def test_update_data(self):
+    def test_update_data(self, _):
         """
         Run test of VAL status / call
         """
         # VAL Patching
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
         responses.add(
             responses.GET,
             CONFIG_DATA['val_api_url'] + '/XXXXXXXX2014-V00TES1',

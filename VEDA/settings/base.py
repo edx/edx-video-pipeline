@@ -115,15 +115,6 @@ DATABASES = {
     }
 }
 
-# NOTE: JWT_SECRET_KEY is intentionally not set here to avoid production releases with a public value.
-# Set a value in a downstream settings file.
-JWT_AUTH = {
-    'JWT_AUDIENCE': 'video-pipeline',
-    'JWT_ISSUER': 'video-pipeline',
-    'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.auth.jwt.decoder.jwt_decode_handler',
-    'JWT_VERIFY_AUDIENCE': False,
-}
-
 REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_PARSER_CLASSES': (

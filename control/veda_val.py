@@ -5,11 +5,13 @@ Send data to VAL, either Video ID data or endpoint URLs
 
 from __future__ import absolute_import
 import logging
-import requests
 import urllib3
 import ast
 import json
+import datetime
 
+from django.core.cache import cache
+from edx_rest_api_client.client import OAuthAPIClient
 from .control_env import *
 from control.veda_utils import Output, VideoProto
 
@@ -58,53 +60,32 @@ class VALAPICall(object):
         self.val_profile = None
 
         """Generated"""
-        self.val_token = None
         self.val_data = None
         self.headers = None
 
         """Credentials"""
         self.auth_dict = kwargs.get('CONFIG_DATA', self._AUTH())
+        self.oauth2_provider_url = self.auth_dict['oauth2_provider_url']
+        self.oauth2_client_id = self.auth_dict['oauth2_client_id']
+        self.oauth2_client_secret = self.auth_dict['oauth2_client_secret']
+        self.oauth2_client = OAuthAPIClient(self.auth_dict['oauth2_provider_url'],
+                                            self.auth_dict['oauth2_client_id'],
+                                            self.auth_dict['oauth2_client_secret'])
+
+    def _AUTH(self):
+        return get_config()
 
     def call(self):
         if not self.auth_dict:
             return None
-
         """
         Errors covered in other methods
         """
-        if not self.val_token:
-            self.val_tokengen()
         if self.video_object:
             self.send_object_data()
             return
         if self.video_proto is not None:
             self.send_val_data()
-
-    def _AUTH(self):
-        return get_config()
-
-    def val_tokengen(self):
-        """
-        Generate a API token for VAL
-        """
-        payload = {
-            'grant_type': 'password',
-            'client_id': self.auth_dict['val_client_id'],
-            'client_secret': self.auth_dict['val_secret_key'],
-            'username': self.auth_dict['val_username'],
-            'password': self.auth_dict['val_password'],
-        }
-        r = requests.post(self.auth_dict['val_token_url'], data=payload, timeout=self.auth_dict['global_timeout'])
-
-        if r.status_code != 200:
-            LOGGER.error('[API] : VAL Token generation')
-            return
-
-        self.val_token = ast.literal_eval(r.text)['access_token']
-        self.headers = {
-            'Authorization': 'Bearer ' + self.val_token,
-            'content-type': 'application/json'
-        }
 
     def send_object_data(self):
         """
@@ -144,8 +125,6 @@ class VALAPICall(object):
         ## "PUT" for extant objects to video/id --
             cannot send duplicate course records
         '''
-        if not self.val_token:
-            return False
 
         if self.video_proto.s3_filename is None or \
                 len(self.video_proto.s3_filename) == 0:
@@ -202,14 +181,7 @@ class VALAPICall(object):
             'courses': val_courses
         }
 
-        r1 = requests.get(
-            '/'.join((
-                self.auth_dict['val_api_url'],
-                self.video_proto.val_id
-            )),
-            headers=self.headers,
-            timeout=self.auth_dict['global_timeout']
-        )
+        r1 = self.oauth2_client.request('GET', '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)))
 
         if r1.status_code != 200 and r1.status_code != 404:
             LOGGER.error('[API] : VAL Communication')
@@ -332,13 +304,9 @@ class VALAPICall(object):
             **self.val_data
         )
 
-        r2 = requests.post(
-            self.auth_dict['val_api_url'] + '/',
-            data=json.dumps(sending_data),
-            headers=self.headers,
-            timeout=self.auth_dict['global_timeout']
-        )
-
+        r2 = self.oauth2_client.request('POST',
+                                        '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)),
+                                        data=json.dumps(sending_data))
         if r2.status_code > 299:
             LOGGER.error('[API] : VAL POST/PUT {code}'.format(code=r2.status_code))
 
@@ -370,15 +338,9 @@ class VALAPICall(object):
         if self.should_update_status(self.encode_data, self.val_status) is False:
             return None
 
-        r4 = requests.put(
-            '/'.join((
-                self.auth_dict['val_api_url'],
-                self.video_proto.val_id,
-            )),
-            data=json.dumps(sending_data),
-            headers=self.headers,
-            timeout=self.auth_dict['global_timeout']
-        )
+        r4 = self.oauth2_client.request('PUT',
+                                        '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)),
+                                        data=json.dumps(sending_data))
         LOGGER.info('[API] {id} : {status} sent to VAL {code}'.format(
             id=self.video_proto.val_id,
             status=self.val_status,
@@ -391,8 +353,6 @@ class VALAPICall(object):
         """
         Update status for a completed transcript.
         """
-        if self.val_token is None:
-            self.val_tokengen()
 
         post_data = {
             'video_id': video_id,
@@ -402,13 +362,7 @@ class VALAPICall(object):
             'file_format': transcript_format,
         }
 
-        response = requests.post(
-            self.auth_dict['val_transcript_create_url'],
-            json=post_data,
-            headers=self.headers,
-            timeout=20
-        )
-
+        response = self.oauth2_client.request('POST', self.auth_dict['val_transcript_create_url'], json=post_data)
         if not response.ok:
             LOGGER.error(
                 '[API] : VAL update_val_transcript failed -- video_id=%s -- provider=% -- status=%s -- content=%s',
@@ -422,21 +376,12 @@ class VALAPICall(object):
         """
         Update video transcript status.
         """
-        if self.val_token is None:
-            self.val_tokengen()
-
         val_data = {
             'edx_video_id': video_id,
             'status': status
         }
 
-        response = requests.patch(
-            self.auth_dict['val_video_transcript_status_url'],
-            json=val_data,
-            headers=self.headers,
-            timeout=20
-        )
-
+        response = self.oauth2_client.request('PATCH', self.auth_dict['val_video_transcript_status_url'], json=val_data)
         if not response.ok:
             LOGGER.error(
                 '[API] : VAL Update_video_status failed -- video_id=%s -- status=%s -- text=%s',

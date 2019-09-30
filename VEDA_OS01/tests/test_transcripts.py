@@ -5,6 +5,7 @@ Transcript tests
 from __future__ import absolute_import
 import json
 import responses
+import datetime
 import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import six.moves.urllib.parse
 
@@ -198,10 +199,11 @@ class Cielo24TranscriptTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('VEDA_OS01.transcripts.VALAPICall._AUTH', PropertyMock(return_value=lambda: CONFIG_DATA))
+    @patch('control.veda_val.OAuthAPIClient.request')
     @patch('VEDA_OS01.transcripts.LOGGER')
     @responses.activate
     @mock_s3_deprecated
-    def test_cielo24_callback(self, mock_logger):
+    def test_cielo24_callback(self, mock_logger, mock_client):
         """
         Verify that `cielo24_transcript_callback` method works as expected.
         """
@@ -214,9 +216,6 @@ class Cielo24TranscriptTests(APITestCase):
             content_type='text/plain',
             status=200
         )
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
-        responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
-        responses.add(responses.PATCH, CONFIG_DATA['val_video_transcript_status_url'], status=200)
 
         # create s3 bucket -- all this is happening in moto's virtual environment
         conn = S3Connection()
@@ -234,8 +233,9 @@ class Cielo24TranscriptTests(APITestCase):
             REQUEST_PARAMS['job_id'],
             REQUEST_PARAMS['iwp_name']
         )
-        # Total of 4 HTTP requests are made as registered above
-        self.assertEqual(len(responses.calls), 4)
+        # Total of 3 HTTP requests are made as registered above
+        # calls made via mock oauth2 client not counted here
+        self.assertEqual(len(responses.calls), 1)
 
         # verify requests
         self.assertTrue(
@@ -246,12 +246,13 @@ class Cielo24TranscriptTests(APITestCase):
             )
         )
 
-        self.assertEqual(responses.calls[2].request.url, CONFIG_DATA['val_transcript_create_url'])
-        transcript_create_request_data = json.loads(responses.calls[2].request.body)
-        self.assertEqual(transcript_create_request_data, self.transcript_create_data)
-
-        self.assertEqual(responses.calls[3].request.url, CONFIG_DATA['val_video_transcript_status_url'])
-        self.assertEqual(json.loads(responses.calls[3].request.body), self.video_transcript_ready_status_data)
+        # verify calls made using mock OAuthAPIClient
+        mock_args, _ = mock_client.call_args_list[0]
+        self.assertEqual(mock_args[0], 'POST')
+        self.assertEqual(mock_args[1], CONFIG_DATA['val_transcript_create_url'])
+        mock_args, _ = mock_client.call_args_list[1]
+        self.assertEqual(mock_args[0], 'PATCH')
+        self.assertEqual(mock_args[1], CONFIG_DATA['val_video_transcript_status_url'])
 
         # Assert edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)
@@ -541,8 +542,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
     @responses.activate
     @mock_s3_deprecated
+    @patch('control.veda_val.OAuthAPIClient.request')
     @patch('VEDA_OS01.transcripts.LOGGER')
-    def test_single_lang_callback_flow(self, mock_logger):
+    def test_single_lang_callback_flow(self, mock_logger, mock_client):
         """
         Tests 3Play Media callback works as expected.
         """
@@ -557,11 +559,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             status=200
         )
 
-        # edx-val mocked responses
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
-        responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
-        responses.add(responses.PATCH, CONFIG_DATA['val_video_transcript_status_url'], status=200)
-
         # Make request to callback
         response = self.invoke_3play_callback()
 
@@ -572,8 +569,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             TranscriptStatus.READY
         )
 
-        # Total of 4 HTTP requests are made as registered above
-        self.assertEqual(len(responses.calls), 4)
+        # Total of 1 HTTP request (not including calls using mock oauth2 client) is made as registered above
+        self.assertEqual(len(responses.calls), 1)
 
         expected_requests = [
             # request - 1
@@ -583,49 +580,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     apikey=self.transcript_prefs.api_key
                 )
             },
-            # request - 2
-            {
-                'url': CONFIG_DATA['val_token_url'],
-                'body': {
-                    'grant_type': ['password'],
-                    'client_id': [CONFIG_DATA['val_client_id']],
-                    'client_secret': [CONFIG_DATA['val_secret_key']],
-                    'username': [CONFIG_DATA['val_username']],
-                    'password': [CONFIG_DATA['val_password']],
-                },
-                'decode_func': six.moves.urllib.parse.parse_qs,
-            },
-            # request - 3
-            {
-                'url': CONFIG_DATA['val_transcript_create_url'],
-                'body': {
-                    'file_format': transcripts.TRANSCRIPT_SJSON,
-                    'video_id': self.video.studio_id,
-                    'language_code': 'en',
-                    'name': '{directory}{uuid}.sjson'.format(
-                        directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
-                    ),
-                    'provider': TranscriptProvider.THREE_PLAY
-                },
-                'headers': {
-                    'Authorization': 'Bearer 1234567890',
-                    'content-type': 'application/json'
-                },
-                'decode_func': json.loads,
-            },
-            # request - 4
-            {
-                'url': CONFIG_DATA['val_video_transcript_status_url'],
-                'body': {
-                    'status': utils.ValTranscriptStatus.TRANSCRIPT_READY,
-                    'edx_video_id': self.video.studio_id
-                },
-                'headers': {
-                    'Authorization': 'Bearer 1234567890',
-                    'content-type': 'application/json'
-                },
-                'decode_func': json.loads,
-            }
         ]
 
         for position, expected_request in enumerate(expected_requests):
@@ -634,6 +588,14 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 expected_request,
                 expected_request.pop('decode_func', None)
             )
+
+        # verify calls made using mock OAuthAPIClient
+        mock_args, _ = mock_client.call_args_list[0]
+        self.assertEqual(mock_args[0], 'POST')
+        self.assertEqual(mock_args[1], CONFIG_DATA['val_transcript_create_url'])
+        mock_args, _ = mock_client.call_args_list[1]
+        self.assertEqual(mock_args[0], 'PATCH')
+        self.assertEqual(mock_args[1], CONFIG_DATA['val_video_transcript_status_url'])
 
         # Assert edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)
@@ -652,8 +614,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
     @responses.activate
     @mock_s3_deprecated
+    @patch('control.veda_val.OAuthAPIClient.request')
     @patch('VEDA_OS01.transcripts.LOGGER')
-    def test_multi_lang_callback_flow(self, mock_logger):
+    def test_multi_lang_callback_flow(self, mock_logger, mock_client):
         """
         Tests 3Play Media callback works as expected.
         """
@@ -707,10 +670,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             status=200,
         )
 
-        # edx-val mocked responses
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
-        responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
-
         # Make request to callback
         response = self.invoke_3play_callback()
 
@@ -735,8 +694,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             TranscriptStatus.IN_PROGRESS,
         )
 
-        # Total of 5 HTTP requests are made as registered above
-        self.assertEqual(len(responses.calls), 5)
+        # Total of 3 HTTP requests (not including calls using mock oauth2 client) are made as registered above
+        self.assertEqual(len(responses.calls), 3)
 
         expected_requests = [
             # request - 1
@@ -748,42 +707,12 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             },
             # request - 2
             {
-                'url': CONFIG_DATA['val_token_url'],
-                'body': {
-                    'grant_type': ['password'],
-                    'client_id': [CONFIG_DATA['val_client_id']],
-                    'client_secret': [CONFIG_DATA['val_secret_key']],
-                    'username': [CONFIG_DATA['val_username']],
-                    'password': [CONFIG_DATA['val_password']],
-                },
-                'decode_func': six.moves.urllib.parse.parse_qs,
-            },
-            # request - 3
-            {
-                'url': CONFIG_DATA['val_transcript_create_url'],
-                'body': {
-                    'file_format': transcripts.TRANSCRIPT_SJSON,
-                    'video_id': self.video.studio_id,
-                    'language_code': 'en',
-                    'name': '{directory}{uuid}.sjson'.format(
-                        directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
-                    ),
-                    'provider': TranscriptProvider.THREE_PLAY
-                },
-                'headers': {
-                    'Authorization': 'Bearer 1234567890',
-                    'content-type': 'application/json'
-                },
-                'decode_func': json.loads,
-            },
-            # request - 4
-            {
                 'url': build_url(
                     transcripts.THREE_PLAY_TRANSLATION_SERVICES_URL,
                     apikey=self.transcript_prefs.api_key
                 )
             },
-            # request - 5
+            # request - 3
             {
                 'url': transcripts.THREE_PLAY_ORDER_TRANSLATION_URL.format(file_id=self.file_id),
                 'body': {
@@ -801,6 +730,11 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 expected_request,
                 expected_request.pop('decode_func', None),
             )
+
+        # verify calls made using mock OAuthAPIClient
+        mock_args, _ = mock_client.call_args_list[0]
+        self.assertEqual(mock_args[0], 'POST')
+        self.assertEqual(mock_args[1], CONFIG_DATA['val_transcript_create_url'])
 
         # verify sjson data uploaded to s3
         self.assert_uploaded_transcript_on_s3(connection=conn)
@@ -1063,8 +997,9 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
     @unpack
     @responses.activate
     @mock_s3_deprecated
+    @patch('control.veda_val.OAuthAPIClient')
     @patch('VEDA_OS01.transcripts.LOGGER')
-    def test_order_translations_exception_cases(self, mock_responses, expected_logging, mock_logger):
+    def test_order_translations_exception_cases(self, mock_responses, expected_logging, mock_logger, _):
         """
         Tests all the error scenarios while ordering translation for a transcript in various languages.
         """
@@ -1082,7 +1017,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             content_type='text/plain; charset=utf-8',
             status=200
         )
-        responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
         responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
         for response in mock_responses:
             responses.add(response.pop('method'), response.pop('url'), **response)
@@ -1106,7 +1040,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
 
     @responses.activate
     @mock_s3_deprecated
-    def test_translations_retrieval(self):
+    @patch('control.veda_val.OAuthAPIClient.request')
+    def test_translations_retrieval(self, mock_client):
         """
         Tests translations retrieval from 3PlayMedia
         """
@@ -1143,11 +1078,7 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 content_type='text/plain; charset=utf-8',
                 status=200,
             )
-            # edx-val mocked responses
-            responses.add(responses.POST, CONFIG_DATA['val_token_url'], '{"access_token": "1234567890"}', status=200)
-            responses.add(responses.POST, CONFIG_DATA['val_transcript_create_url'], status=200)
 
-        responses.add(responses.PATCH, CONFIG_DATA['val_video_transcript_status_url'], status=200)
         responses.add(
             responses.GET,
             transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(file_id=self.file_id),
@@ -1158,9 +1089,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
         # Call to retrieve translations
         transcripts.retrieve_three_play_translations()
 
-        # Total HTTP requests, 1 for retrieving translations metadata, 3 for first translation and
-        # 3 for second translation and 1 for updating video status.
-        self.assertEqual(len(responses.calls), 8)
+        # Total HTTP requests, not including those made using mock oauth2 client
+        self.assertEqual(len(responses.calls), 3)
 
         # Assert that the first request was made for getting translations metadata from 3Play Media.
         expected_video_status_update_request = {
@@ -1183,37 +1113,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                         file_id=self.file_id, translation_id=translation_id
                     ), apikey=self.transcript_prefs.api_key)
                 },
-                # request - 2
-                {
-                    'url': CONFIG_DATA['val_token_url'],
-                    'body': {
-                        'grant_type': ['password'],
-                        'client_id': [CONFIG_DATA['val_client_id']],
-                        'client_secret': [CONFIG_DATA['val_secret_key']],
-                        'username': [CONFIG_DATA['val_username']],
-                        'password': [CONFIG_DATA['val_password']],
-                    },
-                    'decode_func': six.moves.urllib.parse.parse_qs,
-                },
-                # request - 3
-                {
-                    'url': CONFIG_DATA['val_transcript_create_url'],
-                    'body': {
-                        'file_format': transcripts.TRANSCRIPT_SJSON,
-                        'video_id': self.video.studio_id,
-                        'language_code': lang_code,
-                        'name': '{directory}{uuid}.sjson'.format(
-                            directory=CONFIG_DATA['aws_video_transcripts_prefix'], uuid=self.uuid_hex
-                        ),
-                        'provider': TranscriptProvider.THREE_PLAY
-                    },
-                    'headers': {
-                        'Authorization': 'Bearer 1234567890',
-                        'content-type': 'application/json'
-                    },
-                    'decode_func': json.loads,
-                }
             ]
+
             for expected_request in expected_requests:
                 self.assert_request(
                     responses.calls[position].request,
@@ -1221,6 +1122,17 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                     expected_request.pop('decode_func', None),
                 )
                 position += 1
+
+            # verify calls made using mock OAuthAPIClient
+            mock_args, _ = mock_client.call_args_list[0]
+            self.assertEqual(mock_args[0], 'POST')
+            self.assertEqual(mock_args[1], CONFIG_DATA['val_transcript_create_url'])
+            mock_args, _ = mock_client.call_args_list[1]
+            self.assertEqual(mock_args[0], 'POST')
+            self.assertEqual(mock_args[1], CONFIG_DATA['val_transcript_create_url'])
+            mock_args, _ = mock_client.call_args_list[2]
+            self.assertEqual(mock_args[0], 'PATCH')
+            self.assertEqual(mock_args[1], CONFIG_DATA['val_video_transcript_status_url'])
 
             # Asserts the transcript sjson data uploaded to s3
             self.assert_uploaded_transcript_on_s3(connection=connection)
@@ -1235,25 +1147,6 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
                 ).status,
                 TranscriptStatus.READY,
             )
-
-        # Assert that the final request was made for updating video status to `ready`
-        # upon receiving all the translations
-        expected_video_status_update_request = {
-            'url': CONFIG_DATA['val_video_transcript_status_url'],
-            'body': {
-                'status': utils.ValTranscriptStatus.TRANSCRIPT_READY,
-                'edx_video_id': self.video.studio_id
-            },
-            'headers': {
-                'Authorization': 'Bearer 1234567890',
-                'content-type': 'application/json'
-            }
-        }
-        self.assert_request(
-            responses.calls[position].request,
-            expected_video_status_update_request,
-            decode_func=json.loads,
-        )
 
         # Asserts edx-video-pipeline's video status
         video = Video.objects.get(studio_id=self.video.studio_id)

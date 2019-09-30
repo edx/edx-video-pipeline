@@ -74,15 +74,15 @@ instance_prefix: ''
 # ---
 # VAL user creds
 # ---
-val_token_url:
 val_api_url:
 val_video_images_url:
 val_transcript_create_url:
 val_video_transcript_status_url:
-val_client_id:
-val_secret_key:
-val_username: admin@example.com
-val_password:
+
+## OAUTH2 Provider
+oauth2_provider_url: 
+oauth2_client_id: 
+oauth2_client_secret: 
 
 ## VEDA API Auth
 veda_api_url:
