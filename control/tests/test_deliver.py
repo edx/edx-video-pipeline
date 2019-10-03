@@ -4,7 +4,6 @@ Veda Delivery unit tests
 from __future__ import absolute_import
 import os
 import unittest
-import datetime
 
 from django.test import TestCase
 
@@ -12,6 +11,7 @@ import responses
 from control.veda_deliver import VedaDelivery
 from control.veda_file_ingest import VideoProto
 from mock import PropertyMock, patch
+from moto import mock_s3_deprecated
 from VEDA.utils import get_config
 from VEDA_OS01.models import URL, Course, Destination, Encode, Video
 
@@ -98,6 +98,7 @@ class VedaDeliverRunTest(TestCase):
             ))
         )
 
+    @mock_s3_deprecated
     def test_intake(self):
         """
         Framework for intake testing
