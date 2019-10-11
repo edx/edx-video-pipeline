@@ -305,7 +305,7 @@ class VALAPICall(object):
         )
 
         r2 = self.oauth2_client.request('POST',
-                                        '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)),
+                                        '/'.join((self.auth_dict['val_api_url'], '')),
                                         json=sending_data)
         if r2.status_code > 299:
             LOGGER.error('[API] : VAL POST {code}'.format(code=r2.status_code))
