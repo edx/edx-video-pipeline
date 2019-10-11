@@ -184,7 +184,7 @@ class VALAPICall(object):
         r1 = self.oauth2_client.request('GET', '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)))
 
         if r1.status_code != 200 and r1.status_code != 404:
-            LOGGER.error('[API] : VAL Communication')
+            LOGGER.error('[API] : VAL Communication error %d', r1.status_code)
             return
 
         if r1.status_code == 404:
@@ -308,7 +308,7 @@ class VALAPICall(object):
                                         '/'.join((self.auth_dict['val_api_url'], self.video_proto.val_id)),
                                         json=sending_data)
         if r2.status_code > 299:
-            LOGGER.error('[API] : VAL POST/PUT {code}'.format(code=r2.status_code))
+            LOGGER.error('[API] : VAL POST {code}'.format(code=r2.status_code))
 
     def send_200(self, val_api_return):
         """
@@ -347,7 +347,7 @@ class VALAPICall(object):
             code=r4.status_code)
         )
         if r4.status_code > 299:
-            LOGGER.error('[API] : VAL POST/PUT : {status}'.format(status=r4.status_code))
+            LOGGER.error('[API] : VAL PUT : {status}'.format(status=r4.status_code))
 
     def update_val_transcript(self, video_id, lang_code, name, transcript_format, provider):
         """
