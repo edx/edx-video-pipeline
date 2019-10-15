@@ -145,6 +145,7 @@ class VedaIngest(object):
         
         LOGGER.info('ffprobe command has is: ' + ff_command)
         for line in iter(p.stdout.readline, b''):
+            line = line.decode('utf-8')
             if "Duration: " in line:
 
                 self.video_proto.duration = line.split(',')[0].split(' ')[-1]

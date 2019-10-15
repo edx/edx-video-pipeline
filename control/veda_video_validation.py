@@ -61,6 +61,7 @@ class Validation(object):
 
         p = subprocess.Popen(ff_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         for line in iter(p.stdout.readline, b''):
+            line = line.decode('utf-8')
             if "Invalid data found when processing input" in line:
                 LOGGER.info('[VALIDATION] {id} : CORRUPT/Invalid data on input'.format(id=self.videofile))
                 return False
