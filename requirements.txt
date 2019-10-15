@@ -18,11 +18,11 @@ boto
 pyyaml
 requests==2.22.0
 urllib3==1.25.6
-celery==4.1.1
+celery==4.3.0
 pysrt==1.1.1
 MySQL-python==1.2.5 ; python_version == "2.7"
 mysqlclient ; python_version >= "3.0"
 gevent==1.4.0
 six==1.11.0
-redis==2.10.6
+redis==3.3.11
 paramiko==2.4.3
