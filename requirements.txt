@@ -10,7 +10,7 @@ edx-django-utils==1.0.1
 edx-drf-extensions==2.0.0
 edx-opaque-keys==0.4
 edx-rest-api-client==1.9.2
-kombu==4.2.0
+kombu==4.6.5
 newrelic
 uwsgi
 pysftp
