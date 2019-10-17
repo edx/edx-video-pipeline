@@ -9,7 +9,7 @@ Environment=NEW_RELIC_CONFIG_FILE=/home/ec2-user/edx-video-pipeline/veda_newreli
 Environment=DJANGO_SETTINGS_MODULE=VEDA.settings.production
 Environment=PYTHONPATH=/home/ec2-user/edx-video-pipeline
 WorkingDirectory=/home/ec2-user/edx-video-pipeline
-ExecStart=/bin/newrelic-admin run-program /home/ec2-user/edx-video-pipeline/bin/youtubecallback
+ExecStart=/bin/sh -c 'source /home/ec2-user/veda-env/bin/activate && /bin/newrelic-admin run-program /home/ec2-user/edx-video-pipeline/bin/youtubecallback'
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=veda-youtube
