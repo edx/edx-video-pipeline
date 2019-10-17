@@ -201,7 +201,7 @@ def upload_alpha_1(request):
     policy = base64.b64encode(policy_document)
 
     signature = base64.b64encode(hmac.new(
-        auth_dict['veda_secret_access_key'],
+        auth_dict['veda_secret_access_key'].encode('utf-8'),
         policy,
         hashlib.sha1
     ).digest())
