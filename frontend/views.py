@@ -185,7 +185,7 @@ def upload_alpha_1(request):
     policy_expiration = datetime.datetime.utcnow() + timedelta(hours=24)
     policy_exp = str(policy_expiration).replace(' ', 'T').split('.')[0] + 'Z'
 
-    policy_document = ' \
+    policy_document = b' \
     {\"expiration\": \"' + policy_exp + '\", \
     \"conditions\": [ \
     {\"bucket\": \"' + auth_dict['veda_upload_bucket'] + '\"}, \
