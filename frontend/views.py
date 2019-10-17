@@ -185,7 +185,7 @@ def upload_alpha_1(request):
     policy_expiration = datetime.datetime.utcnow() + timedelta(hours=24)
     policy_exp = str(policy_expiration).replace(' ', 'T').split('.')[0] + 'Z'
 
-    policy_document = b' \
+    policy_document = bytes(' \
     {\"expiration\": \"' + policy_exp + '\", \
     \"conditions\": [ \
     {\"bucket\": \"' + auth_dict['veda_upload_bucket'] + '\"}, \
@@ -195,7 +195,7 @@ def upload_alpha_1(request):
     [\"starts-with\", \"$Content-Type\", \"\"], \
     [\"content-length-range\", 0, 500000000000] \
     ] \
-    } '
+    } ', 'utf-8')
 
     abvid_serial = uuid.uuid1().hex[0:10]
     policy = base64.b64encode(policy_document)
