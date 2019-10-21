@@ -85,10 +85,10 @@ class FileDiscovery(object):
             # Non serialized upload - reject
             return
 
-        upload_filename = upload_query[0].upload_filename.encode('utf-8')
+        upload_filename = upload_query[0].upload_filename
 
         if upload_filename is not None:
-            file_extension = upload_filename.split(b'.')[-1]
+            file_extension = upload_filename.split('.')[-1]
         else:
             upload_filename = 'null_file_name.mp4'
             file_extension = 'mp4'
