@@ -252,7 +252,7 @@ def csv_parser(filename):
         ))
         return
 
-    with open(os.path.join(workdir, filename), 'rb') as csvfile:
+    with open(os.path.join(workdir, filename), 'r') as csvfile:
         file_reader = csv.reader(csvfile, delimiter=',')
         try:
             headers = next(file_reader)
@@ -298,7 +298,7 @@ def _process_errors(upload_data, reports_file):
     error_message_pattern = re.compile('Duplicate video ID is \[(?P<thing>[0-9a-zA-Z_-]*)\]')
 
     try:
-        with open(errors_file, 'rb') as csvfile:
+        with open(errors_file, 'r') as csvfile:
             file_reader = csv.reader(csvfile, delimiter=',')
             headers = next(file_reader)
             for column in headers:
