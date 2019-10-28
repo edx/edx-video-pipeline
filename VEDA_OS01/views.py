@@ -5,13 +5,13 @@ import json
 import logging
 
 import requests
-import django_filters.rest_framework
 from django.db import connection
 from django.db.utils import DatabaseError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import filters, renderers, status, viewsets
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import (api_view, detail_route,
+                                       permission_classes)
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -42,7 +42,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = (
         'institution',
         'edx_classid',
@@ -51,7 +51,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         'sg_projID'
     )
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    @detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
         course = self.get_object()
         return Response(course.highlighted)
@@ -65,10 +65,10 @@ class VideoViewSet(viewsets.ModelViewSet):
 
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = ('inst_class', 'edx_id')
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    @detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
         video = self.get_object()
         return Response(video.highlighted)
@@ -82,10 +82,10 @@ class EncodeViewSet(viewsets.ModelViewSet):
 
     queryset = Encode.objects.all()
     serializer_class = EncodeSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = ('encode_filetype', 'encode_suffix', 'product_spec')
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    @detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
         encode = self.get_object()
         return Response(encode.highlighted)
@@ -99,14 +99,14 @@ class URLViewSet(viewsets.ModelViewSet):
 
     queryset = URL.objects.all()
     serializer_class = URLSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = (
         'videoID__edx_id',
         'encode_profile__encode_suffix',
         'encode_profile__encode_filetype'
     )
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    @detail_route(renderer_classes=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
         url = self.get_object()
         return Response(url.highlighted)

@@ -1,6 +1,6 @@
 django==1.11.23
-djangorestframework==3.10.3
-django-config-models==1.0.1
+djangorestframework==3.6.4
+django-config-models==0.2.2
 django-cors-headers
 django-fernet-fields==0.5
 django-filter==1.0.4
