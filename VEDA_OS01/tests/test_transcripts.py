@@ -5,15 +5,15 @@ Transcript tests
 from __future__ import absolute_import
 import json
 import responses
-import datetime
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.error
+import six.moves.urllib.request
 import six.moves.urllib.parse
 
 from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from ddt import data, ddt, unpack
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from mock import Mock, PropertyMock, patch
 from moto import mock_s3_deprecated
 from rest_framework import status
@@ -1166,7 +1166,8 @@ class ThreePlayTranscriptionCallbackTest(APITestCase):
             {
                 'method': 'error',
                 'args': (
-                    '[3PlayMedia Task] Translations metadata request failed, url=%s -- video=%s -- process_id=%s -- status=%s',  # pylint: disable=line-too-long
+                    '[3PlayMedia Task] Translations metadata request failed, ' + \
+                    'url=%s -- video=%s -- process_id=%s -- status=%s',
                     scrub_query_params(
                         build_url(
                             transcripts.THREE_PLAY_TRANSLATIONS_METADATA_URL.format(

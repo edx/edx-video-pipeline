@@ -58,6 +58,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages"
             ],
             'debug': DEBUG,
             'loaders': [
@@ -68,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,13 +77,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Oauth2
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'oauth2_provider.middleware.OAuth2TokenMiddleware',
 )
 
 AUTHENTICATION_BACKENDS = (
-    # Oauth2
     'django.contrib.auth.backends.ModelBackend',
     'oauth2_provider.backends.OAuth2Backend',
 )
@@ -125,7 +123,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
-        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',

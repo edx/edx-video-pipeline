@@ -13,7 +13,7 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^$', views.index),
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     # Input Form
     url(r'cat/', views.input_form),
     # Heal form

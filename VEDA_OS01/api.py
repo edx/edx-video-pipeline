@@ -24,13 +24,13 @@ sys.path.append(primary_directory)
 def token_finisher(token_id):
     try:
         d = AccessToken.objects.get(token=token_id)
-    except:
+    except Exception:
         return False
 
     d.user = User.objects.get(pk=1)
     d.save()
     try:
         token = Token.objects.create(user=d.user)
-    except:
+    except Exception:
         token = Token.objects.get(user=d.user)
     return token.key

@@ -5,7 +5,8 @@ from __future__ import absolute_import
 import glob
 import os
 import shutil
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+import six.moves.urllib.error
+import six.moves.urllib.request
 import six.moves.urllib.parse
 import yaml
 from opaque_keys import InvalidKeyError

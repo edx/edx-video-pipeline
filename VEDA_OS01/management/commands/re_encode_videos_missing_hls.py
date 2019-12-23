@@ -31,6 +31,7 @@ from control.encode_worker_tasks import enqueue_encode
 LOGGER = logging.getLogger(__name__)
 BUCKET_NAME = 'veda-hotstore'
 
+
 def get_auth_token(settings):
     """
     Generate a API token for VAL
@@ -363,4 +364,3 @@ def source_video_not_in_hotstore(video_id):
     except Exception as e:
         LOGGER.error('Exception during get_key: %s', e)
         return True
-

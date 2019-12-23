@@ -9,7 +9,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.static import serve
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework import routers
 
 from VEDA_OS01 import views, transcripts
@@ -32,8 +32,8 @@ urlpatterns = [
     url(r'^', include('frontend.urls')),
     # API
     url(r'^login/', views.user_login),
-    url(r'^accounts/login/$', login, ),
-    url(r'^accounts/logout/$', logout),
+    url(r'^accounts/login/$', LoginView.as_view()),
+    url(r'^accounts/logout/$', LogoutView.as_view()),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url(r'^api/', include(router.urls)),
     # Transcript credentials handler view
