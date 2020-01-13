@@ -29,5 +29,3 @@ for key, value in dict_updates.items():
         vars()[key].update(value)
 
 vars().update(CONFIG_DATA)
-
-

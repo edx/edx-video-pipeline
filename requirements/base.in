@@ -1,0 +1,30 @@
+-c constraints.txt
+
+django<2
+djangorestframework
+django-config-models
+django-cors-headers
+django-fernet-fields
+django-filter
+django-model-utils==3.2.0 # Pinned until we can move to django 2
+django-oauth-toolkit==1.1.3 # Pinned until we can move to django 2
+edx-django-utils
+edx-drf-extensions
+# git+git://github.com/edx/edx-drf-extensions@Django22-support-bug-fix
+edx-opaque-keys
+edx-rest-api-client
+kombu
+newrelic
+uwsgi
+pysftp
+boto
+pyyaml
+requests
+urllib3
+celery
+pysrt
+mysqlclient ; python_version >= "3.0"
+gevent
+six
+redis
+paramiko

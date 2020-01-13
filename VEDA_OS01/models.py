@@ -430,7 +430,7 @@ class Video(models.Model):
     Model for Video.
     """
     # TODO: Change field name
-    inst_class = models.ForeignKey(Course)
+    inst_class = models.ForeignKey(Course, on_delete=models.CASCADE)
     video_active = models.BooleanField('Video Active?', default=True)
     client_title = models.CharField(
         'Video (Client) Title',
@@ -550,7 +550,7 @@ class Encode(models.Model):
     """
     Model for Encode.
     """
-    encode_destination = models.ForeignKey(Destination)
+    encode_destination = models.ForeignKey(Destination, on_delete=models.CASCADE)
     encode_name = models.CharField('Encode Name', max_length=100, null=True, blank=True)
     profile_active = models.BooleanField('Encode Profile Active', default=False)
     encode_suffix = models.CharField(
@@ -600,8 +600,8 @@ class URL(models.Model):
     """
     Model for URL.
     """
-    encode_profile = models.ForeignKey(Encode)
-    videoID = models.ForeignKey(Video)
+    encode_profile = models.ForeignKey(Encode, on_delete=models.CASCADE)
+    videoID = models.ForeignKey(Video, on_delete=models.CASCADE)
     encode_url = models.CharField('Destination URL', max_length=500, null=True, blank=True)
     url_date = models.DateTimeField('URL Updated', null=True, blank=True)
     encode_duration = models.CharField('Duration (sec)', max_length=50, null=True, blank=True)
@@ -706,7 +706,7 @@ class TranscriptProcessMetadata(TimeStampedModel):
     """
     Model to contain third party transcript process metadata.
     """
-    video = models.ForeignKey(Video, related_name='transcript_processes')
+    video = models.ForeignKey(Video, related_name='transcript_processes', on_delete=models.CASCADE)
     provider = models.CharField('Transcript provider', max_length=50, choices=TranscriptProvider.CHOICES)
     process_id = models.CharField('Process id', max_length=255)
     translation_id = models.CharField(

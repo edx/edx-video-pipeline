@@ -1,0 +1,21 @@
+## NOTE:  Test requirements.
+-c constraints.txt
+-r base.txt
+
+codecov
+coverage
+ddt
+edx-lint
+factory_boy
+isort
+moto
+Paver
+pep8
+pytest
+pytest-django
+pytest-django-ordering
+pylint
+pylint-celery
+pylint-django
+responses==0.10.6
+tox

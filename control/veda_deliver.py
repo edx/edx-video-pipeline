@@ -17,7 +17,7 @@ import requests
 
 from boto.exception import S3ResponseError, NoAuthHandlerFound
 from boto.s3.key import Key
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .control_env import *
 from .veda_deliver_cielo import Cielo24Transcript

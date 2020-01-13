@@ -25,7 +25,7 @@ from VEDA.utils import get_config
 
 try:
     boto.config.add_section('Boto')
-except:
+except Exception:
     pass
 
 LOGGER = logging.getLogger(__name__)
@@ -103,5 +103,4 @@ class Command(BaseCommand):
 
     def connect_boto(self):
         conn = boto.connect_s3()
-        
         return conn.get_bucket(CONFIG_DATA['edx_s3_ingest_bucket'])
