@@ -227,8 +227,8 @@ class Institution(models.Model):
     institution_code = models.CharField(max_length=4)
     institution_name = models.CharField(max_length=50)
 
-    def __unicode__(self):
-        return u'{institution_name} {institution_code}'.format(
+    def __str__(self):
+        return '{institution_name} {institution_code}'.format(
             institution_name=self.institution_name,
             institution_code=self.institution_code,
         )
@@ -417,8 +417,8 @@ class Course(TimeStampedModel):
 
         return course_runs
 
-    def __unicode__(self):
-        return u'{institution} {edx_class_id} {course_name}'.format(
+    def __str__(self):
+        return '{institution} {edx_class_id} {course_name}'.format(
             institution=self.institution,
             edx_class_id=self.edx_classid,
             course_name=self.course_name,
@@ -530,8 +530,8 @@ class Video(models.Model):
     class Meta:
         get_latest_by = 'video_trans_start'
 
-    def __unicode__(self):
-        return u'{edx_id}'.format(edx_id=self.edx_id)
+    def __str__(self):
+        return '{edx_id}'.format(edx_id=self.edx_id)
 
 
 class Destination(models.Model):
@@ -542,8 +542,8 @@ class Destination(models.Model):
     destination_active = models.BooleanField('Destination Active', default=False)
     destination_nick = models.CharField('Nickname (3 Char.)', max_length=3, null=True, blank=True)
 
-    def __unicode__(self):
-        return u'{}'.format(self.destination_name)
+    def __str__(self):
+        return '{}'.format(self.destination_name)
 
 
 class Encode(models.Model):
@@ -592,8 +592,8 @@ class Encode(models.Model):
         max_length=300,
         null=True, blank=True)
 
-    def __unicode__(self):
-        return u'{encode_profile}'.format(encode_profile=self.encode_name)
+    def __str__(self):
+        return '{encode_profile}'.format(encode_profile=self.encode_name)
 
 
 class URL(models.Model):
@@ -616,8 +616,8 @@ class URL(models.Model):
     class Meta:
         get_latest_by = 'url_date'
 
-    def __unicode__(self):
-        return u'{video_id} : {encode_profile} : {date}'.format(
+    def __str__(self):
+        return '{video_id} : {encode_profile} : {date}'.format(
             video_id=self.videoID.edx_id,
             encode_profile=self.encode_profile.encode_name,
             date=self.url_date,
@@ -672,8 +672,8 @@ class VedaUpload(models.Model):
     class Meta:
         get_latest_by = 'upload_date'
 
-    def __unicode__(self):
-        return u'{client_information} {upload_filename} {status_email} {file_complete}'.format(
+    def __str__(self):
+        return '{client_information} {upload_filename} {status_email} {file_complete}'.format(
             client_information=self.client_information,
             upload_filename=self.upload_filename,
             status_email=self.status_email,
@@ -698,8 +698,8 @@ class TranscriptCredentials(TimeStampedModel):
         unique_together = ('org', 'provider')
         verbose_name_plural = 'Transcript Credentials'
 
-    def __unicode__(self):
-        return u'{org} - {provider}'.format(org=self.org, provider=self.provider)
+    def __str__(self):
+        return '{org} - {provider}'.format(org=self.org, provider=self.provider)
 
 
 class TranscriptProcessMetadata(TimeStampedModel):
@@ -735,8 +735,8 @@ class TranscriptProcessMetadata(TimeStampedModel):
             setattr(self, attr, value)
         self.save()
 
-    def __unicode__(self):
-        return u'{video} - {provider} - {lang}'.format(
+    def __str__(self):
+        return '{video} - {provider} - {lang}'.format(
             video=self.video.edx_id,
             provider=self.provider,
             lang=self.lang_code
@@ -772,7 +772,7 @@ class EncodeVideosForHlsConfiguration(ConfigurationModel):
         self.offset += self.batch_size
         self.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return "[EncodeVideosForHlsConfiguration] update for {courses} courses if commit as {commit}".format(
             courses='ALL' if self.all_videos else self.course_ids,
             commit=self.commit,
