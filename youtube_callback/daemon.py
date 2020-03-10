@@ -90,11 +90,9 @@ def determine_missing_url(course_object):
                 salient_video.video_trans_status != "Review Hold":
             yt_url_query = URL.objects.filter(
                 videoID=salient_video,
-                encode_profile=Encode.objects.filter(
-                    encode_suffix='100'
-                )
+                encode_profile__encode_suffix='100'
             )
-            if len(yt_url_query) == 0:
+            if not yt_url_query.exists():
                 return True
     return False
 
