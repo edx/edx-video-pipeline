@@ -221,11 +221,12 @@ class VALAPICall(object):
 
         test_list = []
         if self.video_proto.veda_id:
+            final = None
             try:
                 final = URL.objects.filter(videoID__edx_id=self.video_proto.veda_id).latest()
             except URL.DoesNotExist:
                 pass  # Expected if we do not have any URLs yet for this video
-            if final.encode_profile.product_spec != 'review':
+            if final and final.encode_profile.product_spec != 'review':
                 try:
                     self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]
                 except KeyError:
