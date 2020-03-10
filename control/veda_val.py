@@ -7,10 +7,8 @@ from __future__ import absolute_import
 import logging
 import urllib3
 import ast
-import json
-import datetime
 
-from django.core.cache import cache
+
 from edx_rest_api_client.client import OAuthAPIClient
 from .control_env import *
 from control.veda_utils import Output, VideoProto
@@ -198,13 +196,7 @@ class VALAPICall(object):
         Update Status
         """
         LOGGER.info('[INGEST] send_val_data : video ID : %s', self.video_proto.veda_id)
-        url_query = URL.objects.filter(
-            videoID=Video.objects.filter(
-                edx_id=self.video_proto.veda_id
-            )
-        )
-        for u in url_query:
-            URL.objects.filter(pk=u.pk).update(val_input=True)
+        URL.objects.filter(videoID__edx_id=self.video_proto.veda_id).update(val_input=True)
 
     def profile_determiner(self, val_api_return):
         """
@@ -229,31 +221,19 @@ class VALAPICall(object):
 
         test_list = []
         if self.video_proto.veda_id:
-            url_query = URL.objects.filter(
-                videoID=Video.objects.filter(
-                    edx_id=self.video_proto.veda_id
-                ).latest()
-            )
-            for u in url_query:
-                final = URL.objects.filter(
-                    encode_profile=u.encode_profile,
-                    videoID=u.videoID
-                ).latest()
-
-                if final.encode_profile.product_spec == 'review':
+            final = URL.objects.filter(videoID__edx_id=self.video_proto.veda_id).latest()
+            if final.encode_profile.product_spec != 'review':
+                try:
+                    self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]
+                except KeyError:
                     pass
-                else:
-                    try:
-                        self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]
-                    except KeyError:
-                        continue
-                    for p in self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]:
-                        test_list.append(dict(
-                            url=str(final.encode_url),
-                            file_size=final.encode_size,
-                            bitrate=int(final.encode_bitdepth.split(' ')[0]),
-                            profile=str(p)
-                        ))
+                for p in self.auth_dict['val_profile_dict'][final.encode_profile.product_spec]:
+                    test_list.append(dict(
+                        url=str(final.encode_url),
+                        file_size=final.encode_size,
+                        bitrate=int(final.encode_bitdepth.split(' ')[0]),
+                        profile=str(p)
+                    ))
 
         for t in test_list:
             if t['profile'] not in [g['profile'] for g in self.encode_data]:
