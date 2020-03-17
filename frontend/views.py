@@ -198,13 +198,13 @@ def upload_alpha_1(request):
     } ', 'utf-8')
 
     abvid_serial = uuid.uuid1().hex[0:10]
-    policy = base64.b64encode(policy_document)
+    policy = base64.b64encode(policy_document).decode('utf-8')
 
     signature = base64.b64encode(hmac.new(
         auth_dict['veda_secret_access_key'].encode('utf-8'),
         policy,
         hashlib.sha1
-    ).digest())
+    ).digest()).decode('utf-8')
     template = loader.get_template('upload_video.html')
 
     context = {
