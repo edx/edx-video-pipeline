@@ -50,7 +50,7 @@ def send_to_pipeline(upload_data):
     ).update(
         file_valid=upload_data['success'],
     )
-    if upload_data['success'] == 'true':
+    if upload_data['success'] == 'True':
         LOGGER.info('[ABOUT_VIDEO] {ul_id} : Sending File to Pipeline'.format(
             ul_id=upload_data['abvid_serial']
         ))
