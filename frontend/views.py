@@ -230,9 +230,11 @@ def about_input(request):
 
         if 'success' in request.POST:
             upload_data['abvid_serial'] = request.POST['abvid_serial']
-            upload_data['success'] = request.POST['success']
-
-            goahead = send_to_pipeline(upload_data)
+            upload_data['success'] = request.POST['success'].capitalize()
+            if upload_data['success'] in ['True', 'False']:
+                goahead = send_to_pipeline(upload_data)
+            else:
+                goahead = False
 
         elif 'orig_filename' in request.POST:
             upload_data['abvid_serial'] = request.POST['abvid_serial']
