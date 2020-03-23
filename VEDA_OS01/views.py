@@ -10,7 +10,7 @@ from django.db import connection
 from django.db.utils import DatabaseError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import filters, renderers, status, viewsets
+from rest_framework import renderers, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
@@ -387,7 +387,7 @@ def token_auth(request):
 
 
 def user_login(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect(request.path)
     else:
         return HttpResponseRedirect('../admin')  # settings.LOGIN_REDIRECT_URL)

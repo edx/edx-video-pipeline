@@ -10,10 +10,8 @@ import hashlib
 import uuid
 from control import celeryapp
 from django.http import HttpResponse
-from django.template import RequestContext, loader
+from django.template import loader
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from .frontend_env import *
 from .course_validate import VEDACat
 from .abvid_validate import validate_incoming, create_record, send_to_pipeline
 from VEDA.utils import get_config
@@ -29,7 +27,7 @@ links = {
 
 
 def index(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         auth = 'NO'
         linkers = ''
     else:
@@ -49,7 +47,7 @@ def input_form(request):
     """
     Course Addition Tool Endpoints
     """
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return HttpResponseRedirect('/admin/login/?next=%s' % request.path)
 
     VC1 = VEDACat()
