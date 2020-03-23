@@ -9,26 +9,27 @@ appdirs==1.4.3            # via -r requirements/test.txt, virtualenv
 argparse==1.4.0           # via caniusepython3
 astroid==2.3.3            # via -r requirements/test.txt, pylint, pylint-celery
 attrs==19.3.0             # via -r requirements/test.txt, jsonschema, pytest
-aws-sam-translator==1.21.0  # via -r requirements/test.txt, cfn-lint
+aws-sam-translator==1.22.0  # via -r requirements/test.txt, cfn-lint
 aws-xray-sdk==2.4.3       # via -r requirements/test.txt, moto
 backports.functools-lru-cache==1.6.1  # via caniusepython3
 bcrypt==3.1.7             # via -r requirements/test.txt, paramiko
 billiard==3.6.3.0         # via -r requirements/test.txt, celery
-boto3==1.12.17            # via -r requirements/test.txt, aws-sam-translator, moto
+boto3==1.12.26            # via -r requirements/test.txt, aws-sam-translator, moto
 boto==2.49.0              # via -r requirements/test.txt, moto
-botocore==1.15.17         # via -r requirements/test.txt, aws-xray-sdk, boto3, moto, s3transfer
+botocore==1.15.26         # via -r requirements/test.txt, aws-xray-sdk, boto3, moto, s3transfer
 caniusepython3==7.2.0     # via -r requirements/quality.in
-celery==4.4.1             # via -r requirements/test.txt
+celery==4.4.2             # via -r requirements/test.txt
 certifi==2019.11.28       # via -r requirements/test.txt, requests
 cffi==1.14.0              # via -r requirements/test.txt, bcrypt, cryptography, pynacl
-cfn-lint==0.28.4          # via -r requirements/test.txt, moto
+cfn-lint==0.29.0          # via -r requirements/test.txt, moto
 chardet==3.0.4            # via -r requirements/test.txt, pysrt, requests
 click-log==0.3.2          # via -r requirements/test.txt, edx-lint
 click==7.1.1              # via -r requirements/test.txt, click-log, edx-lint
-codecov==2.0.16           # via -r requirements/test.txt
-coverage==5.0.3           # via -r requirements/test.txt, codecov
+codecov==2.0.22           # via -r requirements/test.txt
+coverage==5.0.4           # via -r requirements/test.txt, codecov
 cryptography==2.8         # via -r requirements/test.txt, django-fernet-fields, moto, paramiko, sshpubkeys
-ddt==1.3.0                # via -r requirements/test.txt
+ddt==1.3.1                # via -r requirements/test.txt
+decorator==4.4.2          # via -r requirements/test.txt, networkx
 distlib==0.3.0            # via -r requirements/test.txt, caniusepython3, virtualenv
 django-config-models==2.0.0  # via -r requirements/test.txt
 django-cors-headers==3.2.1  # via -r requirements/test.txt
@@ -47,9 +48,9 @@ edx-django-utils==3.0     # via -r requirements/test.txt, django-config-models, 
 edx-drf-extensions==4.0.0  # via -c requirements/constraints.txt, -r requirements/test.txt
 edx-lint==1.4.1           # via -r requirements/quality.in, -r requirements/test.txt
 edx-opaque-keys==2.0.1    # via -r requirements/test.txt, edx-drf-extensions
-edx-rest-api-client==4.0.1  # via -r requirements/test.txt
+edx-rest-api-client==5.0.2  # via -r requirements/test.txt
 factory-boy==2.12.0       # via -r requirements/test.txt
-faker==4.0.1              # via -r requirements/test.txt, factory-boy
+faker==4.0.2              # via -r requirements/test.txt, factory-boy
 filelock==3.0.12          # via -r requirements/test.txt, tox, virtualenv
 future==0.18.2            # via -r requirements/test.txt, aws-xray-sdk, pyjwkest
 gevent==1.4.0             # via -r requirements/test.txt
@@ -68,10 +69,11 @@ kombu==4.6.8              # via -r requirements/test.txt, celery
 lazy-object-proxy==1.4.3  # via -r requirements/test.txt, astroid
 markupsafe==1.1.1         # via -r requirements/test.txt, jinja2
 mccabe==0.6.1             # via -r requirements/test.txt, pylint
-mock==4.0.1               # via -r requirements/test.txt, moto
+mock==4.0.2               # via -r requirements/test.txt, moto
 more-itertools==8.2.0     # via -r requirements/test.txt, pytest
 moto==1.3.14              # via -r requirements/test.txt
 mysqlclient==1.4.6 ; python_version >= "3.0"  # via -r requirements/test.txt
+networkx==2.4             # via -r requirements/test.txt, cfn-lint
 newrelic==5.10.0.138      # via -r requirements/test.txt, edx-django-utils
 oauthlib==3.1.0           # via -r requirements/test.txt, django-oauth-toolkit
 packaging==20.3           # via -r requirements/test.txt, caniusepython3, pytest, tox
@@ -101,11 +103,11 @@ pysftp==0.2.9             # via -r requirements/test.txt
 pysrt==1.1.2              # via -r requirements/test.txt
 pytest-django-ordering==1.2.0  # via -r requirements/test.txt
 pytest-django==3.8.0      # via -r requirements/test.txt, pytest-django-ordering
-pytest==5.3.5             # via -r requirements/test.txt, pytest-django, pytest-django-ordering
+pytest==5.4.1             # via -r requirements/test.txt, pytest-django, pytest-django-ordering
 python-dateutil==2.8.1    # via -r requirements/test.txt, botocore, edx-drf-extensions, faker, moto
 python-jose==3.1.0        # via -r requirements/test.txt, moto
 pytz==2019.3              # via -r requirements/test.txt, celery, django, moto
-pyyaml==5.3               # via -r requirements/test.txt, cfn-lint, moto
+pyyaml==5.3.1             # via -r requirements/test.txt, cfn-lint, moto
 redis==3.4.1              # via -r requirements/test.txt
 requests==2.23.0          # via -r requirements/test.txt, caniusepython3, codecov, django-oauth-toolkit, docker, edx-drf-extensions, edx-rest-api-client, moto, pyjwkest, responses, slumber
 responses==0.10.6         # via -r requirements/test.txt, moto
@@ -126,8 +128,8 @@ typed-ast==1.4.1          # via -r requirements/test.txt, astroid
 urllib3==1.25.8           # via -r requirements/test.txt, botocore, requests
 uwsgi==2.0.18             # via -r requirements/test.txt
 vine==1.3.0               # via -r requirements/test.txt, amqp, celery
-virtualenv==20.0.10       # via -r requirements/test.txt, tox
-wcwidth==0.1.8            # via -r requirements/test.txt, pytest
+virtualenv==20.0.13       # via -r requirements/test.txt, tox
+wcwidth==0.1.9            # via -r requirements/test.txt, pytest
 websocket-client==0.57.0  # via -r requirements/test.txt, docker
 werkzeug==1.0.0           # via -r requirements/test.txt, moto
 wrapt==1.11.2             # via -r requirements/test.txt, astroid, aws-xray-sdk
