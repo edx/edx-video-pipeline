@@ -66,9 +66,12 @@ class VALAPICall(object):
         self.oauth2_provider_url = self.auth_dict['oauth2_provider_url']
         self.oauth2_client_id = self.auth_dict['oauth2_client_id']
         self.oauth2_client_secret = self.auth_dict['oauth2_client_secret']
+
+        # Setting timeout=None here because we have no mechanism to retry any requests that fail due to timeout errors.
         self.oauth2_client = OAuthAPIClient(self.auth_dict['oauth2_provider_url'],
                                             self.auth_dict['oauth2_client_id'],
-                                            self.auth_dict['oauth2_client_secret'])
+                                            self.auth_dict['oauth2_client_secret'],
+                                            timeout=None)
 
     def _AUTH(self):
         return get_config()
