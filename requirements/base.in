@@ -23,7 +23,6 @@ urllib3
 celery
 pysrt
 mysqlclient ; python_version >= "3.0"
-gevent
 six
 redis
 paramiko
