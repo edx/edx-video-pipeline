@@ -4,7 +4,6 @@ python:
   - "3.7"
 
 env:
-  - TOXENV=django111
   - TOXENV=django22
   - TOXENV=quality
 

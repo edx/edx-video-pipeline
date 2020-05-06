@@ -9,10 +9,10 @@ bcrypt==3.1.7             # via paramiko
 billiard==3.6.3.0         # via celery
 boto==2.49.0              # via -r requirements/base.in
 celery==4.4.2             # via -r requirements/base.in
-certifi==2019.11.28       # via requests
+certifi==2020.4.5.1       # via requests
 cffi==1.14.0              # via bcrypt, cryptography, pynacl
 chardet==3.0.4            # via pysrt, requests
-cryptography==2.8         # via django-fernet-fields, paramiko
+cryptography==2.9.2       # via django-fernet-fields, paramiko
 django-config-models==2.0.0  # via -r requirements/base.in
 django-cors-headers==3.2.1  # via -r requirements/base.in
 django-fernet-fields==0.6  # via -r requirements/base.in
@@ -20,45 +20,43 @@ django-filter==2.2.0      # via -r requirements/base.in
 django-model-utils==4.0.0  # via -r requirements/base.in
 django-oauth-toolkit==1.3.2  # via -r requirements/base.in
 django-waffle==0.20.0     # via edx-django-utils, edx-drf-extensions
-django==2.2.11            # via -c requirements/constraints.txt, -r requirements/base.in, django-config-models, django-cors-headers, django-fernet-fields, django-filter, django-model-utils, django-oauth-toolkit, edx-django-utils, edx-drf-extensions, rest-condition
-djangorestframework-jwt==1.11.0  # via edx-drf-extensions
-djangorestframework==3.9.4  # via -r requirements/base.in, django-config-models, edx-drf-extensions, rest-condition
-edx-django-utils==3.1     # via -r requirements/base.in, django-config-models, edx-drf-extensions, edx-rest-api-client
-edx-drf-extensions==4.0.0  # via -c requirements/constraints.txt, -r requirements/base.in
+django==2.2.12            # via -c requirements/constraints.txt, -r requirements/base.in, django-config-models, django-cors-headers, django-fernet-fields, django-filter, django-model-utils, django-oauth-toolkit, djangorestframework, drf-jwt, edx-django-utils, edx-drf-extensions, rest-condition
+djangorestframework==3.11.0  # via -r requirements/base.in, django-config-models, drf-jwt, edx-drf-extensions, rest-condition
+drf-jwt==1.14.0           # via edx-drf-extensions
+edx-django-utils==3.2.1   # via -r requirements/base.in, django-config-models, edx-drf-extensions, edx-rest-api-client
+edx-drf-extensions==5.0.2  # via -r requirements/base.in
 edx-opaque-keys==2.0.2    # via -r requirements/base.in, edx-drf-extensions
-edx-rest-api-client==5.0.2  # via -r requirements/base.in
+edx-rest-api-client==5.1.0  # via -r requirements/base.in
 future==0.18.2            # via pyjwkest
-gevent==1.4.0             # via -r requirements/base.in
-greenlet==0.4.15          # via gevent
 idna==2.8                 # via -c requirements/constraints.txt, requests
 importlib-metadata==1.6.0  # via kombu
 kombu==4.6.8              # via -r requirements/base.in, celery
 mysqlclient==1.4.6 ; python_version >= "3.0"  # via -r requirements/base.in
-newrelic==5.10.0.138      # via -r requirements/base.in, edx-django-utils
+newrelic==5.12.0.140      # via -r requirements/base.in, edx-django-utils
 oauthlib==3.1.0           # via django-oauth-toolkit
 paramiko==2.7.1           # via -r requirements/base.in, pysftp
-pbr==5.4.4                # via stevedore
+pbr==5.4.5                # via stevedore
 psutil==1.2.1             # via edx-django-utils
 pycparser==2.20           # via cffi
 pycryptodomex==3.9.7      # via pyjwkest
-pyjwkest==1.3.2           # via edx-drf-extensions
-pyjwt==1.7.1              # via djangorestframework-jwt, edx-rest-api-client
+pyjwkest==1.4.2           # via edx-drf-extensions
+pyjwt==1.7.1              # via drf-jwt, edx-rest-api-client
 pymongo==3.10.1           # via edx-opaque-keys
 pynacl==1.3.0             # via paramiko
 pysftp==0.2.9             # via -r requirements/base.in
 pysrt==1.1.2              # via -r requirements/base.in
 python-dateutil==2.8.1    # via edx-drf-extensions
-pytz==2019.3              # via celery, django
+pytz==2020.1              # via celery, django
 pyyaml==5.3.1             # via -r requirements/base.in
-redis==3.4.1              # via -r requirements/base.in
+redis==3.5.0              # via -r requirements/base.in
 requests==2.23.0          # via -r requirements/base.in, django-oauth-toolkit, edx-drf-extensions, edx-rest-api-client, pyjwkest, slumber
 rest-condition==1.0.3     # via edx-drf-extensions
-semantic-version==2.8.4   # via edx-drf-extensions
+semantic-version==2.8.5   # via edx-drf-extensions
 six==1.14.0               # via -r requirements/base.in, bcrypt, cryptography, django-waffle, edx-drf-extensions, edx-opaque-keys, pyjwkest, pynacl, python-dateutil, stevedore
 slumber==0.7.1            # via edx-rest-api-client
 sqlparse==0.3.1           # via django
 stevedore==1.32.0         # via edx-opaque-keys
-urllib3==1.25.8           # via -r requirements/base.in, requests
+urllib3==1.25.9           # via -r requirements/base.in, requests
 uwsgi==2.0.18             # via -r requirements/base.in
 vine==1.3.0               # via amqp, celery
 zipp==3.1.0               # via importlib-metadata

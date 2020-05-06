@@ -144,11 +144,14 @@ INSTALLED_APPS = (
     'config_models',
     'oauth2_provider',
     'rest_framework',
+    'rest_framework_jwt',
     'django_filters',
     'corsheaders',
     'frontend',
     'VEDA_OS01',
 )
+
+JWT_AUTH_HEADER_PREFIX = 'JWT'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
