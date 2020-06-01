@@ -4,18 +4,18 @@
 #
 #    make upgrade
 #
-amqp==2.5.2               # via -r requirements/test.txt, kombu
+amqp==2.6.0               # via -r requirements/test.txt, kombu
 appdirs==1.4.4            # via -r requirements/test.txt, virtualenv
 astroid==2.3.3            # via -r requirements/test.txt, pylint, pylint-celery
 attrs==19.3.0             # via -r requirements/test.txt, jsonschema, pytest
-aws-sam-translator==1.23.0  # via -r requirements/test.txt, cfn-lint
+aws-sam-translator==1.24.0  # via -r requirements/test.txt, cfn-lint
 aws-xray-sdk==2.5.0       # via -r requirements/test.txt, moto
 bcrypt==3.1.7             # via -r requirements/test.txt, paramiko
 billiard==3.6.3.0         # via -r requirements/test.txt, celery
-boto3==1.13.17            # via -r requirements/test.txt, aws-sam-translator, moto
+boto3==1.13.19            # via -r requirements/test.txt, aws-sam-translator, moto
 boto==2.49.0              # via -r requirements/test.txt, moto
-botocore==1.16.17         # via -r requirements/test.txt, aws-xray-sdk, boto3, moto, s3transfer
-celery==4.4.2             # via -r requirements/test.txt
+botocore==1.16.19         # via -r requirements/test.txt, aws-xray-sdk, boto3, moto, s3transfer
+celery==4.4.3             # via -r requirements/test.txt
 certifi==2020.4.5.1       # via -r requirements/test.txt, requests
 cffi==1.14.0              # via -r requirements/test.txt, bcrypt, cryptography, pynacl
 cfn-lint==0.32.1          # via -r requirements/test.txt, moto
@@ -51,8 +51,7 @@ faker==4.1.0              # via -r requirements/test.txt, factory-boy
 filelock==3.0.12          # via -r requirements/test.txt, tox, virtualenv
 future==0.18.2            # via -r requirements/test.txt, aws-xray-sdk, pyjwkest
 idna==2.8                 # via -c requirements/constraints.txt, -r requirements/test.txt, moto, requests
-importlib-metadata==1.6.0  # via -r requirements/test.txt, importlib-resources, jsonpickle, jsonschema, kombu, pluggy, pytest, tox, virtualenv
-importlib-resources==1.5.0  # via -r requirements/test.txt, cfn-lint, virtualenv
+importlib-metadata==1.6.0  # via -r requirements/test.txt, jsonpickle, jsonschema, kombu, pluggy, pytest, tox, virtualenv
 isort==4.3.21             # via -r requirements/test.txt, pylint
 jinja2==2.11.2            # via -r requirements/test.txt, moto
 jmespath==0.10.0          # via -r requirements/test.txt, boto3, botocore
@@ -62,11 +61,11 @@ jsonpickle==1.4.1         # via -r requirements/test.txt, aws-xray-sdk
 jsonpointer==2.0          # via -r requirements/test.txt, jsonpatch
 jsonschema==3.2.0         # via -r requirements/test.txt, aws-sam-translator, cfn-lint
 junit-xml==1.9            # via -r requirements/test.txt, cfn-lint
-kombu==4.6.8              # via -r requirements/test.txt, celery
+kombu==4.6.9              # via -r requirements/test.txt, celery
 lazy-object-proxy==1.4.3  # via -r requirements/test.txt, astroid
 markupsafe==1.1.1         # via -r requirements/test.txt, jinja2
 mccabe==0.6.1             # via -r requirements/test.txt, pylint
-mock==3.0.5               # via -r requirements/test.txt, moto
+mock==4.0.2               # via -r requirements/test.txt, moto
 more-itertools==8.3.0     # via -r requirements/test.txt, pytest
 moto==1.3.14              # via -r requirements/test.txt
 mysqlclient==1.4.6 ; python_version >= "3.0"  # via -r requirements/test.txt
@@ -75,7 +74,6 @@ newrelic==5.12.1.141      # via -r requirements/test.txt, edx-django-utils
 oauthlib==3.1.0           # via -r requirements/test.txt, django-oauth-toolkit
 packaging==20.4           # via -r requirements/test.txt, pytest, tox
 paramiko==2.7.1           # via -r requirements/test.txt, pysftp
-pathlib2==2.3.5           # via -r requirements/test.txt, pytest
 paver==1.3.4              # via -r requirements/test.txt
 pbr==5.4.5                # via -r requirements/test.txt, stevedore
 pep8==1.7.1               # via -r requirements/test.txt
@@ -113,7 +111,7 @@ rest-condition==1.0.3     # via -r requirements/test.txt, edx-drf-extensions
 rsa==4.0                  # via -r requirements/test.txt, python-jose
 s3transfer==0.3.3         # via -r requirements/test.txt, boto3
 semantic-version==2.8.5   # via -r requirements/test.txt, edx-drf-extensions
-six==1.15.0               # via -r requirements/test.txt, astroid, aws-sam-translator, bcrypt, cfn-lint, cryptography, django-waffle, docker, ecdsa, edx-drf-extensions, edx-lint, edx-opaque-keys, jsonschema, junit-xml, mock, moto, packaging, pathlib2, paver, pyjwkest, pynacl, pyrsistent, python-dateutil, python-jose, responses, stevedore, tox, virtualenv, websocket-client
+six==1.15.0               # via -r requirements/test.txt, astroid, aws-sam-translator, bcrypt, cfn-lint, cryptography, django-waffle, docker, ecdsa, edx-drf-extensions, edx-lint, edx-opaque-keys, jsonschema, junit-xml, moto, packaging, paver, pyjwkest, pynacl, pyrsistent, python-dateutil, python-jose, responses, stevedore, tox, virtualenv, websocket-client
 slumber==0.7.1            # via -r requirements/test.txt, edx-rest-api-client
 snowballstemmer==2.0.0    # via pydocstyle
 sqlparse==0.3.1           # via -r requirements/test.txt, django
@@ -132,7 +130,7 @@ websocket-client==0.57.0  # via -r requirements/test.txt, docker
 werkzeug==1.0.1           # via -r requirements/test.txt, moto
 wrapt==1.11.2             # via -r requirements/test.txt, astroid, aws-xray-sdk
 xmltodict==0.12.0         # via -r requirements/test.txt, moto
-zipp==1.2.0               # via -r requirements/test.txt, importlib-metadata, importlib-resources
+zipp==3.1.0               # via -r requirements/test.txt, importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

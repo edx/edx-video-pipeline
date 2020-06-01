@@ -4,11 +4,11 @@
 #
 #    make upgrade
 #
-amqp==2.5.2               # via kombu
+amqp==2.6.0               # via kombu
 bcrypt==3.1.7             # via paramiko
 billiard==3.6.3.0         # via celery
 boto==2.49.0              # via -r requirements/base.in
-celery==4.4.2             # via -r requirements/base.in
+celery==4.4.3             # via -r requirements/base.in
 certifi==2020.4.5.1       # via requests
 cffi==1.14.0              # via bcrypt, cryptography, pynacl
 chardet==3.0.4            # via pysrt, requests
@@ -30,7 +30,7 @@ edx-rest-api-client==5.2.1  # via -r requirements/base.in
 future==0.18.2            # via pyjwkest
 idna==2.8                 # via -c requirements/constraints.txt, requests
 importlib-metadata==1.6.0  # via kombu
-kombu==4.6.8              # via -r requirements/base.in, celery
+kombu==4.6.9              # via -r requirements/base.in, celery
 mysqlclient==1.4.6 ; python_version >= "3.0"  # via -r requirements/base.in
 newrelic==5.12.1.141      # via -r requirements/base.in, edx-django-utils
 oauthlib==3.1.0           # via django-oauth-toolkit
@@ -59,4 +59,4 @@ stevedore==1.32.0         # via edx-opaque-keys
 urllib3==1.25.9           # via -r requirements/base.in, requests
 uwsgi==2.0.18             # via -r requirements/base.in
 vine==1.3.0               # via amqp, celery
-zipp==1.2.0               # via importlib-metadata
+zipp==3.1.0               # via importlib-metadata

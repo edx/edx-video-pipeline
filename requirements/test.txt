@@ -4,18 +4,18 @@
 #
 #    make upgrade
 #
-amqp==2.5.2               # via -r requirements/base.txt, kombu
+amqp==2.6.0               # via -r requirements/base.txt, kombu
 appdirs==1.4.4            # via virtualenv
 astroid==2.3.3            # via pylint, pylint-celery
 attrs==19.3.0             # via jsonschema, pytest
-aws-sam-translator==1.23.0  # via cfn-lint
+aws-sam-translator==1.24.0  # via cfn-lint
 aws-xray-sdk==2.5.0       # via moto
 bcrypt==3.1.7             # via -r requirements/base.txt, paramiko
 billiard==3.6.3.0         # via -r requirements/base.txt, celery
-boto3==1.13.17            # via aws-sam-translator, moto
+boto3==1.13.19            # via aws-sam-translator, moto
 boto==2.49.0              # via -r requirements/base.txt, moto
-botocore==1.16.17         # via aws-xray-sdk, boto3, moto, s3transfer
-celery==4.4.2             # via -r requirements/base.txt
+botocore==1.16.19         # via aws-xray-sdk, boto3, moto, s3transfer
+celery==4.4.3             # via -r requirements/base.txt
 certifi==2020.4.5.1       # via -r requirements/base.txt, requests
 cffi==1.14.0              # via -r requirements/base.txt, bcrypt, cryptography, pynacl
 cfn-lint==0.32.1          # via moto
@@ -50,8 +50,7 @@ faker==4.1.0              # via factory-boy
 filelock==3.0.12          # via tox, virtualenv
 future==0.18.2            # via -r requirements/base.txt, aws-xray-sdk, pyjwkest
 idna==2.8                 # via -c requirements/constraints.txt, -r requirements/base.txt, moto, requests
-importlib-metadata==1.6.0  # via -r requirements/base.txt, importlib-resources, jsonpickle, jsonschema, kombu, pluggy, pytest, tox, virtualenv
-importlib-resources==1.5.0  # via cfn-lint, virtualenv
+importlib-metadata==1.6.0  # via -r requirements/base.txt, jsonpickle, jsonschema, kombu, pluggy, pytest, tox, virtualenv
 isort==4.3.21             # via -r requirements/test.in, pylint
 jinja2==2.11.2            # via moto
 jmespath==0.10.0          # via boto3, botocore
@@ -61,11 +60,11 @@ jsonpickle==1.4.1         # via aws-xray-sdk
 jsonpointer==2.0          # via jsonpatch
 jsonschema==3.2.0         # via aws-sam-translator, cfn-lint
 junit-xml==1.9            # via cfn-lint
-kombu==4.6.8              # via -r requirements/base.txt, celery
+kombu==4.6.9              # via -r requirements/base.txt, celery
 lazy-object-proxy==1.4.3  # via astroid
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via pylint
-mock==3.0.5               # via moto
+mock==4.0.2               # via moto
 more-itertools==8.3.0     # via pytest
 moto==1.3.14              # via -r requirements/test.in
 mysqlclient==1.4.6 ; python_version >= "3.0"  # via -r requirements/base.txt
@@ -74,7 +73,6 @@ newrelic==5.12.1.141      # via -r requirements/base.txt, edx-django-utils
 oauthlib==3.1.0           # via -r requirements/base.txt, django-oauth-toolkit
 packaging==20.4           # via pytest, tox
 paramiko==2.7.1           # via -r requirements/base.txt, pysftp
-pathlib2==2.3.5           # via pytest
 paver==1.3.4              # via -r requirements/test.in
 pbr==5.4.5                # via -r requirements/base.txt, stevedore
 pep8==1.7.1               # via -r requirements/test.in
@@ -110,7 +108,7 @@ rest-condition==1.0.3     # via -r requirements/base.txt, edx-drf-extensions
 rsa==4.0                  # via python-jose
 s3transfer==0.3.3         # via boto3
 semantic-version==2.8.5   # via -r requirements/base.txt, edx-drf-extensions
-six==1.15.0               # via -r requirements/base.txt, astroid, aws-sam-translator, bcrypt, cfn-lint, cryptography, django-waffle, docker, ecdsa, edx-drf-extensions, edx-lint, edx-opaque-keys, jsonschema, junit-xml, mock, moto, packaging, pathlib2, paver, pyjwkest, pynacl, python-dateutil, python-jose, responses, stevedore, tox, virtualenv, websocket-client
+six==1.15.0               # via -r requirements/base.txt, astroid, aws-sam-translator, bcrypt, cfn-lint, cryptography, django-waffle, docker, ecdsa, edx-drf-extensions, edx-lint, edx-opaque-keys, jsonschema, junit-xml, moto, packaging, paver, pyjwkest, pynacl, python-dateutil, python-jose, responses, stevedore, tox, virtualenv, websocket-client
 slumber==0.7.1            # via -r requirements/base.txt, edx-rest-api-client
 sqlparse==0.3.1           # via -r requirements/base.txt, django
 sshpubkeys==3.1.0         # via moto
@@ -128,7 +126,7 @@ websocket-client==0.57.0  # via docker
 werkzeug==1.0.1           # via moto
 wrapt==1.11.2             # via astroid, aws-xray-sdk
 xmltodict==0.12.0         # via moto
-zipp==1.2.0               # via -r requirements/base.txt, importlib-metadata, importlib-resources
+zipp==3.1.0               # via -r requirements/base.txt, importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
