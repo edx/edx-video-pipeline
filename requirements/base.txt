@@ -36,7 +36,7 @@ newrelic==5.12.1.141      # via -r requirements/base.in, edx-django-utils
 oauthlib==3.1.0           # via django-oauth-toolkit
 paramiko==2.7.1           # via -r requirements/base.in, pysftp
 pbr==5.4.5                # via stevedore
-psutil==1.2.1             # via edx-django-utils
+psutil==5.6.6             # via edx-django-utils
 pycparser==2.20           # via cffi
 pycryptodomex==3.9.7      # via pyjwkest
 pyjwkest==1.4.2           # via edx-drf-extensions
