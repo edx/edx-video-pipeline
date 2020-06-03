@@ -18,7 +18,7 @@ LOGGING = get_logger_config(service_variant=CONFIG_DATA.get('SERVICE_VARIANT_NAM
 
 # Keep track of the names of settings that represent dicts. Instead of overriding the values in base.py,
 # the values read from disk should UPDATE the pre-configured dicts.
-DICT_UPDATE_KEYS = ('DATABASES',)
+DICT_UPDATE_KEYS = ('DATABASES', 'JWT_AUTH')
 
 # Remove the items that should be used to update dicts, and apply them separately rather
 # than pumping them into the local vars.
