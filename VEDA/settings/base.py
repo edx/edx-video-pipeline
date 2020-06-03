@@ -163,7 +163,7 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 # more details on how to customize your logging configuration.
 LOGGING = get_logger_config(debug=DEBUG, dev_env=True, local_loglevel='DEBUG')
 
-############### JWT Authentication  ####################
+# JWT Authentication Default configuration values
 
 JWT_AUTH = {
     'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
