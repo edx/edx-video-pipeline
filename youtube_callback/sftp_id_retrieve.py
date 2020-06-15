@@ -2,7 +2,7 @@
 Check SFTP dropboxes for YT Video ID XML information
 
 """
-from __future__ import absolute_import
+
 import csv
 import datetime
 import fnmatch

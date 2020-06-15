@@ -4,7 +4,7 @@ iri2uri
 Converts an IRI to a URI.
 
 """
-from __future__ import absolute_import
+
 import six
 __author__ = "Joe Gregorio (joe@bitworking.org)"
 __copyright__ = "Copyright 2006, Joe Gregorio"

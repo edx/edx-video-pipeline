@@ -1,6 +1,6 @@
 """JSON token scanner
 """
-from __future__ import absolute_import
+
 import re
 def _import_c_make_scanner():
     try:

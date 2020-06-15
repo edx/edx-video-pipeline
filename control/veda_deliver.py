@@ -4,7 +4,7 @@ Determine the destination and upload to the appropriate
 endpoint via the custom methods
 
 """
-from __future__ import absolute_import
+
 import datetime
 import logging
 import shutil

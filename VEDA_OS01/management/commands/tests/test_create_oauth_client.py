@@ -2,7 +2,7 @@
 Tests of the create_oauth_client management command.
 """
 
-from __future__ import absolute_import
+
 from itertools import product
 
 import ddt

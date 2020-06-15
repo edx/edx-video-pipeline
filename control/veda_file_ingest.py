@@ -2,7 +2,7 @@
 Discovered file ingest/insert/job triggering
 
 """
-from __future__ import absolute_import
+
 import datetime
 import logging
 import subprocess

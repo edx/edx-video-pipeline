@@ -3,7 +3,7 @@
 http://code.activestate.com/recipes/576693/
 
 """
-from __future__ import absolute_import
+
 from UserDict import DictMixin
 from six.moves import zip
 

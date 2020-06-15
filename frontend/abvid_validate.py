@@ -3,7 +3,7 @@ About Video Input and Validation
 
 """
 
-from __future__ import absolute_import
+
 import datetime
 import logging
 

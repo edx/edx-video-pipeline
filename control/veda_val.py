@@ -3,7 +3,7 @@ Send data to VAL, either Video ID data or endpoint URLs
 
 """
 
-from __future__ import absolute_import
+
 import logging
 import urllib3
 import ast

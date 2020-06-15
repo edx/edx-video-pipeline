@@ -1,7 +1,7 @@
 """
 Validate Course / Predict Inputs for advanced fields
 """
-from __future__ import absolute_import
+
 import uuid
 import json
 import yaml

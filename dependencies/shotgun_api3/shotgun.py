@@ -30,7 +30,7 @@
 '''
 
 
-from __future__ import absolute_import
+
 import base64
 import email.generator
 import six.moves.http_cookiejar    # used for attachment upload

@@ -1,7 +1,7 @@
 """
 Models for Video Pipeline
 """
-from __future__ import absolute_import
+
 import json
 import uuid
 from django.db import models
