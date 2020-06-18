@@ -1,7 +1,7 @@
 """
 Production environment settings.
 """
-from __future__ import absolute_import
+
 from VEDA.settings.base import *
 from VEDA.utils import get_config
 from VEDA.settings.utils import get_logger_config

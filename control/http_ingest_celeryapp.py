@@ -2,7 +2,7 @@
 Start Celery Worker
 """
 
-from __future__ import absolute_import
+
 
 from celery import Celery
 import logging

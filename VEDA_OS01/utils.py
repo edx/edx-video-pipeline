@@ -1,7 +1,7 @@
 """
 Common utils.
 """
-from __future__ import absolute_import
+
 from rest_framework.parsers import BaseParser
 
 from VEDA.utils import get_config

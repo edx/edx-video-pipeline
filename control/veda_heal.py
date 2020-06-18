@@ -7,7 +7,7 @@ Roll through videos, check for completion
     - reschedule self
 
 """
-from __future__ import absolute_import
+
 import datetime
 from datetime import timedelta
 import logging

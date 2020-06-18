@@ -6,7 +6,7 @@ is only maintained, and not prioritized for refactoring
 
 """
 
-from __future__ import absolute_import
+
 import logging
 import os.path
 import pysftp

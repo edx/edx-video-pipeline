@@ -5,7 +5,7 @@ Get a list of needed encodes from VEDA
 
 """
 
-from __future__ import absolute_import
+
 from .control_env import *
 from dependencies.shotgun_api3 import Shotgun
 from VEDA.utils import get_config

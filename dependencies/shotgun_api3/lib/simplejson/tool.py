@@ -10,7 +10,7 @@ Usage::
     Expecting property name: line 1 column 2 (char 2)
 
 """
-from __future__ import absolute_import
+
 import sys
 import simplejson as json
 

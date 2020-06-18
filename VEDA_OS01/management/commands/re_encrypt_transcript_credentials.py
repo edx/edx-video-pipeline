@@ -1,7 +1,7 @@
 """
 Management command used to re-encrypt transcript credentials data with new fernet key.
 """
-from __future__ import absolute_import
+
 import logging
 
 from cryptography.fernet import InvalidToken

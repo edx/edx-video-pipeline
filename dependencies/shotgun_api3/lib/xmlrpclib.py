@@ -137,7 +137,7 @@ Exported functions:
                  name (None if not present).
 """
 
-from __future__ import absolute_import
+
 import re, string, time, operator
 
 from types import *

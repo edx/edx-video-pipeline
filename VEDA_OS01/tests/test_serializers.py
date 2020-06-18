@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from django.test import TestCase
 
 from VEDA_OS01.models import Course, Destination, Encode, URL, Video

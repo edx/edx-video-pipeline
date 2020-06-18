@@ -1,6 +1,6 @@
 # VEDA F/E Views
 
-from __future__ import absolute_import
+
 import json
 import datetime
 from datetime import timedelta

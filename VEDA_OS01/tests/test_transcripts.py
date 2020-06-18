@@ -2,7 +2,7 @@
 """
 Transcript tests
 """
-from __future__ import absolute_import
+
 import json
 import responses
 import six.moves.urllib.error

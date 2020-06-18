@@ -1,7 +1,7 @@
 """
 Tests common utils
 """
-from __future__ import absolute_import
+
 import glob
 import os
 import shutil

@@ -9,7 +9,7 @@ Mismatched Durations (within 5 sec)
 
 """
 
-from __future__ import absolute_import
+
 import logging
 import os
 import subprocess
