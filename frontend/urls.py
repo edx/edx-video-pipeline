@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'course_id_validate/', views.course_id_validate),
     url(r'course_add/', views.course_add),
     # Uploads
-    url(r'upload/', views.upload_alpha_1),
+    url(r'upload/', views.upload_page_redirect_view),
     url(r'upload_success/', views.upload_success),
     url(r'about_input/', views.about_input),
 ]

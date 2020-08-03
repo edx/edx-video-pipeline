@@ -9,7 +9,7 @@ import hmac
 import hashlib
 import uuid
 from control import celeryapp
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 from django.template import loader
 from django.http import HttpResponseRedirect
 from .course_validate import VEDACat
@@ -256,3 +256,12 @@ def about_input(request):
         json.dumps(goahead),
         content_type="application/json"
     )
+
+
+def upload_page_redirect_view(request):
+    """
+    In order to minimize impact on our partners, redirect VEDA upload page https://veda.edx.org/upload
+    to the new VEM upload page.
+    """
+    veda_config = get_config()
+    return HttpResponsePermanentRedirect(veda_config['vem_upload_url'])
