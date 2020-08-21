@@ -1,8 +1,6 @@
-owner: azarembok
-
 oeps:
-  oep-2: true
-  oep-7: true
-  oep-18: false # make upgrade
+    oep-2: true
+    oep-7: true
+    oep-18: false # make upgrade
 tags:
-  - webservice
+    - webservice
